@@ -1,0 +1,55 @@
+#!/bin/python
+import argparse
+import os
+import logging
+import subprocess
+
+from misc import *
+import config
+from args_gen import *
+from images import *
+
+
+def run_virt_install(virt_install_args):
+
+    """Run virt-install command with arguments provided"""
+
+    args = ["virt-install"]
+    for key, value in virt_install_args.items():
+        args.append(f"--{key}")
+        if value:
+            args.append(value)
+    subprocess.run(args)
+
+def process_vm(vm, vm_index):
+    """
+    Process a single VM definition from the YAML data.
+    """
+    ignore = vm['info'].get('ignore')
+    if ignore:
+        return
+
+    name = vm['info'].get('name', f"{config.IMAGE_NAME}-{vm_index+1}")
+    image = copy_image(name, vm)
+
+    if image['dest_image_exists']:
+        print_message("INFO", f"Provisioning a new VM named {name}\n")
+        vm_args = create_virt_install_args(vm_index, vm)
+        run_virt_install(vm_args)
+
+def main():
+    """
+    Load a YAML file from the given file path, parse its content, and provision all the VM listed in it.
+    """
+
+    data = load_yaml_data(config.YAML_PATH)
+    if data is None:
+        exit()
+
+    for vm_index, vm in enumerate(data['vms']):
+        process_vm(vm, vm_index)
+
+    print_message("INFO", "All VMs provisioned successfully!")
+
+if __name__ == "__main__":
+    main()
