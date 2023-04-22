@@ -22,11 +22,11 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/kebairia/kvmcli">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
+  <!-- <a href="https://github.com/kebairia/kvmcli"> -->
+  <!--   <img src="images/logo.png" alt="Logo" width="80" height="80"> -->
+  <!-- </a> -->
 
-<h3 align="center">Homelab Kubernetes</h3>
+<h3 align="center">KVMcli</h3>
 
   <p align="center">
     A Python script for managing virtual machines in a KVM-based cluster.
@@ -57,16 +57,16 @@
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
+        <!-- <li><a href="#prerequisites">Prerequisites</a></li> -->
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
+    <!-- <li><a href="#roadmap">Roadmap</a></li> -->
+    <!-- <li><a href="#contributing">Contributing</a></li> -->
     <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <!-- <li><a href="#contact">Contact</a></li> -->
+    <!-- <li><a href="#acknowledgments">Acknowledgments</a></li> -->
   </ol>
 </details>
 
@@ -80,7 +80,7 @@
 | [![Deploy Demo](https://asciinema.org/a/0yJKkTA0pFMSjjxdrOytsZnos.svg)](https://asciinema.org/a/0yJKkTA0pFMSjjxdrOytsZnos) |
 | Deploy with a single command (after updating the configuration files)                                                      |
 
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `kebairia`, `kvmcli`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
+<!-- Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `kebairia`, `kvmcli`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description` -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -102,28 +102,22 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 This is an example of how you may give instructions on setting up your project locally.
 To get a local copy up and running follow these simple example steps.
 
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+<!-- ### Prerequisites -->
+<!-- This is an example of how to list things you need to use the software and how to install them. -->
+<!-- * npm -->
+<!--   ```sh -->
+<!--   npm install npm@latest -g -->
+<!--   ``` -->
 
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
    ```sh
    git clone https://github.com/kebairia/kvmcli.git
    ```
-3. Install NPM packages
+2. Install required packages
    ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
+   pip install -r requirements.txt
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -133,9 +127,85 @@ This is an example of how to list things you need to use the software and how to
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+<!-- Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources. -->
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+<!-- _For more examples, please refer to the [Documentation](https://example.com)_ -->
+Here's a sample usage section based on the bullet points you provided:
+
+**Note** This project is still under development, but you can use it to provision VMs with different operating systems.
+
+
+1. The project has the following structure:
+   - A YAML file for describing your cluster, named `servers.yml` by default.
+   - A config file named `config.cfg` for assigning default values, such as the name of the main YAML file.
+   - `kvmcli` is the main command line for the project.
+
+2. Modify the `servers.yml` file with the nodes (VMs) that you want. You can also choose another name for this file and update it in the `config.cfg` file.
+**Example**:
+```yaml
+version: 1.0
+
+vms:
+  - info:
+      name: admin1
+      image: ubuntu22.04
+      ram: 2048
+      cpus: 2
+      os: ubuntu22.04
+    network:
+      interface:
+        bridge: virbr1
+        mac_address: "02:A3:10:00:00:02"
+    storage:
+      disk:
+        size: 30
+        type: SSD
+        format: qcow2
+```
+
+3. Modify `config.cfg` with the default values that you need. 
+```toml
+# TOML Configuration file for provisioner script
+
+# Path to server YAML file
+yaml_path = "servers.yml"
+
+# Image configurations
+[image]
+artifacts_path = "/home/zakaria/dox/homelab/artifacts"
+images_path = "/home/zakaria/dox/homelab/images"
+image_name = "homelab"
+```
+
+4. `kvmcli` is the command for launching the provisioning process. Currently, it is just a command for provisioning VMs from `servers.yml`. 
+    For other feature, you can test each function by itself by `python <function>.py`.
+
+
+Here's an example of how to provision VMs using `kvmcli`:
+``` sh
+./kvmcli
+```
+To get a table for all the VMs listed in `servers.yml` execute:
+``` sh
+py ./info.py
+```
+```
+                                    SERVERS.YML
+┏━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ SERVERS ┃ SYSTEM      ┃ RAM     ┃ CPUS ┃ BRIDGE ┃ MAC ADDRESS       ┃ DISK SIZE ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ admin1  │ ubuntu22.04 │ 2048 MB │ 2    │ virbr1 │ 02:A3:10:00:00:02 │ 30 GB     │
+└─────────┴─────────────┴─────────┴──────┴────────┴───────────────────┴───────────┘
+
+```
+
+This will create the VMs specified in the `servers.yml` file. You can then connect to the VMs using a remote desktop client or SSH.
+
+<!-- For more information on the available commands, run `kvmcli --help`. -->
+
+
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -143,13 +213,11 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 <!-- ROADMAP -->
 ## Roadmap
-
-- [x] Bootstrap script
-- [ ] Ansible Roles
-    - [ ] Automated Kubernetes installation and management
-    - [x] Roles for admin nodes (DNS, DHCP, HAProxy, Keepalived, NTP)
-    - [ ] Roles for storage nodes (NFS, SMB, Syslog)
-    - [x] Roles for Monitoring node (Prometheus, Grafana)
+    
+- [x] Print report for the cluster
+- [x] Provision multiple VMs with different Operating Systems
+- [ ] Enhancing command line tool
+- [ ] Logging system
 
 See the [open issues](https://github.com/kebairia/kvmcli/issues) for a full list of proposed features (and known issues).
 
@@ -176,11 +244,11 @@ Don't forget to give the project a star! Thanks again!
 
 
 <!-- LICENSE -->
-## License
+<!-- ## License -->
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+<!-- Distributed under the MIT License. See `LICENSE.txt` for more information. -->
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 
@@ -196,11 +264,11 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 
 
 <!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
+<!-- ## Acknowledgments -->
 
-* []()
-* []()
-* []()
+<!-- * []() -->
+<!-- * []() -->
+<!-- * []() -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
