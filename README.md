@@ -138,9 +138,10 @@ Here's a sample usage section based on the bullet points you provided:
 1. The project has the following structure:
    - A YAML file for describing your cluster, named `servers.yml` by default.
    - A config file named `config.cfg` for assigning default values, such as the name of the main YAML file.
-   - `kvmcli` is the main command line for the project.
+   - `kvmcli` is the main command line tool for the project.
 
 2. Modify the `servers.yml` file with the nodes (VMs) that you want. You can also choose another name for this file and update it in the `config.cfg` file.
+
 **Example**:
 ```yaml
 version: 1.0
@@ -185,6 +186,9 @@ Here's an example of how to provision VMs using `kvmcli`:
 ``` sh
 ./kvmcli
 ```
+This will create the VMs specified in the `servers.yml` file. You can then connect to the VMs using a remote desktop client or SSH.
+
+
 To get a table for all the VMs listed in `servers.yml` execute:
 ``` sh
 py ./info.py
@@ -199,7 +203,6 @@ py ./info.py
 
 ```
 
-This will create the VMs specified in the `servers.yml` file. You can then connect to the VMs using a remote desktop client or SSH.
 
 <!-- For more information on the available commands, run `kvmcli --help`. -->
 
@@ -298,3 +301,7 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 
 [TOML.icon]: https://img.shields.io/badge/toml-9d4626?style=for-the-badge&logo=toml&logoColor=whte
 [TOML.url]: https://toml.io/
+
+[UP.icon]: https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=^&logoColor=ffde57
+[UP.url]:  https://github.com/kebairia/kvmcli#readme-top
+
