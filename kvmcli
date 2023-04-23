@@ -9,8 +9,6 @@ import config
 from args_gen import *
 from images import *
 
-import cli
-
 
 def run_virt_install(virt_install_args):
 
@@ -27,11 +25,14 @@ def process_vm(vm, vm_index):
     """
     Process a single VM definition from the YAML data.
     """
-    ignore = vm['info'].get('ignore')
-    if ignore:
-        return
+    # ignore = vm['info'].get('ignore')
+    # if ignore:
+        # return
 
     name = vm['info'].get('name', f"{config.IMAGE_NAME}-{vm_index+1}")
+
+    if name in ignore:
+        return
     image = copy_image(name, vm)
 
     if image['dest_image_exists']:
@@ -55,7 +56,23 @@ def apply(yaml_path):
 
 
 if __name__ == "__main__":
-    if cli.args.info:
+
+    parser = argparse.ArgumentParser(
+                        prog='kvmcli',
+                        description='A Python script for managing virtual machines in a KVM-based cluster.',
+                        epilog='Enjoy')
+    
+    parser.add_argument('--info', action="store_true", help='Print information about your cluster')
+    parser.add_argument('--apply', metavar='YAML_PATH', help='apply configuration from file')
+    parser.add_argument('--ignore', metavar='NODE_NAME', help='Ignore NODE NAME')
+    
+    args = parser.parse_args()
+
+    if args.ignore:
+        ignore = [node.strip() for node in args.ignore.split(',')]
+    else: 
+        ignore = []
+    if args.info:
         subprocess.run(['python', 'info.py'])
-    elif cli.args.apply:
-        apply(YAML_PATH)
+    if args.apply:
+        apply(args.apply)
