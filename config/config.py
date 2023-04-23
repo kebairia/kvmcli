@@ -4,6 +4,7 @@ from typing import Dict
 
 # Define constants for the keys in the TOML file
 YAML_PATH_KEY = "yaml_path"
+TEMPLATE_NAME_KEY = "template_name"
 ARTIFACTS_PATH_KEY = "artifacts_path"
 IMAGES_PATH_KEY = "images_path"
 IMAGE_NAME_KEY = "image_name"
@@ -30,6 +31,7 @@ config = load_config("config.cfg")
 
 # Read the configuration values
 YAML_PATH: str = config[YAML_PATH_KEY]
+TEMPLATE_NAME: str = config[TEMPLATE_NAME_KEY]
 ARTIFACTS_PATH: str = config["image"][ARTIFACTS_PATH_KEY]
 IMAGES_PATH: str = config["image"][IMAGES_PATH_KEY]
 IMAGE_NAME: str = config["image"][IMAGE_NAME_KEY]

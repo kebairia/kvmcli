@@ -1,5 +1,6 @@
 
-__all__ = ["info", 
+__all__ = ["init", 
+           "info",
            "args_gen",
            "images",
            "misc",

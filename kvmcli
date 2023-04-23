@@ -12,6 +12,7 @@ import subprocess
 import sys
 from config import config
 from src.info import *
+from src.init import *
 from src.images import *
 from src.misc import print_message
 from src.args_gen import load_yaml_data, create_virt_install_args
@@ -64,13 +65,16 @@ if __name__ == "__main__":
                         description='A Python script for managing virtual machines in a KVM-based cluster.',
                         epilog='Enjoy')
     
-    parser.add_argument('-i', '--info', action="store_true", help='Print information about your cluster')
+    parser.add_argument('-I', '--info', action="store_true", help='Print information about your cluster')
+    parser.add_argument('-i', '--init', action="store_true", help='Create template file')
     parser.add_argument('-a', '--apply', action="store_true", help='apply configuration from YAML_FILE')
     parser.add_argument('-f', '--file', metavar='YAML_FILE', help='Specify a yaml file')
     parser.add_argument('--ignore', metavar='NODE_NAME', help='Ignore NODE NAME')
     
     args = parser.parse_args()
 
+    if args.init:
+        create_template
     if args.file:
         yaml_file = args.file
     else:
