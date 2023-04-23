@@ -12,7 +12,7 @@ import subprocess
 import sys
 from config import config
 from src.info import *
-from src.init import *
+from src.init import create_template
 from src.images import *
 from src.misc import print_message
 from src.args_gen import load_yaml_data, create_virt_install_args
@@ -74,16 +74,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.init:
-        create_template
+        create_template()
+
     if args.file:
         yaml_file = args.file
     else:
         yaml_file = config.YAML_PATH
+
     if args.ignore:
         ignore = [node.strip() for node in args.ignore.split(',')]
     else: 
         ignore = []
+
     if args.info:
         report(yaml_file)
+
     if args.apply:
         apply(yaml_file)

@@ -1,8 +1,12 @@
 #!/bin/python
 import yaml
 from config import config
+from pathlib import Path
+from src.misc import print_message
+
 import colorama
 colorama.init()  
+
 def create_template():
     template = config.TEMPLATE_NAME
     dict_file = {
@@ -27,7 +31,9 @@ def create_template():
               }
              ]
             }
-    with open(rf'{template}', 'w') as file:
-        print(f"template file with the name {colorama.Style.DIM}{template}{colorama.Style.RESET_ALL} is created !")
-        yaml.dump(dict_file, file)
-create_template()
+    if Path(template).exists():
+        print_message("WARNING", f"{colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} Already exist" )
+    else:
+        with open(rf'{template}', 'w') as file:
+            print(f"Template file with the name {colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} is created !")
+            yaml.dump(dict_file, file)
