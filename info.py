@@ -33,5 +33,3 @@ def report(yaml_file):
 
     console = Console()
     console.print(table)
-
-report(config.YAML_PATH)
