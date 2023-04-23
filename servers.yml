@@ -3,10 +3,10 @@ version: 1.0
 vms:
   - info:
       name: admin1
-      image: ubuntu22.04
-      ram: 2048
-      cpus: 2
-      os: ubuntu22.04
+      image: rocky9.1
+      ram: 1536
+      cpus: 1
+      os: rocky9
     network:
       interface:
         bridge: virbr1
@@ -28,39 +28,6 @@ vms:
       interface:
         bridge: virbr1
         mac_address: "02:A3:10:00:00:03"
-    storage:
-      disk:
-        size: 30
-        type: SSD
-        format: qcow2
-    provisioner: "/home/zakaria/test.sh"
-
-  - info:
-      name: monitor
-      image: rocky9.1
-      ram: 4096
-      cpus: 3
-      os: rocky9
-    network:
-      interface:
-        bridge: virbr1
-        mac_address: "02:A3:10:00:00:11"
-    storage:
-      disk:
-        size: 30
-        type: SSD
-        format: qcow2
-    provisioner: "/home/zakaria/test.sh"
-
-  - info:
-      image: rocky9.1
-      ram: 2048
-      cpus: 1
-      os: rocky9
-    network:
-      interface:
-        bridge: virbr1 
-        mac_address: "02:A3:10:00:00:10"
     storage:
       disk:
         size: 30
