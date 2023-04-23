@@ -1,5 +1,5 @@
 #!/bin/python
-import yaml
+
 from rich.console import Console
 from rich.table import Table
 from args_gen import create_virt_install_args, load_yaml_data
