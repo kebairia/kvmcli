@@ -1,7 +1,10 @@
 #!/bin/python
 
 import yaml
-from images import *
+from pathlib import Path
+from .  import images
+
+from config import config
 
 def load_yaml_data(file_path):
 

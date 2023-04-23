@@ -3,15 +3,18 @@ import argparse
 import os
 import logging
 import subprocess
+
+# from misc import *
+# from args_gen import *
+# from images import *
+# import info
+
 import sys
-
-from misc import *
-from args_gen import *
-from images import *
-import info
-
-import config
-
+from config import config
+from src.info import *
+from src.images import *
+from src.misc import print_message
+from src.args_gen import load_yaml_data, create_virt_install_args
 
 def run_virt_install(virt_install_args):
 
@@ -28,10 +31,6 @@ def process_vm(vm, vm_index):
     """
     Process a single VM definition from the YAML data.
     """
-    # ignore = vm['info'].get('ignore')
-    # if ignore:
-        # return
-
     name = vm['info'].get('name', f"{config.IMAGE_NAME}-{vm_index+1}")
 
     if name in ignore:
@@ -66,8 +65,8 @@ if __name__ == "__main__":
                         epilog='Enjoy')
     
     parser.add_argument('-i', '--info', action="store_true", help='Print information about your cluster')
-    parser.add_argument('-a', '--apply', action="store_true", help='apply configuration from file')
-    parser.add_argument('-f', '--file', metavar='YAML_PATH', help='apply configuration from file')
+    parser.add_argument('-a', '--apply', action="store_true", help='apply configuration from YAML_FILE')
+    parser.add_argument('-f', '--file', metavar='YAML_FILE', help='Specify a yaml file')
     parser.add_argument('--ignore', metavar='NODE_NAME', help='Ignore NODE NAME')
     
     args = parser.parse_args()
@@ -81,6 +80,6 @@ if __name__ == "__main__":
     else: 
         ignore = []
     if args.info:
-        info.report(yaml_file)
+        report(yaml_file)
     if args.apply:
         apply(yaml_file)

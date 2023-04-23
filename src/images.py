@@ -4,8 +4,8 @@ import time
 import shutil
 from pathlib import Path
 
-import config
-from misc import print_message
+from config import config
+from src.misc import print_message
 
 
 def copy_image(name: str, vm: dict) -> dict:
