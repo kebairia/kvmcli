@@ -112,10 +112,14 @@ To get a local copy up and running follow these simple example steps.
 ### Installation
 
 1. Clone the repo
+
+
    ```sh
    git clone https://github.com/kebairia/kvmcli.git
    ```
 2. Install required packages
+
+
    ```sh
    pip install -r requirements.txt
    ```
@@ -171,13 +175,18 @@ The `kvmcli` command is used for launching the provisioning process. You can use
 #### Creating a template
 First, use the `--init` argument to create a template that you can use as a reference for your VMs.
 
+
 ```sh
 kvmcli --init
 ```
+
+
 ```
 Template file with the name `template.yml` is created !
 ```
+
 This will create a template file named template.yml. The content of the template will be like the following:
+
 ```yaml
 version: 1.0
 vms:
@@ -201,15 +210,19 @@ vms:
 You can use the `--info` flag to print the content of the template file in a pretty table:
 It uses the default value of `template_name` from the `config.cfg` configuration file
 
+
 ```sh
 kvmcli --info
 ```
 
 If you want to use another file as a reference, use the `-f` or `--file` flag:
 
+
 ```sh
 kvmcli --info -f template.yml
 ```
+
+
 ```
                                   TEMPLATE.YML                                 
  ┏━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
@@ -221,9 +234,12 @@ kvmcli --info -f template.yml
 #### Applying configuration from a YAML file
 When you're happy with the result, you can start provisioning using the `-a` or `--apply` flag:
 
+
 ```sh
 kvmcli --apply -f template.yml
 ```
+
+
 ```
  INFO: Copying new VM to /home/zakaria/dox/homelab/images/node1.qcow2
  INFO: Provisioning a new VM named node1
@@ -235,11 +251,14 @@ The `--ignore` flag is used to exclude specific nodes from the provisioning proc
 
 For example, running `kvmcli --apply -f template.yml --ignore node1` will apply the configuration defined in `template.yml`, but exclude the `node1` node from being provisioned.
 
+
 ```sh
 kvmcli --apply -f template.yml --ignore node1
 ```
 
 -h, --help Show the help message and exit.
+
+
 ```
 usage: kvmcli [-h] [-I] [-i] [-a] [-f YAML_FILE] [--ignore NODE_NAME]
 
@@ -353,4 +372,3 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 
 [UP.icon]: https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=^&logoColor=ffde57
 [UP.url]:  https://github.com/kebairia/kvmcli#readme-top
-
