@@ -88,9 +88,11 @@
 
 ### Built With
 
-[![Python][Python.icon]][Python.url]
-[![YAML][YAML.icon]][YAML.url]
-[![TOML][TOML.icon]][TOML.url]
+| Technologies                         | Used for                                                         |
+|:-------------------------------------|:-----------------------------------------------------------------|
+| [![Python][Python.icon]][Python.url] | Python is the primary programming language used in this project. |
+| [![YAML][YAML.icon]][YAML.url]       | YAML is utilized to describe the virtual machine cluster.        |
+| [![TOML][TOML.icon]][TOML.url]       | TOML is used for managing configuration files in the project.    |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
