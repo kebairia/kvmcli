@@ -100,9 +100,6 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
 <!-- ### Prerequisites -->
 <!-- This is an example of how to list things you need to use the software and how to install them. -->
 <!-- * npm -->
@@ -118,11 +115,11 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    git clone https://github.com/kebairia/kvmcli.git
    ```
-2. Install required packages
+2. Install the project
 
 
    ```sh
-   pip install -r requirements.txt
+   make install
    ```
 
 <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
@@ -134,12 +131,6 @@ To get a local copy up and running follow these simple example steps.
 <!-- Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources. -->
 
 <!-- _For more examples, please refer to the [Documentation](https://example.com)_ -->
-Here's a sample usage section based on the bullet points you provided:
-
-1. The project has the following structure:
-   - A YAML file for describing your cluster, named `servers.yml` by default.
-   - A config file named `config.cfg` for assigning default values, such as the name of the main YAML file.
-   - `kvmcli` is the main command line tool for the project.
 
 **Note**: This project is still under development, but you can use it to provision VMs with different operating systems.
 
@@ -151,7 +142,7 @@ The project has the following structure:
 
 ### Configuring default values
 
-Modify `config.cfg` with the default values that you need. You can specify the path to the server YAML file, the path to the artifacts and images directories, and the name of the image that you want to use, on so on.
+Modify `config.cfg` with the default values that you need. You can specify the path to the server YAML file, the path to the artifacts and images directories, the name of the image that you want to use, on so on.
 
 Here's an example of how to configure the default values in `config.cfg`:
 
