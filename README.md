@@ -136,7 +136,7 @@
 
 The project has the following structure:
 
-- A YAML file named `servers.yml` for describing your cluster.
+- A YAML file named `servers.yml` [^1]  for describing your cluster.
 - A configuration file named `config.cfg` for assigning default values, such as the name of the main YAML file.
 - The `kvmcli` command line tool is the main tool for the project.
 
@@ -361,3 +361,9 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 
 <!-- [UP.icon]: <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a> -->
 <!-- [UP.url]:  https://github.com/kebairia/kvmcli#readme-top -->
+
+[^1]: Or any name you like, you can change that by change the `yaml` and `template_name` keys under `[yaml]` section in `config.cfg`
+lksjdflkjlsdjf 
+lksjdflkjlsdjf 
+lksjdflkjlsdjf 
+lksjdflkjlsdjf 
