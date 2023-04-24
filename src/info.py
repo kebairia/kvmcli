@@ -2,8 +2,6 @@
 
 from rich.console import Console
 from rich.table import Table
-# from args_gen import create_virt_install_args, load_yaml_data
-# import args_gen
 from src.args_gen import load_yaml_data, create_virt_install_args
 
 # from .. import config

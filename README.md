@@ -315,18 +315,18 @@ Don't forget to give the project a star! Thanks again!
 
 
 <!-- LICENSE -->
-<!-- ## License -->
+## License
 
-<!-- Distributed under the MIT License. See `LICENSE.txt` for more information. -->
+Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_client.com
+<!-- Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_client.com -->
 
 Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_username/repo_name)
 
@@ -335,11 +335,11 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 
 
 <!-- ACKNOWLEDGMENTS -->
-<!-- ## Acknowledgments -->
+## Acknowledgments 
 
-<!-- * []() -->
-<!-- * []() -->
-<!-- * []() -->
+* [README Template](https://github.com/othneildrew/Best-README-Template) 
+<!--* []() -->
+<!--* []() -->
 
 <!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
