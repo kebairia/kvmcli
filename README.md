@@ -132,44 +132,31 @@ To get a local copy up and running follow these simple example steps.
 <!-- _For more examples, please refer to the [Documentation](https://example.com)_ -->
 Here's a sample usage section based on the bullet points you provided:
 
-**Note** This project is still under development, but you can use it to provision VMs with different operating systems.
-
-
 1. The project has the following structure:
    - A YAML file for describing your cluster, named `servers.yml` by default.
    - A config file named `config.cfg` for assigning default values, such as the name of the main YAML file.
    - `kvmcli` is the main command line tool for the project.
 
-2. Modify the `servers.yml` file with the nodes (VMs) that you want. You can also choose another name for this file and update it in the `config.cfg` file.
+**Note**: This project is still under development, but you can use it to provision VMs with different operating systems.
 
-**Example**:
-```yaml
-version: 1.0
+The project has the following structure:
 
-vms:
-  - info:
-      name: admin1
-      image: ubuntu22.04
-      ram: 2048
-      cpus: 2
-      os: ubuntu22.04
-    network:
-      interface:
-        bridge: virbr1
-        mac_address: "02:A3:10:00:00:02"
-    storage:
-      disk:
-        size: 30
-        type: SSD
-        format: qcow2
+- A YAML file named `servers.yml` for describing your cluster.
+- A configuration file named `config.cfg` for assigning default values, such as the name of the main YAML file.
+- The `kvmcli` command line tool is the main tool for the project.
+
+### Configuring default values
+
+Modify `config.cfg` with the default values that you need. You can specify the path to the server YAML file, the path to the artifacts and images directories, and the name of the image that you want to use, on so on.
+
+Here's an example of how to configure the default values in `config.cfg`:
+
 ```
-
-3. Modify `config.cfg` with the default values that you need. 
-```toml
-# TOML Configuration file for provisioner script
+# KVMCLI provisioner script configuration file
 
 # Path to server YAML file
-yaml_path = "servers.yml"
+yaml_path = "template.yml"
+template_name = "template.yml"
 
 # Image configurations
 [image]
@@ -178,19 +165,19 @@ images_path = "/home/zakaria/dox/homelab/images"
 image_name = "homelab"
 ```
 
-4. `kvmcli` is the command for launching the provisioning process. Currently, it is just a command for provisioning VMs from `servers.yml`. 
-    For other feature, you can test each function by itself by `python <function>.py`.
+### Launching the provisioning process
+The `kvmcli` command is used for launching the provisioning process. You can use it to create a template, print information about your cluster, apply configuration from a YAML file, or ignore a specific node.
 
+#### Creating a template
+First, use the `--init` argument to create a template that you can use as a reference for your VMs.
 
-Here's an example of how to provision VMs using `kvmcli`:
-- First we need to use the `--init` argument to create a template that we can use
 ```sh
 kvmcli --init
 ```
 ```
 Template file with the name `template.yml` is created !
 ```
-The content of `template.yml`
+This will create a template file named template.yml. The content of the template will be like the following:
 ```yaml
 version: 1.0
 vms:
@@ -211,11 +198,14 @@ vms:
       type: SSD
 ```
 
-You can use the `--info` flag to print the content of `template.yml` in pretty table.
+You can use the `--info` flag to print the content of the template file in a pretty table:
+It uses the default value of `template_name` from the `config.cfg` configuration file
 
-Using `--info` by itself will use the default YAML file mentioned in `config.cfg` file
+```sh
+kvmcli --info
+```
 
-If you want to use another file as reference, use the `-f` or `--file` flag.
+If you want to use another file as a reference, use the `-f` or `--file` flag:
 
 ```sh
 kvmcli --info -f template.yml
@@ -228,8 +218,8 @@ kvmcli --info -f template.yml
  │ node1   │ rocky9 │ 1536 MB │ 1    │ virbr1 │ 02:A3:10:00:00:10 │ 30 GB     │
  └─────────┴────────┴─────────┴──────┴────────┴───────────────────┴───────────┘
 ```
-
-When you're happy with the result, you can start provisioning using the `-a` or `--apply` flag
+#### Applying configuration from a YAML file
+When you're happy with the result, you can start provisioning using the `-a` or `--apply` flag:
 
 ```sh
 kvmcli --apply -f template.yml
@@ -241,14 +231,15 @@ kvmcli --apply -f template.yml
  INFO: All VMs provisioned successfully!
 ```
 
-If you want to ignore any node from the template file, you need to use the `--ignore` flag like the following:
+The `--ignore` flag is used to exclude specific nodes from the provisioning process when applying a configuration from a YAML file using the `kvmcli` tool. 
+
+For example, running `kvmcli --apply -f template.yml --ignore node1` will apply the configuration defined in `template.yml`, but exclude the `node1` node from being provisioned.
 
 ```sh
 kvmcli --apply -f template.yml --ignore node1
 ```
 
-For more information on the available commands, run `kvmcli --help`. 
-
+-h, --help Show the help message and exit.
 ```
 usage: kvmcli [-h] [-I] [-i] [-a] [-f YAML_FILE] [--ignore NODE_NAME]
 
