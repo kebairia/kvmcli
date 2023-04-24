@@ -91,7 +91,7 @@
 | Technologies                         | Used for                                                         |
 |:-------------------------------------|:-----------------------------------------------------------------|
 | [![Python][Python.icon]][Python.url] | Python is the primary programming language used in this project. |
-| [![YAML][YAML.icon]][YAML.url]       | YAML is utilized to describe the virtual machine cluster.        |
+| [![YAML][YAML.icon]][YAML.url]       | YAML is utilized to describe the virtual machines cluster.        |
 | [![TOML][TOML.icon]][TOML.url]       | TOML is used for managing configuration files in the project.    |
 
 <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
@@ -164,7 +164,7 @@ image_name = "homelab"
 The `kvmcli` command is used for launching the provisioning process. You can use it to create a template, print information about your cluster, apply configuration from a YAML file, or ignore a specific node.
 
 #### Creating a template
-First, use the `--init` argument to create a template that you can use as a reference for your VMs.
+First, use the `--init` option to create a template that you can use as a reference for your VMs.
 
 
 ```sh
@@ -198,7 +198,7 @@ vms:
       type: SSD
 ```
 
-You can use the `--info` flag to print the content of the template file in a pretty table:
+You can use the `--info` option to print the content of the template file in a pretty table:
 It uses the default value of `template_name` from the `config.cfg` configuration file
 
 
@@ -206,7 +206,7 @@ It uses the default value of `template_name` from the `config.cfg` configuration
 kvmcli --info
 ```
 
-If you want to use another file as a reference, use the `-f` or `--file` flag:
+If you want to use another file as a reference, use the `-f` or `--file` option:
 
 
 ```sh
@@ -223,7 +223,7 @@ kvmcli --info -f template.yml
  └─────────┴────────┴─────────┴──────┴────────┴───────────────────┴───────────┘
 ```
 #### Applying configuration from a YAML file
-When you're happy with the result, you can start provisioning using the `-a` or `--apply` flag:
+When you're happy with the result, you can start provisioning using the `-a` or `--apply` option:
 
 
 ```sh
@@ -271,14 +271,13 @@ Enjoy
 
 <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
-
-
 <!-- ROADMAP -->
 ## Roadmap
     
 - [x] Print report for the cluster
 - [x] Provision multiple VMs with different Operating Systems
 - [x] Enhancing command line tool
+- [ ] Provisioning system
 - [ ] Logging system
 
 See the [open issues](https://github.com/kebairia/kvmcli/issues) for a full list of proposed features (and known issues).

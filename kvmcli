@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
                         prog='kvmcli',
-                        description='A Python script for managing virtual machines in a KVM-based cluster.',
+                        description='A Python script for managing virtual machines in a KVM-based environment.',
                         epilog='Enjoy')
     
     parser.add_argument('-I', '--info', action="store_true", help='Print information about your cluster')
