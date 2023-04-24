@@ -77,7 +77,7 @@
 
 | Demo                                                                                                                       |
 | :--:                                                                                                                       |
-| [![Deploy Demo](https://asciinema.org/a/0yJKkTA0pFMSjjxdrOytsZnos.svg)](https://asciinema.org/a/0yJKkTA0pFMSjjxdrOytsZnos) |
+| [![Deploy Demo](https://asciinema.org/a/4BaCROzRjSZVLZMgKpMeptbvi.svg)](https://asciinema.org/a/4BaCROzRjSZVLZMgKpMeptbvi)|
 | Deploy with a single command (after updating the configuration files)                                                      |
 
 <!-- Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `kebairia`, `kvmcli`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description` -->
