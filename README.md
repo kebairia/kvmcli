@@ -183,30 +183,88 @@ image_name = "homelab"
 
 
 Here's an example of how to provision VMs using `kvmcli`:
-``` sh
-./kvmcli
-```
-This will create the VMs specified in the `servers.yml` file. You can then connect to the VMs using a remote desktop client or SSH.
-
-
-To get a table for all the VMs listed in `servers.yml` execute:
-``` sh
-py ./info.py
+- First we need to use the `--init` argument to create a template that we can use
+```sh
+kvmcli --init
 ```
 ```
-                                    SERVERS.YML
-┏━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
-┃ SERVERS ┃ SYSTEM      ┃ RAM     ┃ CPUS ┃ BRIDGE ┃ MAC ADDRESS       ┃ DISK SIZE ┃
-┡━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
-│ admin1  │ ubuntu22.04 │ 2048 MB │ 2    │ virbr1 │ 02:A3:10:00:00:02 │ 30 GB     │
-└─────────┴─────────────┴─────────┴──────┴────────┴───────────────────┴───────────┘
-
+Template file with the name `template.yml` is created !
+```
+The content of `template.yml`
+```yaml
+version: 1.0
+vms:
+- info:
+    cpus: 1
+    image: rocky9.1
+    name: node1
+    os: rocky9
+    ram: 1536
+  network:
+    interface:
+      bridge: virbr1
+      mac_address: 02:A3:10:00:00:10
+  storage:
+    disk:
+      format: qcow2
+      size: 30
+      type: SSD
 ```
 
+You can use the `--info` flag to print the content of `template.yml` in pretty table.
 
-<!-- For more information on the available commands, run `kvmcli --help`. -->
+Using `--info` by itself will use the default YAML file mentioned in `config.cfg` file
 
+If you want to use another file as reference, use the `-f` or `--file` flag.
 
+```sh
+kvmcli --info -f template.yml
+```
+```
+                                  TEMPLATE.YML                                 
+ ┏━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━┳━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
+ ┃ SERVERS ┃ SYSTEM ┃ RAM     ┃ CPUS ┃ BRIDGE ┃ MAC ADDRESS       ┃ DISK SIZE ┃
+ ┡━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━╇━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
+ │ node1   │ rocky9 │ 1536 MB │ 1    │ virbr1 │ 02:A3:10:00:00:10 │ 30 GB     │
+ └─────────┴────────┴─────────┴──────┴────────┴───────────────────┴───────────┘
+```
+
+When you're happy with the result, you can start provisioning using the `-a` or `--apply` flag
+
+```sh
+kvmcli --apply -f template.yml
+```
+```
+ INFO: Copying new VM to /home/zakaria/dox/homelab/images/node1.qcow2
+ INFO: Provisioning a new VM named node1
+ 
+ INFO: All VMs provisioned successfully!
+```
+
+If you want to ignore any node from the template file, you need to use the `--ignore` flag like the following:
+
+```sh
+kvmcli --apply -f template.yml --ignore node1
+```
+
+For more information on the available commands, run `kvmcli --help`. 
+
+```
+usage: kvmcli [-h] [-I] [-i] [-a] [-f YAML_FILE] [--ignore NODE_NAME]
+
+A Python script for managing virtual machines in a KVM-based cluster.
+
+options:
+  -h, --help            show this help message and exit
+  -I, --info            Print information about your cluster
+  -i, --init            Create template file
+  -a, --apply           apply configuration from YAML_FILE
+  -f YAML_FILE, --file YAML_FILE
+                        Specify a yaml file
+  --ignore NODE_NAME    Ignore NODE NAME
+
+Enjoy
+```
 
 
 
@@ -219,7 +277,7 @@ py ./info.py
     
 - [x] Print report for the cluster
 - [x] Provision multiple VMs with different Operating Systems
-- [ ] Enhancing command line tool
+- [x] Enhancing command line tool
 - [ ] Logging system
 
 See the [open issues](https://github.com/kebairia/kvmcli/issues) for a full list of proposed features (and known issues).
