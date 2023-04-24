@@ -368,6 +368,8 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 <!-- [UP.icon]: <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a> -->
 <!-- [UP.url]:  https://github.com/kebairia/kvmcli#readme-top -->
 
+### Footnotes
+
 [^1]: Or any name you like, you can change that by changing the `path` and `template_name` keys under `[yaml]` section in `config.cfg`
 
     ```yaml
