@@ -29,7 +29,7 @@
 <h3 align="center">KVMcli</h3>
 
   <p align="center">
-    A Python script for managing virtual machines in a KVM-based cluster.
+    A Python script for managing virtual machines in a KVM-based environment.
     <br />
     <a href="https://github.com/kebairia/kvmcli"><strong>Explore the docs »</strong></a>
     <br />
@@ -146,18 +146,23 @@ Modify `config.cfg` with the default values that you need. You can specify the p
 
 Here's an example of how to configure the default values in `config.cfg`:
 
-```
+```toml
 # KVMCLI provisioner script configuration file
-
-# Path to server YAML file
-yaml_path = "template.yml"
-template_name = "template.yml"
+ 
+# YAML configurations
+[yaml]
+# Default path for YAML file
+path = "Testing.yml"
+# Name of template YAML file used when initializing script
+template = "Testing.yml"
 
 # Image configurations
 [image]
 artifacts_path = "/home/zakaria/dox/homelab/artifacts"
 images_path = "/home/zakaria/dox/homelab/images"
 image_name = "homelab"
+
+...
 ```
 
 ### Launching the provisioning process
@@ -253,7 +258,7 @@ kvmcli --apply -f template.yml --ignore node1
 ```
 usage: kvmcli [-h] [-I] [-i] [-a] [-f YAML_FILE] [--ignore NODE_NAME]
 
-A Python script for managing virtual machines in a KVM-based cluster.
+A Python script for managing virtual machines in a KVM-based environment.
 
 options:
   -h, --help            show this help message and exit
@@ -362,8 +367,12 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 <!-- [UP.icon]: <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a> -->
 <!-- [UP.url]:  https://github.com/kebairia/kvmcli#readme-top -->
 
-[^1]: Or any name you like, you can change that by change the `yaml` and `template_name` keys under `[yaml]` section in `config.cfg`
-lksjdflkjlsdjf 
-lksjdflkjlsdjf 
-lksjdflkjlsdjf 
-lksjdflkjlsdjf 
+[^1]: Or any name you like, you can change that by changing the `path` and `template_name` keys under `[yaml]` section in `config.cfg`
+
+    ```yaml
+    [yaml]
+    # Default path for YAML file
+    path = "servers.yml"
+    # Name of template YAML file used when initializing script
+    template = "servers.yml"
+    ```
