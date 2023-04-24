@@ -10,6 +10,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+[![tag](https://img.shields.io/github/v/tag/khuedoan/homelab?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/kebairia/kvmcli/tags)
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
