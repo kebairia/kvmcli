@@ -14,7 +14,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
+[![GPL-3.0 License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 
@@ -317,7 +317,7 @@ Don't forget to give the project a star! Thanks again!
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE.md` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -356,10 +356,12 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 [issues-shield]: https://img.shields.io/github/issues/kebairia/kvmcli.svg?style=for-the-badge
 [issues-url]: https://github.com/kebairia/kvmcli/issues
 [license-shield]: https://img.shields.io/github/license/kebairia/kvmcli.svg?style=for-the-badge
-[license-url]: https://github.com/kebairia/kvmcli/blob/master/LICENSE.txt
+[license-url]: https://github.com/kebairia/kvmcli/blob/main/LICENSE.md
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/zakaria-kebairia
-[homelab-arch-screenshot]: ./arch.png
+
+[blog-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[blog-url]: https://kebairia.github.io-kebairia
 
 [Python.icon]: https://img.shields.io/badge/python-4584b6?style=for-the-badge&logo=python&logoColor=ffde57
 [Python.url]:  https://www.python.org/
