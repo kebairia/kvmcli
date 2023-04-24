@@ -82,7 +82,7 @@
 
 <!-- Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `kebairia`, `kvmcli`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description` -->
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 
@@ -94,8 +94,7 @@
 | [![YAML][YAML.icon]][YAML.url]       | YAML is utilized to describe the virtual machine cluster.        |
 | [![TOML][TOML.icon]][TOML.url]       | TOML is used for managing configuration files in the project.    |
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 <!-- GETTING STARTED -->
@@ -126,8 +125,7 @@ To get a local copy up and running follow these simple example steps.
    pip install -r requirements.txt
    ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 <!-- USAGE EXAMPLES -->
@@ -280,7 +278,7 @@ Enjoy
 
 
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 
@@ -294,7 +292,7 @@ Enjoy
 
 See the [open issues](https://github.com/kebairia/kvmcli/issues) for a full list of proposed features (and known issues).
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 
@@ -312,7 +310,7 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 
@@ -321,7 +319,7 @@ Don't forget to give the project a star! Thanks again!
 
 Distributed under the MIT License. See `LICENSE.md` for more information.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 
@@ -332,9 +330,6 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 
 Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_username/repo_name)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments 
@@ -343,7 +338,7 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 <!--* []() -->
 <!--* []() -->
 
-<!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
+<a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 
 
@@ -365,7 +360,7 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 [blog-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [blog-url]: https://kebairia.github.io-kebairia
 
-[Python.icon]: https://img.shields.io/badge/python-4584b6?style=for-the-badge&logo=python&logoColor=ffde57
+[Python.icon]: https://img.shields.io/badge/python-4584b6?style=for-the-badge&logo=python&logoColor=white
 [Python.url]:  https://www.python.org/
 
 [YAML.icon]: https://img.shields.io/badge/yaml-red?style=for-the-badge&logo=yaml&logoColor=whte
@@ -374,5 +369,5 @@ Project Link: [https://github.com/kebairia/kvmcli](https://github.com/github_use
 [TOML.icon]: https://img.shields.io/badge/toml-9d4626?style=for-the-badge&logo=toml&logoColor=whte
 [TOML.url]: https://toml.io/
 
-[UP.icon]: https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=^&logoColor=ffde57
-[UP.url]:  https://github.com/kebairia/kvmcli#readme-top
+<!-- [UP.icon]: <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a> -->
+<!-- [UP.url]:  https://github.com/kebairia/kvmcli#readme-top -->
