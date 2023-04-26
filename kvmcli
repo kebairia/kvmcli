@@ -1,16 +1,13 @@
 #!/bin/python
 import argparse
-import os
 import logging
 import subprocess
 import multiprocessing as mp
-import sys
 
 from config import config
 from src.info import report
 from src.init import create_template
 from src.images import copy_image
-# from src.misc import print_message
 from src.args_gen import load_yaml_data, create_virt_install_args
 
 
@@ -44,6 +41,9 @@ def process_vm(vm, vm_index):
     Process a single VM definition from the YAML data.
     """
     name = vm['info'].get('name', f"{config.IMAGE_NAME}-{vm_index+1}")
+
+    if name in ignore:
+        return
 
     image = copy_image(name, vm)
 
@@ -102,6 +102,7 @@ def main():
         yaml_file = config.YAML_PATH
 
     if args.ignore:
+        global ignore
         ignore = [node.strip() for node in args.ignore.split(',')]
     else:
         ignore = []
