@@ -3,11 +3,7 @@ import argparse
 import os
 import logging
 import subprocess
-
-# from misc import *
-# from args_gen import *
-# from images import *
-# import info
+import multiprocessing as mp
 
 import sys
 from config import config
@@ -17,8 +13,8 @@ from src.images import *
 from src.misc import print_message
 from src.args_gen import load_yaml_data, create_virt_install_args
 
-def run_virt_install(virt_install_args):
 
+def run_virt_install(virt_install_args):
     """Run virt-install command with arguments provided"""
 
     args = ["virt-install"]
@@ -27,6 +23,7 @@ def run_virt_install(virt_install_args):
         if value:
             args.append(value)
     subprocess.run(args)
+
 
 def process_vm(vm, vm_index):
     """
@@ -43,34 +40,44 @@ def process_vm(vm, vm_index):
         vm_args = create_virt_install_args(vm_index, vm)
         run_virt_install(vm_args)
 
+
 def apply(yaml_path):
     """
     Load a YAML file from the given file path, parse its content, and provision all the VM listed in it.
     """
 
+    semaphore = mp.Semaphore(3)
     data = load_yaml_data(yaml_path)
     if data is None:
         exit()
 
     for vm_index, vm in enumerate(data['vms']):
-        process_vm(vm, vm_index)
+        # process_vm(vm, vm_index)
+        p1 = mp.Process(target=process_vm, args=(vm, vm_index))
+        p1.start()
 
-    print_message("INFO", "All VMs provisioned successfully!")
+    # print_message("INFO", "All VMs provisioned successfully!")
+# calculate the number of vms
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-                        prog='kvmcli',
-                        description='A Python script for managing virtual machines in a KVM-based environment.',
-                        epilog='Enjoy')
-    
-    parser.add_argument('-I', '--info', action="store_true", help='Print information about your cluster')
-    parser.add_argument('-i', '--init', action="store_true", help='Create template file')
-    parser.add_argument('-a', '--apply', action="store_true", help='apply configuration from YAML_FILE')
-    parser.add_argument('-f', '--file', metavar='YAML_FILE', help='Specify a yaml file')
-    parser.add_argument('--ignore', metavar='NODE_NAME', help='Ignore NODE NAME')
-    
+        prog='kvmcli',
+        description='A Python script for managing virtual machines in a KVM-based environment.',
+        epilog='Enjoy')
+
+    parser.add_argument('-I', '--info', action="store_true",
+                        help='Print information about your cluster')
+    parser.add_argument('-i', '--init', action="store_true",
+                        help='Create template file')
+    parser.add_argument('-a', '--apply', action="store_true",
+                        help='apply configuration from YAML_FILE')
+    parser.add_argument('-f', '--file', metavar='YAML_FILE',
+                        help='Specify a yaml file')
+    parser.add_argument('--ignore', metavar='NODE_NAME',
+                        help='Ignore NODE NAME')
+
     args = parser.parse_args()
 
     if args.init:
@@ -83,7 +90,7 @@ if __name__ == "__main__":
 
     if args.ignore:
         ignore = [node.strip() for node in args.ignore.split(',')]
-    else: 
+    else:
         ignore = []
 
     if args.info:
