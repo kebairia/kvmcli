@@ -10,8 +10,11 @@ from config import config
 from src.info import report
 from src.init import create_template
 from src.images import copy_image
-from src.misc import print_message
+# from src.misc import print_message
 from src.args_gen import load_yaml_data, create_virt_install_args
+
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 
 def is_data_valid(data):
@@ -33,7 +36,7 @@ def run_virt_install(virt_install_args):
     try:
         subprocess.run(args)
     except subprocess.CalledProcessError as e:
-        print_message("ERROR", f"virt-install command failed: {e}")
+        logging.error(f"virt-install command failed: {e}")
 
 
 def process_vm(vm, vm_index):
@@ -45,7 +48,7 @@ def process_vm(vm, vm_index):
     image = copy_image(name, vm)
 
     if image['dest_image_exists']:
-        print_message("INFO", f"Provisioning a new VM named {name}\n")
+        logging.info(f"Provisioning a new VM named {name}\n")
         vm_args = create_virt_install_args(vm_index, vm)
         run_virt_install(vm_args)
 
@@ -59,16 +62,16 @@ def apply(yaml_path):
     data = load_yaml_data(yaml_path)
 
     if not is_data_valid:
-        print("ERROR", "Invalid YAML data")
+        logging.error("Invalid YAML data")
         exit()
 
     vm_index_tuples = [(vm, vm_index)
                        for vm_index, vm in enumerate(data['vms'])]
 
     with mp.Pool(processes=num_processes) as pool:
-        results = pool.starmap(process_vm, (vm_index_tuples))
+        pool.starmap(process_vm, (vm_index_tuples))
 
-    print_message("INFO", "All VMs provisioned successfully!")
+    logging.info("All VMs provisioned successfully!")
 
 
 def main():

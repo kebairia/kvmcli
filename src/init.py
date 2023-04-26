@@ -1,11 +1,13 @@
 #!/bin/python
 import yaml
+import logging
 from config import config
 from pathlib import Path
-from src.misc import print_message
 
 import colorama
-colorama.init()  
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+colorama.init()
 
 def create_template():
     template = config.TEMPLATE_NAME
@@ -32,8 +34,10 @@ def create_template():
              ]
             }
     if Path(template).exists():
-        print_message("WARNING", f"{colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} Already exist" )
+        logging.warning(
+            "WARNING", f"{colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} Already exist")
     else:
         with open(rf'{template}', 'w') as file:
-            print(f"Template file with the name {colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} is created !")
+            print(
+                f"Template file with the name {colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} is created !")
             yaml.dump(dict_file, file)

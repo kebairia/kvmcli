@@ -1,6 +1,7 @@
 #!/bin/python
 
 import yaml
+import logging
 from pathlib import Path
 from .  import images
 
@@ -14,7 +15,7 @@ def load_yaml_data(file_path):
         with open(file_path, "r") as server_yaml:
             data = yaml.safe_load(server_yaml)
     except yaml.YAMLError as exc:
-        print(f"Failed to parse YAML file: {exc}")
+        logging.error(f"Failed to parse YAML file: {exc}")
         return None
     return data
 
