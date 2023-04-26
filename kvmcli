@@ -4,14 +4,22 @@ import os
 import logging
 import subprocess
 import multiprocessing as mp
-
 import sys
+
 from config import config
-from src.info import *
+from src.info import report
 from src.init import create_template
-from src.images import *
+from src.images import copy_image
 from src.misc import print_message
 from src.args_gen import load_yaml_data, create_virt_install_args
+
+
+def is_data_valid(data):
+    return data is not None
+
+
+def get_number_of_processes():
+    return mp.cpu_count if config.FORK == 0 else config.FORK
 
 
 def run_virt_install(virt_install_args):
@@ -22,7 +30,10 @@ def run_virt_install(virt_install_args):
         args.append(f"--{key}")
         if value:
             args.append(value)
-    subprocess.run(args)
+    try:
+        subprocess.run(args)
+    except subprocess.CalledProcessError as e:
+        print_message("ERROR", f"virt-install command failed: {e}")
 
 
 def process_vm(vm, vm_index):
@@ -31,8 +42,6 @@ def process_vm(vm, vm_index):
     """
     name = vm['info'].get('name', f"{config.IMAGE_NAME}-{vm_index+1}")
 
-    if name in ignore:
-        return
     image = copy_image(name, vm)
 
     if image['dest_image_exists']:
@@ -46,22 +55,23 @@ def apply(yaml_path):
     Load a YAML file from the given file path, parse its content, and provision all the VM listed in it.
     """
 
-    semaphore = mp.Semaphore(3)
+    num_processes = get_number_of_processes()
     data = load_yaml_data(yaml_path)
-    if data is None:
+
+    if not is_data_valid:
+        print("ERROR", "Invalid YAML data")
         exit()
 
-    for vm_index, vm in enumerate(data['vms']):
-        # process_vm(vm, vm_index)
-        p1 = mp.Process(target=process_vm, args=(vm, vm_index))
-        p1.start()
+    vm_index_tuples = [(vm, vm_index)
+                       for vm_index, vm in enumerate(data['vms'])]
 
-    # print_message("INFO", "All VMs provisioned successfully!")
-# calculate the number of vms
+    with mp.Pool(processes=num_processes) as pool:
+        results = pool.starmap(process_vm, (vm_index_tuples))
+
+    print_message("INFO", "All VMs provisioned successfully!")
 
 
-if __name__ == "__main__":
-
+def main():
     parser = argparse.ArgumentParser(
         prog='kvmcli',
         description='A Python script for managing virtual machines in a KVM-based environment.',
@@ -98,3 +108,7 @@ if __name__ == "__main__":
 
     if args.apply:
         apply(yaml_file)
+
+
+if __name__ == "__main__":
+    main()

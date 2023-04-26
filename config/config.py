@@ -3,6 +3,7 @@ import tomlkit
 from typing import Dict
 
 # Define constants for the keys in the TOML file
+FORK_KEY = "fork"
 YAML_PATH_KEY = "path"
 TEMPLATE_NAME_KEY = "template"
 ARTIFACTS_PATH_KEY = "artifacts_path"
@@ -30,6 +31,7 @@ def load_config(file_path: str) -> Dict[str, dict]:
 config = load_config("config.cfg")
 
 # Read the configuration values
+FORK: int = config['misc'][FORK_KEY]
 YAML_PATH: str = config['yaml'][YAML_PATH_KEY]
 TEMPLATE_NAME: str = config['yaml'][TEMPLATE_NAME_KEY]
 ARTIFACTS_PATH: str = config["image"][ARTIFACTS_PATH_KEY]
