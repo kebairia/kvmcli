@@ -4,8 +4,6 @@ from rich.console import Console
 from rich.table import Table
 from src.args_gen import load_yaml_data, create_virt_install_args
 
-# from .. import config
-from config import config
 
 def report(yaml_file):
 
@@ -15,7 +13,8 @@ def report(yaml_file):
 
     table = Table(title=f"{yaml_file}".upper())
 
-    columns = ["SERVERS", "SYSTEM", "RAM", "CPUS", "BRIDGE", "MAC ADDRESS", "DISK SIZE"]
+    columns = ["SERVERS", "SYSTEM", "RAM", "CPUS",
+               "BRIDGE", "MAC ADDRESS", "DISK SIZE"]
 
     for column in columns:
         table.add_column(column)
