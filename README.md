@@ -71,7 +71,6 @@
 </details>
 
 
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -147,14 +146,19 @@ Modify `config.cfg` with the default values that you need. You can specify the p
 Here's an example of how to configure the default values in `config.cfg`:
 
 ```toml
+
 # KVMCLI provisioner script configuration file
  
+[misc]
+# Number of forks to use in a multi-process application
+fork = 5  
+
 # YAML configurations
 [yaml]
 # Default path for YAML file
-path = "Testing.yml"
+path = "servers.yml"
 # Name of template YAML file used when initializing script
-template = "Testing.yml"
+template = "servers.yml"
 
 # Image configurations
 [image]
@@ -187,11 +191,11 @@ This will create a template file named template.yml. The content of the template
 version: 1.0
 vms:
 - info:
-    cpus: 1
-    image: rocky9.1
     name: node1
-    os: rocky9
+    image: rocky9.1
     ram: 1536
+    cpus: 1
+    os: rocky9
   network:
     interface:
       bridge: virbr1
@@ -272,13 +276,11 @@ options:
 Enjoy
 ```
 
-
-
 <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
 
 <!-- ROADMAP -->
 ## Roadmap
-    
+
 - [x] Print report for the cluster
 - [x] Provision multiple VMs with different Operating Systems
 - [x] Enhancing command line tool
@@ -307,8 +309,6 @@ Don't forget to give the project a star! Thanks again!
 5. Open a Pull Request
 
 <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
-
-
 
 <!-- LICENSE -->
 ## License
