@@ -284,8 +284,8 @@ Enjoy
 - [x] Print report for the cluster
 - [x] Provision multiple VMs with different Operating Systems
 - [x] Enhancing command line tool
+- [x] Multiprocessing support
 - [ ] Provisioning system
-- [ ] Asynchronous execution
 - [ ] Logging system
 
 See the [open issues](https://github.com/kebairia/kvmcli/issues) for a full list of proposed features (and known issues).
