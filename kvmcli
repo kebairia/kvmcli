@@ -55,7 +55,8 @@ def process_vm(vm, vm_index):
 
 def apply(yaml_path):
     """
-    Load a YAML file from the given file path, parse its content, and provision all the VM listed in it.
+    Load a YAML file from the given file path, parse its content, and provision
+    all the VM listed in it.
     """
 
     num_processes = get_number_of_processes()
@@ -90,6 +91,8 @@ def main():
                         help='Specify a yaml file')
     parser.add_argument('--ignore', metavar='NODE_NAME',
                         help='Ignore NODE NAME')
+    parser.add_argument('-v', '--version', action="store_true",
+                        help='Print version')
 
     args = parser.parse_args()
 
@@ -112,6 +115,9 @@ def main():
 
     if args.apply:
         apply(yaml_file)
+
+    if args.version:
+        print(f"kvmcli {config.VERSION}")
 
 
 if __name__ == "__main__":

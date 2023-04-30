@@ -45,3 +45,4 @@ MAC_ADDRESS: str = config["network"][MAC_ADDRESS_KEY]
 BRIDGE_NAME: str = config["network"][BRIDGE_NAME_KEY]
 SIZE_GB: int = config["disk"][SIZE_GB_KEY]
 VIRTUALIZATION_TYPE: str = config["platform"][VIRTUALIZATION_TYPE_KEY]
+VERSION: int = "0.9"

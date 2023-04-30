@@ -35,7 +35,8 @@ def create_template():
     }
     if Path(template).exists():
         logging.warning(
-            "WARNING", f"{colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} Already exist")
+            "WARNING",
+            f"{colorama.Style.DIM}`{template}`{colorama.Style.RESET_ALL} Already exist")
     else:
         with open(rf'{template}', 'w') as file:
             print(
