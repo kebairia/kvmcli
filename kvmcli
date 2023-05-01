@@ -11,7 +11,7 @@ from src.images import copy_image
 from src.args_gen import load_yaml_data, create_virt_install_args
 
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
 def is_data_valid(data):
@@ -40,14 +40,14 @@ def process_vm(vm, vm_index):
     """
     Process a single VM definition from the YAML data.
     """
-    name = vm['info'].get('name', f"{config.IMAGE_NAME}-{vm_index+1}")
+    name = vm["info"].get("name", f"{config.IMAGE_NAME}-{vm_index+1}")
 
     if name in ignore:
         return
 
     image = copy_image(name, vm)
 
-    if image['dest_image_exists']:
+    if image["dest_image_exists"]:
         logging.info(f"Provisioning a new VM named {name}\n")
         vm_args = create_virt_install_args(vm_index, vm)
         run_virt_install(vm_args)
@@ -66,8 +66,7 @@ def apply(yaml_path):
         logging.error("Invalid YAML data")
         exit()
 
-    vm_index_tuples = [(vm, vm_index)
-                       for vm_index, vm in enumerate(data['vms'])]
+    vm_index_tuples = [(vm, vm_index) for vm_index, vm in enumerate(data["vms"])]
 
     with mp.Pool(processes=num_processes) as pool:
         pool.starmap(process_vm, (vm_index_tuples))
@@ -77,22 +76,23 @@ def apply(yaml_path):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog='kvmcli',
-        description='A Python script for managing virtual machines in a KVM-based environment.',
-        epilog='Enjoy')
+        prog="kvmcli",
+        description="A Python script for managing virtual machines in a KVM-based environment.",
+        epilog="Enjoy",
+    )
 
-    parser.add_argument('-I', '--info', action="store_true",
-                        help='Print information about your cluster')
-    parser.add_argument('-i', '--init', action="store_true",
-                        help='Create template file')
-    parser.add_argument('-a', '--apply', action="store_true",
-                        help='apply configuration from YAML_FILE')
-    parser.add_argument('-f', '--file', metavar='YAML_FILE',
-                        help='Specify a yaml file')
-    parser.add_argument('--ignore', metavar='NODE_NAME',
-                        help='Ignore NODE NAME')
-    parser.add_argument('-v', '--version', action="store_true",
-                        help='Print version')
+    parser.add_argument(
+        "-I", "--info", action="store_true", help="Print information about your cluster"
+    )
+    parser.add_argument(
+        "-i", "--init", action="store_true", help="Create template file"
+    )
+    parser.add_argument(
+        "-a", "--apply", action="store_true", help="apply configuration from YAML_FILE"
+    )
+    parser.add_argument("-f", "--file", metavar="YAML_FILE", help="Specify a yaml file")
+    parser.add_argument("--ignore", metavar="NODE_NAME", help="Ignore NODE NAME")
+    parser.add_argument("-v", "--version", action="store_true", help="Print version")
 
     args = parser.parse_args()
 
@@ -106,7 +106,7 @@ def main():
 
     if args.ignore:
         global ignore
-        ignore = [node.strip() for node in args.ignore.split(',')]
+        ignore = [node.strip() for node in args.ignore.split(",")]
     else:
         ignore = []
 

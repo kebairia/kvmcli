@@ -21,16 +21,14 @@ def load_yaml_data(file_path):
 def create_virt_install_args(index, vm):
     """Creates a dictionary of arguments for the virt-install command."""
 
-    name = vm['info'].get('name', f"{config.IMAGE_NAME}-{index+1}")
-    operating_system = str(vm['info'].get('os', 'generic'))
-    ram = str(vm['info'].get("ram", config.RAM))
-    cpus = str(vm['info'].get("cpus", config.CPUS))
-    bridge = vm['network']['interface'].get("bridge", config.BRIDGE_NAME)
-    mac_address = vm['network']['interface'].get(
-        "mac_address", config.MAC_ADDRESS)
-    disk_size = vm['storage']['disk'].get("size", config.SIZE_GB)
-    disk = Path(config.IMAGES_PATH) / \
-        f"{name}.{vm['storage']['disk']['format']}"
+    name = vm["info"].get("name", f"{config.IMAGE_NAME}-{index+1}")
+    operating_system = str(vm["info"].get("os", "generic"))
+    ram = str(vm["info"].get("ram", config.RAM))
+    cpus = str(vm["info"].get("cpus", config.CPUS))
+    bridge = vm["network"]["interface"].get("bridge", config.BRIDGE_NAME)
+    mac_address = vm["network"]["interface"].get("mac_address", config.MAC_ADDRESS)
+    disk_size = vm["storage"]["disk"].get("size", config.SIZE_GB)
+    disk = Path(config.IMAGES_PATH) / f"{name}.{vm['storage']['disk']['format']}"
 
     virt_install_args = {
         "name": f"{name}",
@@ -45,6 +43,6 @@ def create_virt_install_args(index, vm):
         "import": "",
         "wait": "0",
         "quiet": "",
-        "connect": "qemu:///system"
+        "connect": "qemu:///system",
     }
     return virt_install_args

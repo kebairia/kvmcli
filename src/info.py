@@ -6,20 +6,18 @@ from src.args_gen import load_yaml_data, create_virt_install_args
 
 
 def report(yaml_file):
-
     data = load_yaml_data(yaml_file)
     if data is None:
         exit()
 
     table = Table(title=f"{yaml_file}".upper())
 
-    columns = ["SERVERS", "SYSTEM", "RAM", "CPUS",
-               "BRIDGE", "MAC ADDRESS", "DISK SIZE"]
+    columns = ["SERVERS", "SYSTEM", "RAM", "CPUS", "BRIDGE", "MAC ADDRESS", "DISK SIZE"]
 
     for column in columns:
         table.add_column(column)
 
-    for index, vm in enumerate(data['vms']):
+    for index, vm in enumerate(data["vms"]):
         vm_args = create_virt_install_args(index, vm)
         row = [
             f"{vm_args['name']}",
@@ -28,9 +26,9 @@ def report(yaml_file):
             f"{vm_args['vcpus']}",
             f"{vm['network']['interface']['bridge']}",
             f"{vm['network']['interface']['mac_address']}",
-            f"{vm['storage']['disk']['size']} GB"
+            f"{vm['storage']['disk']['size']} GB",
         ]
-        table.add_row(*row, style='bright_green')
+        table.add_row(*row, style="bright_green")
 
     console = Console()
     console.print(table)

@@ -1,6 +1,6 @@
 #!/bin/python
-import tomlkit
 from typing import Dict
+import tomlkit
 
 # Define constants for the keys in the TOML file
 FORK_KEY = "fork"
@@ -18,6 +18,7 @@ BRIDGE_NAME_KEY = "bridge_name"
 SIZE_GB_KEY = "size_gb"
 VIRTUALIZATION_TYPE_KEY = "virtualization_type"
 
+
 def load_config(file_path: str) -> Dict[str, dict]:
     """
     Load the TOML configuration file at the specified path and return a dictionary
@@ -27,13 +28,14 @@ def load_config(file_path: str) -> Dict[str, dict]:
         config = tomlkit.load(f)
     return config
 
+
 # Load the configuration file
 config = load_config("config.cfg")
 
 # Read the configuration values
-FORK: int = config['misc'][FORK_KEY]
-YAML_PATH: str = config['yaml'][YAML_PATH_KEY]
-TEMPLATE_NAME: str = config['yaml'][TEMPLATE_NAME_KEY]
+FORK: int = config["misc"][FORK_KEY]
+YAML_PATH: str = config["yaml"][YAML_PATH_KEY]
+TEMPLATE_NAME: str = config["yaml"][TEMPLATE_NAME_KEY]
 ARTIFACTS_PATH: str = config["image"][ARTIFACTS_PATH_KEY]
 IMAGES_PATH: str = config["image"][IMAGES_PATH_KEY]
 IMAGE_NAME: str = config["image"][IMAGE_NAME_KEY]
@@ -45,4 +47,4 @@ MAC_ADDRESS: str = config["network"][MAC_ADDRESS_KEY]
 BRIDGE_NAME: str = config["network"][BRIDGE_NAME_KEY]
 SIZE_GB: int = config["disk"][SIZE_GB_KEY]
 VIRTUALIZATION_TYPE: str = config["platform"][VIRTUALIZATION_TYPE_KEY]
-VERSION: int = "0.9"
+VERSION:  str = "0.9"
