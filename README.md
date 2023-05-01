@@ -173,7 +173,7 @@ image_name = "homelab"
 The `kvmcli` command is used for launching the provisioning process. You can use it to create a template, print information about your cluster, apply configuration from a YAML file, or ignore a specific node.
 
 #### Creating a template
-First, use the `--init` option to create a template that you can use as a reference for your VMs.
+To begin, utilize the `--init` option for generating a template that will serve as a reference for creating your virtual machines."
 
 
 ```sh
