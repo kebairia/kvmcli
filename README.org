@@ -1,15 +1,13 @@
-<a name="readme-top"></a>
+#+html: <a name="readme-top"></a>
 
 
 
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
+# PROJECT SHIELDS
+# *** I'm using markdown "reference style" links for readability.
+# *** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
+# *** See the bottom of this document for the declaration of the reference variables
+# *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
+# *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -19,28 +17,29 @@
 
 
 
-<!-- PROJECT LOGO -->
-<br />
-<div align="center">
-  <!-- <a href="https://github.com/kebairia/kvmcli"> -->
-  <!--   <img src="images/logo.png" alt="Logo" width="80" height="80"> -->
-  <!-- </a> -->
+# PROJECT LOGO
 
-<h3 align="center">KVMcli</h3>
-
-  <p align="center">
-    A Python script for managing virtual machines in a KVM-based environment.
-    <br />
-    <a href="https://github.com/kebairia/kvmcli"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/kebairia/kvmcli">View Demo</a>
-    ·
-    <a href="https://github.com/kebairia/kvmcli/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/kebairia/kvmcli/issues">Request Feature</a>
-  </p>
-</div>
+#+html: <br />
+#+html: <div align="center">
+#+html:   <!-- <a href="https://github.com/kebairia/kvmcli"> -->
+#+html:   <!--   <img src="images/logo.png" alt="Logo" width="80" height="80"> -->
+#+html:   <!-- </a> -->
+#+html: 
+#+html: <h3 align="center">KVMcli</h3>
+#+html: 
+#+html:   <p align="center">
+#+html:     A Python script for managing virtual machines in a KVM-based environment.
+#+html:     <br />
+#+html:     <a href="https://github.com/kebairia/kvmcli"><strong>Explore the docs »</strong></a>
+#+html:     <br />
+#+html:     <br />
+#+html:     <a href="https://github.com/kebairia/kvmcli">View Demo</a>
+#+html:     ·
+#+html:     <a href="https://github.com/kebairia/kvmcli/issues">Report Bug</a>
+#+html:     ·
+#+html:     <a href="https://github.com/kebairia/kvmcli/issues">Request Feature</a>
+#+html:   </p>
+#+html: </div>
 
 
 
@@ -71,13 +70,13 @@
 </details>
 
 
-<!-- ABOUT THE PROJECT -->
+# ABOUT THE PROJECT
 ** About The Project
-
 | Demo                                                                                                                       |
-| :--:                                                                                                                       |
-| [![Deploy Demo](https://asciinema.org/a/4BaCROzRjSZVLZMgKpMeptbvi.svg)](https://asciinema.org/a/4BaCROzRjSZVLZMgKpMeptbvi)|
+|----------------------------------------------------------------------------------------------------------------------------|
+| [![Deploy Demo](https://asciinema.org/a/4BaCROzRjSZVLZMgKpMeptbvi.svg)](https://asciinema.org/a/4BaCROzRjSZVLZMgKpMeptbvi) |
 | Deploy with a single command (after updating the configuration files)                                                      |
+
 
 <!-- Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `kebairia`, `kvmcli`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description` -->
 
@@ -88,9 +87,8 @@
 *** Built With
 
 | Technologies                         | Used for                                                         |
-|:-------------------------------------|:-----------------------------------------------------------------|
 | [![Python][Python.icon]][Python.url] | Python is the primary programming language used in this project. |
-| [![YAML][YAML.icon]][YAML.url]       | YAML is utilized to describe the virtual machines cluster.        |
+| [![YAML][YAML.icon]][YAML.url]       | YAML is utilized to describe the virtual machines cluster.       |
 | [![TOML][TOML.icon]][TOML.url]       | TOML is used for managing configuration files in the project.    |
 
 <a href="#readme-top"><img src="https://img.shields.io/badge/UP-ED2B2A?style=for-the-badge&logo=acclaim&logoColor=white" align="right"/> </a>
