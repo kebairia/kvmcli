@@ -1,0 +1,27 @@
+version: "1.0"
+vms:
+  my-vm:
+    cpu: 2
+    image: rocky9.5
+    memory: "4G"
+    disk:
+      size: "20G"
+      path: "/home/zakaria/dox/homelab/images/my-vm.qcow2"
+    network:
+      type: "bridge"
+      source: "br0"
+      mac_address: "02:A3:10:00:01:02"
+    autostart: true
+
+  my-vm2:
+    cpu: 2
+    image: rocky9.5
+    memory: "4G"
+    disk:
+      size: "20G"
+      path: "/home/zakaria/dox/homelab/images/my-vm2.qcow2"
+    network:
+      type: "bridge"
+      source: "br0"
+      mac_address: "02:A3:10:00:01:03"
+    autostart: true

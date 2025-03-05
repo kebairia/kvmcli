@@ -1,0 +1,14 @@
+root = "."  # Root directory
+
+[build]
+cmd = "go build -o kvmcli ."  # Build the binary as 'kvmcli' in the root directory
+bin = "kvmcli"  # Path to the binary
+full_bin = "./kvmcli"  # Full path to the binary
+delay = 1000  # Delay before restarting (1 second)
+
+[log]
+level = "debug"
+
+[watcher]
+includes = ["\\.go$", "\\.yaml$"]  # Watch Go and YAML files
+exclude_dirs = ["tests"]  # Don't watch the 'tests' directory
