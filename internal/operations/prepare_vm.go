@@ -23,8 +23,8 @@ func CreateOverlay(baseImage, destImage string) error {
 	)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Error.Fatalf("error executing qemu-img: %v\n\touptut: %s", err, string(output))
+		logger.Log.Fatalf("error executing qemu-img: %s\n\touptut: %s", err, string(output))
 	}
-	logger.Info.Printf("Overlay image created successfully \n")
+	logger.Log.Infof("Overlay image created successfully \n")
 	return nil
 }

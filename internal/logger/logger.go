@@ -1,20 +1,26 @@
 package logger
 
 import (
-	"log"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
-// Global loggers available to the entire application.
-var (
-	Info  *log.Logger
-	Warn  *log.Logger
-	Error *log.Logger
-)
+// Log is a global logger instance that other packages can use.
+var Log = logrus.New()
 
-// init sets up the loggers once when the package is imported.
 func init() {
-	Info = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	Warn = log.New(os.Stderr, "WARN\t", log.Ldate|log.Ltime|log.Lshortfile)
-	Error = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	// Configure Logrus to output colored logs with full timestamps.
+	Log.SetOutput(os.Stdout)
+	Log.SetFormatter(&logrus.TextFormatter{
+		ForceColors:  true,
+		PadLevelText: true, // This pads the level text for better spacing.
+		// Timestamp configuration
+		DisableTimestamp: true, // Set to true to disable timestamps
+		FullTimestamp:    true,
+		TimestampFormat:  "2006/01/02 15:04:05",
+	})
+
+	// Set the default log level (you can adjust this as needed).
+	Log.SetLevel(logrus.DebugLevel)
 }
