@@ -15,7 +15,7 @@ type VMConfig struct {
 type VM struct {
 	Name      string  `yaml:"name"`
 	CPU       int     `yaml:"cpu"`
-	Memory    string  `yaml:"memory"`
+	Memory    int     `yaml:"memory"`
 	Image     string  `yaml:"image"`
 	Disk      Disk    `yaml:"disk"`
 	Network   Network `yaml:"network"`
@@ -36,7 +36,7 @@ type Network struct {
 
 type Os struct {
 	Type string `yaml:"type"`
-	ISO  string `yaml:"iso"` // Fixed
+	ISO  string `yaml:"iso"`
 }
 
 func LoadConfig(path string) (*VMConfig, error) {
