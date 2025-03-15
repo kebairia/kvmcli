@@ -75,6 +75,8 @@ type Devices struct {
 	Disk      Disk      `xml:"disk"`
 	Interface Interface `xml:"interface"`
 	Channel   Channel   `xml:"channel"`
+	Serial    Serial    `xml:"serial"`
+	Console   Console   `xml:"console"`
 	Graphics  Graphics  `xml:"graphics"`
 }
 
@@ -146,6 +148,23 @@ type VirtioAddress struct {
 	Controller string `xml:"controller,attr"`
 	Bus        string `xml:"bus,attr"`
 	Port       string `xml:"port,attr"`
+}
+
+type Serial struct {
+	Type   string       `xml:"type,attr"`
+	Target SerialTarget `xml:"target"`
+}
+type SerialTarget struct {
+	Port string `xml:"port,attr"`
+}
+
+type Console struct {
+	Type   string        `xml:"type,attr"`
+	Target ConsoleTarget `xml:"target"`
+}
+type ConsoleTarget struct {
+	Type string `xml:"type,attr"`
+	Port string `xml:"port,attr"`
 }
 
 // Graphics represents the graphics configuration
@@ -234,6 +253,19 @@ func NewDomain(name string, mem int, cpu int, source string, mac_address string)
 					Controller: "0",
 					Bus:        "0",
 					Port:       "2",
+				},
+			},
+			Serial: Serial{
+				Type: "pty",
+				Target: SerialTarget{
+					Port: "0",
+				},
+			},
+			Console: Console{
+				Type: "pty",
+				Target: ConsoleTarget{
+					Type: "serial",
+					Port: "0",
 				},
 			},
 			Graphics: Graphics{
