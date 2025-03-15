@@ -5,27 +5,16 @@ import (
 	"os"
 )
 
-type Logger interface {
-	Info(msg string, keyAndValues ...any)
-	Error(msg string, keyAndValues ...any)
-}
+// Global loggers available to the entire application.
+var (
+	Info  *log.Logger
+	Warn  *log.Logger
+	Error *log.Logger
+)
 
-// SimpleLogger is a basic implementation of the Logger interface.
-type SimpleLogger struct {
-	logger *log.Logger
-}
-
-// NewLogger creates a new SimpleLogger instance.
-func NewLogger() Logger {
-	return &SimpleLogger{
-		logger: log.New(os.Stdout, "", log.LstdFlags),
-	}
-}
-
-func (l *SimpleLogger) Info(msg string, keysAndValues ...any) {
-	l.logger.Printf("INFO: "+msg+" %v", keysAndValues)
-}
-
-func (l *SimpleLogger) Error(msg string, keysAndValues ...any) {
-	l.logger.Printf("ERROR: "+msg+" %v", keysAndValues)
+// init sets up the loggers once when the package is imported.
+func init() {
+	Info = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	Warn = log.New(os.Stderr, "WARN\t", log.Ldate|log.Ltime|log.Lshortfile)
+	Error = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 }

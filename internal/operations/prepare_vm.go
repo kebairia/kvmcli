@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/kebairia/kvmcli/internal/logger"
 )
 
 const artifactsPath = "/home/zakaria/dox/homelab/artifacts/rocky"
@@ -21,8 +23,8 @@ func CreateOverlay(baseImage, destImage string) error {
 	)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("error executing qemu-img: %v\nouptut: %s", err, string(output))
+		logger.Error.Fatalf("error executing qemu-img: %v\n\touptut: %s", err, string(output))
 	}
-	fmt.Printf("Overlay image created successfully \n")
+	logger.Info.Printf("Overlay image created successfully \n")
 	return nil
 }

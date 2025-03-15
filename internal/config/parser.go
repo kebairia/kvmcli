@@ -40,6 +40,9 @@ type Os struct {
 }
 
 func LoadConfig(path string) (*VMConfig, error) {
+	//
+	// NOTE: I need to change the error logs here
+	//
 	// Read the YAML file
 	data, err := os.ReadFile(path)
 	if err != nil {
