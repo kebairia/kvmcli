@@ -5,12 +5,20 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/kebairia/kvmcli/internal/config"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
 const imagesPath = "/home/zakaria/dox/homelab/images/"
 
-func DestroyFromFile(path string) {
+func DestroyFromFile(configPath string) {
+	config, err := config.LoadConfig(configPath)
+	if err != nil {
+		logger.Log.Fatal(err)
+	}
+	for vmName := range config.VMs {
+		DestroyVM(vmName)
+	}
 }
 
 func DestroyFromArgs(...[]string) {
@@ -52,5 +60,5 @@ func DestroyVM(vmName string) {
 		logger.Log.Fatalf("failed to delete disk for VM %q: %v", vmName, err)
 	}
 
-	logger.Log.Infof("%q has been successfully deleted", vmName)
+	logger.Log.Infof("%s/%s deleted", "vm", vmName)
 }
