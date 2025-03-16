@@ -32,7 +32,7 @@ func ProvisionVMs(configPath string) {
 
 	// Iterate over the VMs defined in the configuration.
 	for vmName, vmConfig := range serverConfig.VMs {
-		logger.Log.Infof("Provisioning VM: %s", vmName)
+		logger.Log.Debugf("Provisioning VM: %s", vmName)
 
 		// Create a domain definition from the VM configuration.
 		// The NewDomain helper function constructs a domain object with proper settings.

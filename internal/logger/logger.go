@@ -22,5 +22,5 @@ func init() {
 	})
 
 	// Set the default log level (you can adjust this as needed).
-	Log.SetLevel(logrus.DebugLevel)
+	Log.SetLevel(logrus.InfoLevel)
 }

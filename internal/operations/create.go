@@ -16,12 +16,12 @@ func CreateVM(vmName string, xmlConfig []byte, conn *libvirt.Libvirt) {
 		logger.Log.Fatalf("Failed to define domain for VM %s: %v", vmName, err)
 	}
 
-	logger.Log.Infof("VM defined successfully: %s", vmInstance.Name)
+	logger.Log.Debugf("%q defined successfully.", vmInstance.Name)
 
 	// Start the VM using the defined domain.
 	if err := conn.DomainCreate(vmInstance); err != nil {
 		logger.Log.Fatalf("Failed to start VM %s: %v", vmInstance.Name, err)
 	}
 
-	logger.Log.Infof("VM started successfully: %s", vmInstance.Name)
+	logger.Log.Infof("%q started successfully", vmInstance.Name)
 }
