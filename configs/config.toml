@@ -1,0 +1,41 @@
+# Global defaults for the kvmcli behavior
+[defaults]
+# Default CPU and memory values for new VMs
+cpu = 2
+memory = 4096
+# Default image to base the VM on
+image = "rocky9.5"
+# Whether VMs should start automatically when created
+autostart = true
+
+# Default libvirt connection details
+[connection]
+# The type of connection (e.g., "unix" for Unix socket)
+network = "unix"
+# Path to the libvirt socket
+address = "/var/run/libvirt/libvirt-sock"
+
+# Default paths and settings for VM artifacts
+[defaults.artifacts]
+# Default directory where VM disk images are stored
+path = "/home/zakaria/dox/homelab/artifacts/"
+
+# Default disk settings that can be inherited per-VM
+[defaults.disk]
+size = "20G"
+format = "qcow2"
+# This can be overridden by each VM if needed:
+# path = "<specific disk image path>"
+
+# Default network settings for VMs
+[defaults.network]
+# Network type could be "bridge", "nat", etc.
+type = "bridge"
+# The network source that libvirt should use (e.g., bridge name)
+source = "br0"
+# Default MAC address (or prefix) for VM network interfaces
+# - **homelab:** `4A:4F:4D`  
+#   (Derived from "HOM" by taking the ASCII codes for H, O, M and ensuring the first byte is modified for local administration.)
+# - **zaki:** `5A:41:4B`  
+#   (Derived from "ZAK" using the ASCII values for Z, A, K.)
+mac_address = "4A:4F:4D:00:00:02"
