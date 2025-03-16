@@ -18,7 +18,7 @@ func (d *CustomDialer) Dial() (net.Conn, error) {
 }
 
 // ConnectLibvirt create and returns a libvirt connection
-func ConnectLibvirt(network, address string) (*libvirt.Libvirt, error) {
+func InitConnection(network, address string) (*libvirt.Libvirt, error) {
 	dialer := &CustomDialer{
 		network: network,
 		address: address,

@@ -16,7 +16,7 @@ import (
 func ProvisionVMs(configPath string) {
 	// Establish a connection to libvirt.
 	// The network type "unix" and the socket path are specified; these can be made configurable.
-	libvirtConn, err := ConnectLibvirt("unix", "/var/run/libvirt/libvirt-sock")
+	libvirtConn, err := InitConnection("unix", "/var/run/libvirt/libvirt-sock")
 	if err != nil {
 		logger.Log.Fatalf("Failed to establish libvirt connection: %v", err)
 	}
@@ -27,7 +27,7 @@ func ProvisionVMs(configPath string) {
 	// The configuration file path is hardcoded; consider reading it from environment variables or flags.
 	serverConfig, err := config.LoadConfig(configPath)
 	if err != nil {
-		logger.Log.Fatalf("Failed to load configuration file: %v", err)
+		logger.Log.Fatal(err)
 	}
 
 	// Iterate over the VMs defined in the configuration.
