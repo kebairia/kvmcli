@@ -11,6 +11,8 @@ import (
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
+const deviceName = "vda"
+
 type VMInfo struct {
 	Name    string
 	CPU     int
@@ -55,9 +57,8 @@ func GetAllVM(configPath string) {
 	w.Flush()
 }
 
-func GetVMInfo(vmName string, conn *libvirt.Libvirt) VMInfo {
-	vm := VMInfo{}
-
+func GetVMInfo(vmName string, conn *libvirt.Libvirt) *VMInfo {
+	var info VMInfo
 	domain, err := conn.DomainLookupByName(vmName)
 	if err != nil {
 		logger.Log.Fatalf("Domain lookup failed for %s: %v", vmName, err)
@@ -69,7 +70,7 @@ func GetVMInfo(vmName string, conn *libvirt.Libvirt) VMInfo {
 	}
 
 	// Retrieve disk block info for device "vda"
-	_, _, diskPhysSize, err := conn.DomainGetBlockInfo(domain, "vda", 0)
+	_, _, diskPhysSize, err := conn.DomainGetBlockInfo(domain, deviceName, 0)
 	if err != nil {
 		logger.Log.Fatalf("Failed to get block info for domain %s: %v", vmName, err)
 	}
@@ -79,15 +80,15 @@ func GetVMInfo(vmName string, conn *libvirt.Libvirt) VMInfo {
 	if state == 1 {
 		status = "Running"
 	}
-	// Populate the VMInfo struct
-	vm.Name = vmName
-	vm.CPU = int(cpu)
-	vm.Memory = int(
-		mem / 1024 / 1024,
-	) // Note: mem is returned in kilobytes; adjust if needed.
-	vm.Disk = float64(diskPhysSize / 1024 / 1024 / 1024) // Convert bytes to MB.
-	vm.Network = "homelab"                               // This is hard-coded; update as needed.
-	vm.Status = status
+	// Populate the VMInfo struct.
+	info = VMInfo{
+		Name:    vmName,
+		CPU:     int(cpu),
+		Memory:  int(mem) / (1024 * 1024), // Convert from kilobytes to GiB.
+		Disk:    float64(diskPhysSize) / (1024 * 1024 * 1024),
+		Network: "homelab", // This value is hard-coded; consider retrieving from config or domain XML.
+		Status:  status,
+	}
 
-	return vm
+	return &info
 }
