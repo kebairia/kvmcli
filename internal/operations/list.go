@@ -22,7 +22,7 @@ type VMInfo struct {
 	Status  string
 }
 
-func GetAllVM(configPath string) {
+func ListAllVM(configPath string) {
 	uri, err := url.Parse(string(libvirt.QEMUSystem))
 	if err != nil {
 		fmt.Println(err)

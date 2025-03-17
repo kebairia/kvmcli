@@ -23,7 +23,7 @@ var GetVMCmd = &cobra.Command{
 			ConfigFile = "./configs/servers.yaml"
 			// logger.Log.Fatalf("Configuration file is required (-f flag)")
 		}
-		op.GetAllVM(ConfigFile)
+		op.ListAllVM(ConfigFile)
 	},
 }
 
