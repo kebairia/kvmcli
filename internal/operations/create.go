@@ -26,10 +26,15 @@ func CreateVMFromFile(configPath string) {
 
 	// Load server configuration from the YAML file.
 	// The configuration file path is hardcoded; consider reading it from environment variables or flags.
-	serverConfig, err := config.LoadConfig(configPath)
-	if err != nil {
+	var vms []config.VirtualMachine
+	if err := config.LoadConfig(configPath, &vms); err != nil {
 		logger.Log.Fatal(err)
 	}
+
+	// serverConfig, err := config.LoadConfig[config.VirtualMachine](configPath)
+	// if err != nil {
+	// 	logger.Log.Fatal(err)
+	// }
 
 	// Iterate over the VMs defined in the configuration.
 	for vmName, vmConfig := range serverConfig.VMs {
