@@ -20,6 +20,7 @@ type VMInfo struct {
 	Disk    float64
 	Network string
 	Status  string
+	OS      string
 }
 
 func ListAllVM(configPath string) {
@@ -37,20 +38,22 @@ func ListAllVM(configPath string) {
 		logger.Log.Fatalf("failed to connect: %v", err)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "NAME\tCPU\tMEMORY\tDISK\tNETWORK\tSTATUS")
-	for vmName := range config.VMs {
-		info := GetVMInfo(vmName, l)
+	fmt.Fprintln(w, "NAME\tSTATUS\tCPU\tMEMORY\tDISK\tNETWORK\tOS")
+
+	for _, vm := range vms {
+		info := GetVMInfo(vm.Metadata.Name, l)
 
 		// Use tabwriter to format the output similar to kubectl
 		// Print header similar to Kubernetes (you can add more columns if needed)
 		// fmt.Fprintln(w, "----\t------\t----")
-		fmt.Fprintf(w, "%s\t%d\t%d GiB\t%.2f GiB\t%s\t%s\n",
+		fmt.Fprintf(w, "%s\t%s\t%d\t%d GB\t%.2f GB\t%s\t%s\n",
 			info.Name,
+			info.Status,
 			info.CPU,
 			info.Memory,
 			info.Disk,
 			info.Network,
-			info.Status,
+			vm.Spec.Image,
 		)
 
 	}
