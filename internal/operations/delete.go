@@ -19,11 +19,19 @@ func DestroyFromFile(configPath string) {
 	}
 
 	for _, vm := range vms {
-		DestroyVM(vm.Metadata.Name)
+		if err := DestroyVM(vm.Metadata.Name); err != nil {
+			logger.Log.Errorf("%s", err)
+		}
 	}
 }
 
-func DestroyFromArgs(...[]string) {
+func DestroyFromArgs(vmNames []string) error {
+	for _, vmName := range vmNames {
+		if err := DestroyVM(vmName); err != nil {
+			logger.Log.Errorf("error destroying VM %q: %v", vmName, err)
+		}
+	}
+	return nil
 }
 
 func DestroyVM(vmName string) error {
@@ -52,6 +60,7 @@ func DestroyVM(vmName string) error {
 	if err := libvirtConn.DomainUndefine(domain); err != nil {
 		return fmt.Errorf("failed to undefine VM %q: %w", vmName, err)
 	}
+
 	logger.Log.Debugf("%q has been successfully undefined", vmName)
 	// Remove the disk of the virtual machine
 	diskPath := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vmName))
