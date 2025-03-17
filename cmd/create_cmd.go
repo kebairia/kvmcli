@@ -13,7 +13,7 @@ var CreateCmd = &cobra.Command{
 		if ConfigFile == "" {
 			logger.Log.Fatalf("Configuration file is required (-f flag)")
 		}
-		op.ProvisionVMs(ConfigFile)
+		op.CreateVMFromConfig(ConfigFile)
 	},
 }
 

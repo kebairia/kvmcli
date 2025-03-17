@@ -11,10 +11,8 @@ import (
 // and provisions each virtual machine defined in the configuration.
 // It iterates over each VM entry, creates the corresponding domain configuration,
 // generates the XML, creates an overlay disk, and then defines and starts the VM.
-// TODO: Consider parameterizing file paths and network settings instead of hardcoding them.
 
-// configPath will be the value passed from the --config flag in main().
-func CreateVMFromFile(configPath string) {
+func CreateVMFromConfig(configPath string) error {
 	// Establish a connection to libvirt.
 	// The network type "unix" and the socket path are specified; these can be made configurable.
 	libvirtConn, err := InitConnection("unix", "/var/run/libvirt/libvirt-sock")
