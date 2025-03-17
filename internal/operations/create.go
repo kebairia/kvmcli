@@ -27,6 +27,7 @@ func CreateVMFromConfig(configPath string) error {
 	var vms []config.VirtualMachine
 	if err := config.LoadConfig(configPath, &vms); err != nil {
 		logger.Log.Fatal(err)
+		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// serverConfig, err := config.LoadConfig[config.VirtualMachine](configPath)
@@ -70,19 +71,20 @@ func CreateVMFromConfig(configPath string) error {
 // If an error occurs during either step, it logs the error.
 // TODO: Consider returning an error instead of logging it directly for better error propagation.
 
-func CreateVM(vmName string, xmlConfig []byte, conn *libvirt.Libvirt) {
+func CreateVM(vmName string, xmlConfig []byte, conn *libvirt.Libvirt) error {
 	// Define the domain in libvirt using the provided XML configuration.
-	vmInstance, err := conn.DomainDefineXML(string(xmlConfig))
+	domain, err := conn.DomainDefineXML(string(xmlConfig))
 	if err != nil {
-		logger.Log.Fatalf("Failed to define domain for VM %s: %v", vmName, err)
+		return fmt.Errorf("Failed to define domain for VM %s: %w", vmName, err)
 	}
 
-	logger.Log.Debugf("%q defined successfully.", vmInstance.Name)
+	logger.Log.Debugf("%q defined successfully.", domain.Name)
 
 	// Start the VM using the defined domain.
-	if err := conn.DomainCreate(vmInstance); err != nil {
-		logger.Log.Fatalf("Failed to start VM %s: %v", vmInstance.Name, err)
+	if err := conn.DomainCreate(domain); err != nil {
+		return fmt.Errorf("Failed to start VM %s: %w", domain.Name, err)
 	}
 
-	logger.Log.Infof("%s/%s created", "vm", vmInstance.Name)
+	logger.Log.Infof("%s/%s created", "vm", domain.Name)
+	return nil
 }

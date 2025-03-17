@@ -21,9 +21,8 @@ func CreateOverlay(baseImage, destImage string) error {
 		"qcow2",
 		destImage,
 	)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		logger.Log.Error(string(output))
+	if _, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%w", err)
 	}
 	logger.Log.Debugf("Overlay image created successfully \n")
 	return nil
