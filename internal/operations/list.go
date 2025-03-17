@@ -33,8 +33,8 @@ func ListAllVM(configPath string) {
 		logger.Log.Fatalf("failed to connect: %v", err)
 	}
 
-	config, err := config.LoadConfig(configPath)
-	if err != nil {
+	var vms []config.VirtualMachine
+	if vms, err = config.LoadConfig(configPath); err != nil {
 		logger.Log.Fatalf("failed to connect: %v", err)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)

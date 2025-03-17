@@ -1,6 +1,8 @@
 package operations
 
 import (
+	"fmt"
+
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal/config"
 	"github.com/kebairia/kvmcli/internal/logger"
@@ -23,47 +25,46 @@ func CreateVMFromConfig(configPath string) error {
 	defer libvirtConn.Disconnect()
 
 	// Load server configuration from the YAML file.
-	// The configuration file path is hardcoded; consider reading it from environment variables or flags.
-	var vms []config.VirtualMachine
-	if err := config.LoadConfig(configPath, &vms); err != nil {
-		logger.Log.Fatal(err)
+	vms, err := config.LoadConfig(configPath)
+	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// serverConfig, err := config.LoadConfig[config.VirtualMachine](configPath)
-	// if err != nil {
-	// 	logger.Log.Fatal(err)
-	// }
-
 	// Iterate over the VMs defined in the configuration.
-	for vmName, vmConfig := range serverConfig.VMs {
-		logger.Log.Debugf("Provisioning VM: %s", vmName)
-
+	for _, vm := range vms {
+		logger.Log.Debugf("Provisioning VM: %s", vm.Metadata.Name)
 		// Create a domain definition from the VM configuration.
 		// The NewDomain helper function constructs a domain object with proper settings.
+		// FIX: convert Memory into "1024MiB"
+		// memoryStr := utils.FormatMemory(vm.Spec.Memory)
+
 		domain := utils.NewDomain(
-			vmName,
-			vmConfig.Memory,
-			vmConfig.CPU,
-			vmConfig.Disk.Path,
-			vmConfig.Network.MAC,
+			vm.Metadata.Name,
+			vm.Spec.Memory,
+			vm.Spec.CPU,
+			vm.Spec.Disk.Path,
+			vm.Spec.Network.MacAddress,
 		)
+
 		// Create an overlay disk image based on a base image.
-		// TODO: Ensure that CreateOverlay returns an error, and handle it appropriately.
-		if err := CreateOverlay("rocky.qcow2", vmConfig.Disk.Path); err != nil {
-			logger.Log.Errorf("Failed to create overlay for VM %s: %v", vmName, err)
+		if err := CreateOverlay("rocky.qcow2", vm.Spec.Disk.Path); err != nil {
+			logger.Log.Errorf("Failed to create overlay for VM %s: %v", vm.Metadata.Name, err)
+			// Continue to next VM even if overlay creation fails.
+			continue
 		}
 
 		// Generate the XML configuration required by libvirt for the VM.
 		xmlConfig, err := domain.GenerateXML()
 		if err != nil {
-			logger.Log.Warnf("Failed to generate XML for VM %s: %v", vmName, err)
+			logger.Log.Warnf("Failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
 			continue
 		}
 		// Create the VM using the generated XML configuration.
-		CreateVM(vmName, xmlConfig, libvirtConn)
-
+		if err := CreateVM(vm.Metadata.Name, xmlConfig, libvirtConn); err != nil {
+			logger.Log.Errorf("%s", err)
+		}
 	}
+	return nil
 }
 
 // CreateVM creates a virtual machine using the provided VM name and XML configuration.
