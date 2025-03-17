@@ -1,10 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"io"
 	"os"
 
-	"github.com/kebairia/kvmcli/internal/logger"
 	"gopkg.in/yaml.v3"
 )
 
@@ -39,23 +39,10 @@ type Network struct {
 	MacAddress string `yaml:"macAddress"`
 }
 
-//	func LoadConfig[T any](configPath string) (T, error) {
-//		var resource T
-//		data, err := os.ReadFile(configPath)
-//		if err != nil {
-//			logger.Log.Errorf("failed to read file: %v", err)
-//		}
-//
-//		if err := yaml.Unmarshal(data, &resource); err != nil {
-//			logger.Log.Errorf("failed to parse YAML: %v", err)
-//		}
-//
-//		return resource, nil
-//	}
 func LoadConfig(configPath string) ([]VirtualMachine, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
-		logger.Log.Errorf("failed to read file: %v", err)
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 	defer file.Close()
 
@@ -67,13 +54,10 @@ func LoadConfig(configPath string) ([]VirtualMachine, error) {
 			if err == io.EOF {
 				break
 			}
-			logger.Log.Errorf("failed to decode YAML: %v", err)
+			return nil, fmt.Errorf("failed to decode YAML: %w", err)
 		}
 		vms = append(vms, vm)
 	}
-	// if err := yaml.Unmarshal(file, &resource); err != nil {
-	// 	log.Printf("failed to parse YAML: %v", err)
-	// }
 
 	return vms, nil
 }
