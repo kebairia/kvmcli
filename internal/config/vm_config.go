@@ -42,9 +42,10 @@ type Network struct {
 }
 
 func LoadConfig(configPath string) ([]VirtualMachine, error) {
+	// return error if you failed to read/open file
 	file, err := os.Open(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
+		return nil, fmt.Errorf("%w", err)
 	}
 	defer file.Close()
 
