@@ -2,60 +2,29 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func ConnectToMongo() {
-	uri := "mongodb://root:example@localhost:27017/?authSource=admin"
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
-	if err != nil {
-		log.Fatal("Error creating MongoDB client:", err)
-	}
-	// Define a context with a timeout for the connection.
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	// Connect to MongoDB.
-	if err := client.Connect(ctx); err != nil {
-		log.Fatal("Error connecting to MongoDB:", err)
-	}
-	// Ensure the client disconnects when the function ends.
-	defer func() {
-		if err := client.Disconnect(ctx); err != nil {
-			log.Fatal("Error disconnecting from MongoDB:", err)
-		}
-	}()
-	db := client.Database("kvmcli")
-	collection := db.Collection("vms")
-	// Create a new VM document.
-	vm := bson.D{
-		{"name", "vm1"},
-		{"status", "running"},
-		{"cpu", 2},
-		{"memory", 4096},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
-		// You can add more fields like disks, network details, etc.
-	}
+var (
+	ctx    = context.TODO()
+	client *mongo.Client
+)
 
-	// Insert the document into the collection.
-	insertResult, err := collection.InsertOne(ctx, vm)
-	if err != nil {
-		log.Fatal("Error inserting document:", err)
-	}
-	fmt.Println("Inserted VM with ID:", insertResult.InsertedID)
+func init() {
+	uri := options.Client().ApplyURI("mongodb://root:example@localhost:27017")
 
-	// Query the inserted VM document by its name.
-	var result bson.M
-	filter := bson.D{{"name", "vm1"}}
-	err = collection.FindOne(ctx, filter).Decode(&result)
+	// Connect to MongoDB
+	var err error
+	client, err = mongo.Connect(ctx, uri)
 	if err != nil {
-		log.Fatal("Error finding document:", err)
+		log.Fatal(err)
 	}
-	fmt.Println("Found VM document:", result)
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal("Failed to connect to MongoDB:", err)
+	}
+	log.Println("Connected to MongoDB")
 }
