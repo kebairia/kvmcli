@@ -30,4 +30,5 @@ func init() {
 	rootCmd.AddCommand(CreateCmd)
 	rootCmd.AddCommand(DeleteCmd)
 	rootCmd.AddCommand(GetCmd)
+	rootCmd.AddCommand(InitVMCmd)
 }
