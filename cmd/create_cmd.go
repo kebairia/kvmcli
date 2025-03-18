@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/kebairia/kvmcli/internal/logger"
-	op "github.com/kebairia/kvmcli/internal/operations"
+	"github.com/kebairia/kvmcli/internal/operations/vms"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +13,8 @@ var CreateCmd = &cobra.Command{
 		if ConfigFile == "" {
 			logger.Log.Fatalf("Configuration file is required (-f flag)")
 		}
-		op.CreateVMFromConfig(ConfigFile)
+		// op.CreateVMFromConfig(ConfigFile)
+		vms.CreateVMFromConfig(ConfigFile)
 	},
 }
 

@@ -1,11 +1,13 @@
-package operations
+package vms
 
 import (
 	"fmt"
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal/config"
+	"github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
+	op "github.com/kebairia/kvmcli/internal/operations"
 	"github.com/kebairia/kvmcli/internal/utils"
 )
 
@@ -17,7 +19,7 @@ import (
 func CreateVMFromConfig(configPath string) error {
 	// Establish a connection to libvirt.
 	// The network type "unix" and the socket path are specified; these can be made configurable.
-	libvirtConn, err := InitConnection("unix", "/var/run/libvirt/libvirt-sock")
+	libvirtConn, err := op.InitConnection("unix", "/var/run/libvirt/libvirt-sock")
 	if err != nil {
 		logger.Log.Fatalf("Failed to establish libvirt connection: %v", err)
 	}
@@ -63,6 +65,16 @@ func CreateVMFromConfig(configPath string) error {
 		if err := CreateVM(vm.Metadata.Name, xmlConfig, libvirtConn); err != nil {
 			logger.Log.Errorf("%s", err)
 		}
+
+		// Create VM entry on database
+		database.CreateVMEntry(
+			vm.Metadata.Name,
+			vm.Metadata.Namespace,
+			vm.Spec.Memory,
+			vm.Spec.CPU,
+			vm.Spec.Network.MacAddress,
+			vm.Spec.Network.Name,
+		)
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package operations
+package vms
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/kebairia/kvmcli/internal/config"
 	"github.com/kebairia/kvmcli/internal/logger"
+	op "github.com/kebairia/kvmcli/internal/operations"
 )
 
 const imagesPath = "/home/zakaria/dox/homelab/images/"
@@ -35,7 +36,7 @@ func DestroyFromArgs(vmNames []string) error {
 }
 
 func DestroyVM(vmName string) error {
-	libvirtConn, err := InitConnection("unix", "/var/run/libvirt/libvirt-sock")
+	libvirtConn, err := op.InitConnection("unix", "/var/run/libvirt/libvirt-sock")
 	if err != nil {
 		return fmt.Errorf("failed to establish libvirt connection: %w", err)
 	}

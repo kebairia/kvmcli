@@ -1,4 +1,4 @@
-package operations
+package vms
 
 import (
 	"fmt"
@@ -33,9 +33,10 @@ func ListAllVM(configPath string) {
 		logger.Log.Fatalf("failed to connect: %v", err)
 	}
 
+	// read config file, return error if you failed
 	var vms []config.VirtualMachine
 	if vms, err = config.LoadConfig(configPath); err != nil {
-		logger.Log.Fatalf("failed to connect: %v", err)
+		logger.Log.Fatalf("%s", err)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(w, "NAME\tSTATUS\tCPU\tMEMORY\tDISK\tNETWORK\tOS")

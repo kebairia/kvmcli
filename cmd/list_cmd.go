@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kebairia/kvmcli/internal/logger"
-	op "github.com/kebairia/kvmcli/internal/operations"
+	"github.com/kebairia/kvmcli/internal/operations/vms"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,8 @@ var GetVMCmd = &cobra.Command{
 			ConfigFile = "./configs/servers.yaml"
 			// logger.Log.Fatalf("Configuration file is required (-f flag)")
 		}
-		op.ListAllVM(ConfigFile)
+		// op.ListAllVM(ConfigFile)
+		vms.ListAllVM(ConfigFile)
 	},
 }
 

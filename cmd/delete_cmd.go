@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/kebairia/kvmcli/internal/logger"
-	op "github.com/kebairia/kvmcli/internal/operations"
+	"github.com/kebairia/kvmcli/internal/operations/vms"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,8 @@ var DeleteCmd = &cobra.Command{
 			logger.Log.Fatalf("Configuration file is required (-f flag)")
 		}
 		// Call your delete operation with the provided file.
-		op.DestroyFromFile(ConfigFile)
+		// op.DestroyFromFile(ConfigFile)
+		vms.DestroyFromFile(ConfigFile)
 	},
 }
 
