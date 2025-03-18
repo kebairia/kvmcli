@@ -13,13 +13,15 @@ type Resource interface {
 }
 
 type VirtualMachine struct {
-	Kind     string   `yaml:"kind"`
-	Metadata Metadata `yaml:"metadata"`
-	Spec     Spec     `yaml:"spec"`
+	ApiVersion string   `yaml:"apiVersion"`
+	Kind       string   `yaml:"kind"`
+	Metadata   Metadata `yaml:"metadata"`
+	Spec       Spec     `yaml:"spec"`
 }
 type Metadata struct {
-	Name   string            `yaml:"name"`
-	Labels map[string]string `yaml:"labels"`
+	Name      string            `yaml:"name"`
+	Namespace string            `yaml:"namespace"`
+	Labels    map[string]string `yaml:"labels"`
 }
 type Spec struct {
 	CPU       int     `yaml:"cpu"`
