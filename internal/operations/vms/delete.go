@@ -12,63 +12,71 @@ import (
 
 const imagesPath = "/home/zakaria/dox/homelab/images/"
 
-func DestroyFromFile(configPath string) {
+func DestroyFromFile(configPath string) error {
+	conn, err := op.InitConnection("unix", "/var/run/libvirt/libvirt-sock")
+	if err != nil {
+		return fmt.Errorf("failed to establish libvirt connection: %w", err)
+	}
+	defer conn.Disconnect()
+
+	manager := NewVMManager(conn)
+
 	var vms []config.VirtualMachine
-	var err error
 	if vms, err = config.LoadConfig(configPath); err != nil {
 		logger.Log.Errorf("failed to connect: %v", err)
 	}
 
 	for _, vm := range vms {
-		if err := DestroyVM(vm.Metadata.Name); err != nil {
+		if err := manager.Delete(vm.Metadata.Name); err != nil {
 			logger.Log.Errorf("%s", err)
 		}
 	}
+	return nil
 }
 
 func DestroyFromArgs(vmNames []string) error {
+	conn, err := op.InitConnection("unix", "/var/run/libvirt/libvirt-sock")
+	if err != nil {
+		return fmt.Errorf("failed to establish libvirt connection: %w", err)
+	}
+	defer conn.Disconnect()
+	manager := NewVMManager(conn)
 	for _, vmName := range vmNames {
-		if err := DestroyVM(vmName); err != nil {
+		if err := manager.Delete(vmName); err != nil {
 			logger.Log.Errorf("error destroying VM %q: %v", vmName, err)
 		}
 	}
 	return nil
 }
 
-func DestroyVM(vmName string) error {
-	libvirtConn, err := op.InitConnection("unix", "/var/run/libvirt/libvirt-sock")
-	if err != nil {
-		return fmt.Errorf("failed to establish libvirt connection: %w", err)
-	}
-	defer libvirtConn.Disconnect()
-
+func (m *VMManager) Delete(name string) error {
 	// Lookup the domain by name
-	domain, err := libvirtConn.DomainLookupByName(vmName)
+	domain, err := m.Conn.DomainLookupByName(name)
 	if err != nil {
-		return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
+		return fmt.Errorf("Failed to find VM %s: %w", name, err)
 	}
-	logger.Log.Debugf("Deleting VM: %q", vmName)
+	logger.Log.Debugf("Deleting VM: %q", name)
 
 	// Destroy the VM if it's running
 	// NOTE: work on this later, remove only vm not running
 
-	if err := libvirtConn.DomainDestroy(domain); err != nil {
+	if err := m.Conn.DomainDestroy(domain); err != nil {
 		// It might be acceptable if the VM is not running; log a warning instead of failing immediately.
-		return fmt.Errorf("failed to destroy VM %q (it might not be running): %w", vmName, err)
+		return fmt.Errorf("failed to destroy VM %q (it might not be running): %w", name, err)
 	}
 
 	// Undefine the domain
-	if err := libvirtConn.DomainUndefine(domain); err != nil {
-		return fmt.Errorf("failed to undefine VM %q: %w", vmName, err)
+	if err := m.Conn.DomainUndefine(domain); err != nil {
+		return fmt.Errorf("failed to undefine VM %q: %w", name, err)
 	}
 
-	logger.Log.Debugf("%q has been successfully undefined", vmName)
+	logger.Log.Debugf("%q has been successfully undefined", name)
 	// Remove the disk of the virtual machine
-	diskPath := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vmName))
+	diskPath := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, name))
 	if err := os.Remove(diskPath); err != nil {
-		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
+		return fmt.Errorf("failed to delete disk for VM %q: %w", name, err)
 	}
 
-	logger.Log.Infof("%s/%s deleted", "vm", vmName)
+	logger.Log.Infof("%s/%s deleted", "vm", name)
 	return nil
 }
