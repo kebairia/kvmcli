@@ -22,17 +22,17 @@ type VMInfo struct {
 	OS      string
 }
 
-func ListAllVM(configPath string) {
+func ListAllVM() {
 	uri, err := url.Parse(string(libvirt.QEMUSystem))
 	if err != nil {
 		logger.Log.Println(err)
 	}
-	l, err := libvirt.ConnectToURI(uri)
+	conn, err := libvirt.ConnectToURI(uri)
 	if err != nil {
 		logger.Log.Fatalf("failed to connect: %v", err)
 	}
 	flags := libvirt.ConnectListDomainsActive | libvirt.ConnectListDomainsInactive
-	domains, _, err := l.ConnectListAllDomains(1, flags)
+	domains, _, err := conn.ConnectListAllDomains(1, flags)
 	if err != nil {
 		logger.Log.Fatalf("can't retreive domains infos: %v", err)
 	}
@@ -67,8 +67,27 @@ func ListAllVM(configPath string) {
 	w.Flush()
 }
 
-func GetVMInfo(vmName string, conn *libvirt.Libvirt) *VMInfo {
-// func GetVMInfo(vmName string, conn *libvirt.Libvirt) *VMInfo {
+func (m *VMManager) GetALLVMs() ([]string, error) {
+	var listOfVMs []string
+	uri, err := url.Parse(string(libvirt.QEMUSystem))
+	if err != nil {
+		logger.Log.Println(err)
+	}
+	conn, err := libvirt.ConnectToURI(uri)
+	if err != nil {
+		logger.Log.Fatalf("failed to connect: %v", err)
+	}
+	flags := libvirt.ConnectListDomainsActive | libvirt.ConnectListDomainsInactive
+	domains, _, err := conn.ConnectListAllDomains(1, flags)
+	if err != nil {
+		logger.Log.Fatalf("can't retreive domains infos: %v", err)
+	}
+	for _, domain := range domains {
+		listOfVMs = append(listOfVMs, domain.Name)
+	}
+	return listOfVMs, nil
+}
+
 func (m *VMManager) GetInfo(name string) *VMInfo {
 	var info VMInfo
 	domain, err := m.Conn.DomainLookupByName(name)
