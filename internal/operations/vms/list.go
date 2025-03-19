@@ -7,7 +7,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/kebairia/kvmcli/internal/config"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
@@ -26,35 +25,40 @@ type VMInfo struct {
 func ListAllVM(configPath string) {
 	uri, err := url.Parse(string(libvirt.QEMUSystem))
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Println(err)
 	}
 	l, err := libvirt.ConnectToURI(uri)
 	if err != nil {
 		logger.Log.Fatalf("failed to connect: %v", err)
 	}
+	flags := libvirt.ConnectListDomainsActive | libvirt.ConnectListDomainsInactive
+	domains, _, err := l.ConnectListAllDomains(1, flags)
+	if err != nil {
+		logger.Log.Fatalf("can't retreive domains infos: %v", err)
+	}
 
 	// read config file, return error if you failed
-	var vms []config.VirtualMachine
-	if vms, err = config.LoadConfig(configPath); err != nil {
-		logger.Log.Fatalf("%s", err)
-	}
+	// var vms []config.VirtualMachine
+	// if vms, err = config.LoadConfig(configPath); err != nil {
+	// 	logger.Log.Fatalf("%s", err)
+	// }
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(w, "NAME\tSTATUS\tCPU\tMEMORY\tDISK\tNETWORK\tOS")
 
-	for _, vm := range vms {
-		info := GetVMInfo(vm.Metadata.Name, l)
+	for _, domain := range domains {
+		info := GetVMInfo(domain.Name, l)
 
 		// Use tabwriter to format the output similar to kubectl
 		// Print header similar to Kubernetes (you can add more columns if needed)
 		// fmt.Fprintln(w, "----\t------\t----")
-		fmt.Fprintf(w, "%s\t%s\t%d\t%d GB\t%.2f GB\t%s\t%s\n",
+		fmt.Fprintf(w, "%s\t%s\t%d\t%d GB\t%.2f GB\t%s\n",
 			info.Name,
 			info.Status,
 			info.CPU,
 			info.Memory,
 			info.Disk,
 			info.Network,
-			vm.Spec.Image,
+			// vm.Spec.Image,
 		)
 
 	}

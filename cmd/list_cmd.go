@@ -57,8 +57,6 @@ var GetNetworkCmd = &cobra.Command{
 func init() {
 	// Flags for virtual machines
 	GetVMCmd.Flags().
-		StringVarP(&ConfigFile, "file", "f", "servers.yaml", "Path to the configuration file")
-	GetVMCmd.Flags().
 		StringVarP(&ConfigFile, "namespace", "n", "default", "Namespace")
 		// Flags for Networks
 	GetNetworkCmd.Flags().
