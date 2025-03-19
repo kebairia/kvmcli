@@ -24,7 +24,7 @@ var GetVMCmd = &cobra.Command{
 			// logger.Log.Fatalf("Configuration file is required (-f flag)")
 		}
 		// op.ListAllVM(ConfigFile)
-		vms.ListAllVM(ConfigFile)
+		vms.ListAllVM()
 	},
 }
 

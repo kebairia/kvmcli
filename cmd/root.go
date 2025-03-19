@@ -10,6 +10,7 @@ var (
 	ConfigFile  string // To store the path of the config file
 	ClusterFile string // To store the path of the cluster file
 	Provision   bool   // To determine if provisioning should start
+	DeleteAll   bool   // To determine if delete all VMs
 	Verbose     bool   // To determine if output should be in verbose
 )
 
