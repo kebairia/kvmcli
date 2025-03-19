@@ -5,7 +5,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal/config"
-	"github.com/kebairia/kvmcli/internal/database"
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
 	op "github.com/kebairia/kvmcli/internal/operations"
 	"github.com/kebairia/kvmcli/internal/utils"
@@ -37,22 +37,23 @@ func CreateVMFromConfig(configPath string) error {
 	// Ensure that the libvirt connection is closed when the function exits.
 	defer libvirtConn.Disconnect()
 
-	// Load server configuration from the YAML file.
+	// Load VMs configuration from the YAML file.
 	vms, err := config.LoadConfig(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Iterate over the VMs defined in the configuration.
 	// Initilize a new manager for vm
 	manager := NewVMManager(libvirtConn)
+
+	// Iterate over each VM in the configuration.
 	for _, vm := range vms {
 		logger.Log.Debugf("Provisioning VM: %s", vm.Metadata.Name)
+
 		// Create a domain definition from the VM configuration.
 		// The NewDomain helper function constructs a domain object with proper settings.
 		// FIX: convert Memory into "1024MiB"
 		// memoryStr := utils.FormatMemory(vm.Spec.Memory)
-
 		domain := utils.NewDomain(
 			vm.Metadata.Name,
 			vm.Spec.Memory,
@@ -68,7 +69,7 @@ func CreateVMFromConfig(configPath string) error {
 			continue
 		}
 
-		// Generate the XML configuration required by libvirt for the VM.
+		// Generate the XML configuration for the VM.
 		xmlConfig, err := domain.GenerateXML()
 		if err != nil {
 			logger.Log.Warnf("Failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
@@ -79,15 +80,21 @@ func CreateVMFromConfig(configPath string) error {
 			logger.Log.Errorf("%s", err)
 		}
 
+		// Initilize database entry
+		entry := db.VM{
+			Name:       vm.Metadata.Name,
+			Namespace:  vm.Metadata.Namespace,
+			RAM:        vm.Spec.Memory,
+			CPU:        vm.Spec.CPU,
+			MacAddress: vm.Spec.Network.MacAddress,
+			NetworkID:  vm.Spec.Network.Name,
+		}
 		// Create VM entry on database
-		database.CreateVMEntry(
-			vm.Metadata.Name,
-			vm.Metadata.Namespace,
-			vm.Spec.Memory,
-			vm.Spec.CPU,
-			vm.Spec.Network.MacAddress,
-			vm.Spec.Network.Name,
-		)
+		id, err := db.Insert(entry)
+		if err != nil {
+			return fmt.Errorf("error inserting VM entry into database: %w\n", err)
+		}
+		logger.Log.Debug("Inserted VM with _id: %w\n", id)
 	}
 	return nil
 }
