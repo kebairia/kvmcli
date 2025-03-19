@@ -8,10 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Resource interface {
-	Validate()
-}
-
 type VirtualMachine struct {
 	ApiVersion string   `yaml:"apiVersion"`
 	Kind       string   `yaml:"kind"`
