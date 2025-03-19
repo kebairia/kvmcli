@@ -11,6 +11,17 @@ import (
 	"github.com/kebairia/kvmcli/internal/utils"
 )
 
+// VMManager encapsulates the dependencies for managing VMs
+type VMManager struct {
+	Conn *libvirt.Libvirt
+	// Logger *logger.Log
+	// Log logrus.New()
+}
+
+func NewVMManager(conn *libvirt.Libvirt) *VMManager {
+	return &VMManager{Conn: conn}
+}
+
 // ProvisionVMs reads the server configuration file, establishes a connection to libvirt,
 // and provisions each virtual machine defined in the configuration.
 // It iterates over each VM entry, creates the corresponding domain configuration,
@@ -33,6 +44,8 @@ func CreateVMFromConfig(configPath string) error {
 	}
 
 	// Iterate over the VMs defined in the configuration.
+	// Initilize a new manager for vm
+	manager := NewVMManager(libvirtConn)
 	for _, vm := range vms {
 		logger.Log.Debugf("Provisioning VM: %s", vm.Metadata.Name)
 		// Create a domain definition from the VM configuration.
@@ -61,8 +74,8 @@ func CreateVMFromConfig(configPath string) error {
 			logger.Log.Warnf("Failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
 			continue
 		}
-		// Create the VM using the generated XML configuration.
-		if err := CreateVM(vm.Metadata.Name, xmlConfig, libvirtConn); err != nil {
+		// Create a virtual machine using the provided name and xmlconfig file
+		if err := manager.Create(vm.Metadata.Name, xmlConfig); err != nil {
 			logger.Log.Errorf("%s", err)
 		}
 
@@ -82,19 +95,18 @@ func CreateVMFromConfig(configPath string) error {
 // CreateVM creates a virtual machine using the provided VM name and XML configuration.
 // It defines the domain in libvirt and then starts the domain.
 // If an error occurs during either step, it logs the error.
-// TODO: Consider returning an error instead of logging it directly for better error propagation.
 
-func CreateVM(vmName string, xmlConfig []byte, conn *libvirt.Libvirt) error {
+func (m *VMManager) Create(name string, xmlConfig []byte) error {
 	// Define the domain in libvirt using the provided XML configuration.
-	domain, err := conn.DomainDefineXML(string(xmlConfig))
+	domain, err := m.Conn.DomainDefineXML(string(xmlConfig))
 	if err != nil {
-		return fmt.Errorf("Failed to define domain for VM %s: %w", vmName, err)
+		return fmt.Errorf("Failed to define domain for VM %s: %w", name, err)
 	}
 
 	logger.Log.Debugf("%q defined successfully.", domain.Name)
 
 	// Start the VM using the defined domain.
-	if err := conn.DomainCreate(domain); err != nil {
+	if err := m.Conn.DomainCreate(domain); err != nil {
 		return fmt.Errorf("Failed to start VM %s: %w", domain.Name, err)
 	}
 
