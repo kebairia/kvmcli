@@ -23,7 +23,7 @@ func DestroyFromFile(configPath string) error {
 
 	var vms []config.VirtualMachine
 	if vms, err = config.LoadConfig(configPath); err != nil {
-		logger.Log.Errorf("failed to connect: %v", err)
+		logger.Log.Errorf("failed to Load config file: %v", err)
 	}
 
 	for _, vm := range vms {
@@ -34,16 +34,16 @@ func DestroyFromFile(configPath string) error {
 	return nil
 }
 
-func DestroyFromArgs(vmNames []string) error {
+func DestroyFromArgs(names []string) error {
 	conn, err := op.InitConnection("unix", "/var/run/libvirt/libvirt-sock")
 	if err != nil {
 		return fmt.Errorf("failed to establish libvirt connection: %w", err)
 	}
 	defer conn.Disconnect()
 	manager := NewVMManager(conn)
-	for _, vmName := range vmNames {
-		if err := manager.Delete(vmName); err != nil {
-			logger.Log.Errorf("error destroying VM %q: %v", vmName, err)
+	for _, name := range names {
+		if err := manager.Delete(name); err != nil {
+			logger.Log.Errorf("error destroying VM %q: %v", name, err)
 		}
 	}
 	return nil
