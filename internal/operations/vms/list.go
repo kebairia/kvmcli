@@ -45,8 +45,10 @@ func ListAllVM(configPath string) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(w, "NAME\tSTATUS\tCPU\tMEMORY\tDISK\tNETWORK\tOS")
 
+	manager := VMManager{conn}
+
 	for _, domain := range domains {
-		info := GetVMInfo(domain.Name, l)
+		info := manager.GetInfo(domain.Name)
 
 		// Use tabwriter to format the output similar to kubectl
 		// Print header similar to Kubernetes (you can add more columns if needed)
@@ -66,21 +68,23 @@ func ListAllVM(configPath string) {
 }
 
 func GetVMInfo(vmName string, conn *libvirt.Libvirt) *VMInfo {
+// func GetVMInfo(vmName string, conn *libvirt.Libvirt) *VMInfo {
+func (m *VMManager) GetInfo(name string) *VMInfo {
 	var info VMInfo
-	domain, err := conn.DomainLookupByName(vmName)
+	domain, err := m.Conn.DomainLookupByName(name)
 	if err != nil {
-		logger.Log.Fatalf("Domain lookup failed for %s: %v", vmName, err)
+		logger.Log.Fatalf("Domain lookup failed for %s: %v", name, err)
 	}
 	// Retrieve basic domain info (state, memory, and CPU count)
-	state, _, mem, cpu, _, err := conn.DomainGetInfo(domain)
+	state, _, mem, cpu, _, err := m.Conn.DomainGetInfo(domain)
 	if err != nil {
-		logger.Log.Fatalf("Failed to get info for domain %s: %v", vmName, err)
+		logger.Log.Fatalf("Failed to get info for domain %s: %v", name, err)
 	}
 
 	// Retrieve disk block info for device "vda"
-	_, _, diskPhysSize, err := conn.DomainGetBlockInfo(domain, deviceName, 0)
+	_, _, diskPhysSize, err := m.Conn.DomainGetBlockInfo(domain, deviceName, 0)
 	if err != nil {
-		logger.Log.Fatalf("Failed to get block info for domain %s: %v", vmName, err)
+		logger.Log.Fatalf("Failed to get block info for domain %s: %v", name, err)
 	}
 
 	// Determine status based on the domain state (assumes state 1 means running)
@@ -90,7 +94,7 @@ func GetVMInfo(vmName string, conn *libvirt.Libvirt) *VMInfo {
 	}
 	// Populate the VMInfo struct.
 	info = VMInfo{
-		Name:    vmName,
+		Name:    name,
 		CPU:     int(cpu),
 		Memory:  int(mem) / (1024 * 1024), // Convert from kilobytes to GiB.
 		Disk:    float64(diskPhysSize) / (1024 * 1024 * 1024),
