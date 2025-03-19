@@ -49,6 +49,25 @@ func DestroyFromArgs(names []string) error {
 	return nil
 }
 
+func DeleteALLVMs() error {
+	conn, err := op.InitConnection("unix", "/var/run/libvirt/libvirt-sock")
+	if err != nil {
+		return fmt.Errorf("failed to establish libvirt connection: %w", err)
+	}
+	defer conn.Disconnect()
+
+	manager := NewVMManager(conn)
+	listOfVMs, err := manager.GetALLVMs()
+	if err != nil {
+		return fmt.Errorf("error trying to retreive all VMs")
+	}
+
+	for _, vm := range listOfVMs {
+		manager.Delete(vm)
+	}
+	return nil
+}
+
 func (m *VMManager) Delete(name string) error {
 	// Lookup the domain by name
 	domain, err := m.Conn.DomainLookupByName(name)
