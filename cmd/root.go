@@ -5,25 +5,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Global variables to store flag values
+// Global flag variables.
 var (
-	ConfigFile  string // To store the path of the config file
-	ClusterFile string // To store the path of the cluster file
-	Provision   bool   // To determine if provisioning should start
-	DeleteAll   bool   // To determine if delete all VMs
-	Verbose     bool   // To determine if output should be in verbose
+	ManifestPath string // Path of the manifest file.
+	ConfigFile   string // Path of the configuration file.
+	ClusterFile  string // Path of the cluster file.
+	Provision    bool   // Flag to start provisioning.
+	DeleteAll    bool   // Flag to delete all VMs.
+	Verbose      bool   // Flag for verbose output.
 )
 
-// Create the root command
+// rootCmd is the base command for kvmcli.
 var rootCmd = &cobra.Command{
 	Use:   "kvmcli",
-	Short: "kvmcli is a CLI for managing KVM virtual machines",
+	Short: "A CLI for managing KVM virtual machines",
 	Long:  "A CLI similar to kubectl for creating, deleting, and managing KVM VMs.",
 }
 
+// Execute runs the root command.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logger.Log.Errorf("%s", err)
+		logger.Log.Errorf("Error executing command: %v", err)
 	}
 }
 
