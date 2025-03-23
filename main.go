@@ -8,5 +8,4 @@ import (
 func main() {
 	// Execute the CLI commands defined in the cmd package.
 	cmd.Execute()
-	// database.ConnectToMongo()
 }
