@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/kebairia/kvmcli/internal/logger"
-	"github.com/kebairia/kvmcli/internal/operations/vms"
 	"github.com/spf13/cobra"
 )
 
@@ -21,10 +20,7 @@ var GetVMCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if ConfigFile == "" {
 			ConfigFile = "./configs/servers.yaml"
-			// logger.Log.Fatalf("Configuration file is required (-f flag)")
 		}
-		// op.ListAllVM(ConfigFile)
-		vms.ListAllVM()
 	},
 }
 
