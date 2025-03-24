@@ -44,7 +44,7 @@ func (vm *VirtualMachine) Create() error {
 		return fmt.Errorf("libvirt connection is nil")
 	}
 	// Create overlay image
-	if err := CreateOverlay(vm.Metadata.Namespace, "rocky.qcow2", vm.Spec.Disk.Path); err != nil {
+	if err := CreateOverlay("rocky.qcow2", vm.Spec.Disk.Path); err != nil {
 		return fmt.Errorf("Failed to create overlay for VM %q: %v", vm.Metadata.Name, err)
 	}
 	// Creating domain out of infos
