@@ -69,7 +69,7 @@ func (vm *VirtualMachine) Create() error {
 		return fmt.Errorf("failed to start VM %s: %w", vmInstance.Name, err)
 	}
 
-	fmt.Printf("Create a vm: %s\n", vm.Metadata.Name)
+	fmt.Printf("vm/%s created\n", vm.Metadata.Name)
 	return nil
 }
 
