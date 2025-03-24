@@ -2,25 +2,27 @@ package cmd
 
 import (
 	"github.com/kebairia/kvmcli/internal/logger"
+	"github.com/kebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
 )
 
 var DeleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete VM(s) from a configuration file",
+	Short: "Delete resource(s) from a manifest file",
 	Run: func(cmd *cobra.Command, args []string) {
 		if DeleteAll {
 			// Delete all VMs
 			return
-		} else if ConfigFile == "" {
-			logger.Log.Fatalf("Configuration file is required (-f flag)")
+		} else if ManifestPath == "" {
+			logger.Log.Fatalf("Manifest file is required (-f flag)")
 		}
 		// Call your delete operation with the provided file.
+		operations.DeleteFromManifest(ManifestPath)
 	},
 }
 
 func init() {
 	DeleteCmd.Flags().
-		StringVarP(&ConfigFile, "file", "f", "", "Configuration file for the VM(s) to delete")
-	DeleteCmd.Flags().BoolVar(&DeleteAll, "all", false, "Delete all VMs")
+		StringVarP(&ManifestPath, "file", "f", "", "Manifest file for the resource(s) to delete")
+	// DeleteCmd.Flags().BoolVar(&DeleteAll, "all", false, "Delete all VMs")
 }

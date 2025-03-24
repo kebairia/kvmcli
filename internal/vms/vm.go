@@ -2,10 +2,15 @@ package vms
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/utils"
 )
+
+const imagesPath = "/home/zakaria/dox/homelab/images/"
 
 type VirtualMachine struct {
 	// Conn to hold the libvirt connection
@@ -74,7 +79,39 @@ func (vm *VirtualMachine) Create() error {
 }
 
 func (vm *VirtualMachine) Delete() error {
-	fmt.Println("Delete a vm")
+	// Check connection
+	if vm.Conn == nil {
+		return fmt.Errorf("libvirt connection is nil")
+	}
+
+	vmName := vm.Metadata.Name
+	domain, err := vm.Conn.DomainLookupByName(vmName)
+	if err != nil {
+		return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
+	}
+
+	// Attempt to destroy the domain.
+	if err := vm.Conn.DomainDestroy(domain); err != nil {
+		return fmt.Errorf(
+			"failed to delete VM %q (it might not be running): %w",
+			vmName,
+			err,
+		)
+	}
+
+	// Undefine the domain
+	if err := vm.Conn.DomainUndefine(domain); err != nil {
+		return fmt.Errorf("failed to undefine VM %q: %w", vmName, err)
+	}
+
+	// Remove the disk associated with the VM.
+	diskPath := filepath.Join(imagesPath, vmName+".qcow2")
+	if err := os.Remove(diskPath); err != nil {
+		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
+	}
+
+	logger.Log.Infof("%s/%s deleted", "vm", vmName)
+
 	return nil
 }
 
