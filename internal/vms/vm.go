@@ -77,7 +77,9 @@ func (vm *VirtualMachine) Create() error {
 	return nil
 }
 
+// Delete function
 func (vm *VirtualMachine) Delete() error {
+	var err error
 	// Check connection
 	if vm.Conn == nil {
 		return fmt.Errorf("libvirt connection is nil")
@@ -108,7 +110,10 @@ func (vm *VirtualMachine) Delete() error {
 	if err := os.Remove(diskPath); err != nil {
 		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
 	}
-
+	err = database.Delete(vm.Metadata.Name)
+	if err != nil {
+		logger.Log.Errorf("failed to delete record for VM %s: %v", vm.Metadata.Name, err)
+	}
 	logger.Log.Infof("%s/%s deleted", "vm", vmName)
 
 	return nil
