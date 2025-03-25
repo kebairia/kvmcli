@@ -7,7 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
+	"github.com/kebairia/kvmcli/internal/utils"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const artifactsPath = "/home/zakaria/dox/homelab/artifacts/rocky"
@@ -37,5 +40,54 @@ func CreateOverlay(baseImage, destImage string) error {
 	}
 
 	logger.Log.Debug("Overlay image created successfully")
+	return nil
+}
+
+func NewVMRecord(vm *VirtualMachine) *db.VMRecord {
+	// Create vm record out of infos
+	return &db.VMRecord{
+		Name:      vm.Metadata.Name,
+		Namespace: vm.Metadata.Namespace,
+		Labels:    vm.Metadata.Labels,
+		CPU:       vm.Spec.CPU,
+		RAM:       vm.Spec.Memory,
+		Disk: db.Disk{
+			vm.Spec.Disk.Size,
+			vm.Spec.Disk.Path,
+		},
+		Image:       vm.Spec.Image,
+		MacAddress:  vm.Spec.Network.MacAddress,
+		Network:     vm.Spec.Network.Name,
+		SnapshotIDs: []primitive.ObjectID{},
+		CreatedAt:   time.Now(),
+	}
+}
+
+func (vm *VirtualMachine) prepareDomain() (string, error) {
+	// Creating domain out of infos
+	domain := utils.NewDomain(
+
+		vm.Metadata.Name,
+		vm.Spec.Memory,
+		vm.Spec.CPU,
+		vm.Spec.Disk.Path,
+		vm.Spec.Network.MacAddress,
+	)
+
+	xmlConfig, err := domain.GenerateXML()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
+	}
+	return string(xmlConfig), nil
+}
+
+func (vm *VirtualMachine) defineAndStartDomain(xmlConfig string) error {
+	vmInstance, err := vm.Conn.DomainDefineXML(xmlConfig)
+	if err != nil {
+		return fmt.Errorf("failed to define domain for VM %s: %v", vm.Metadata.Name, err)
+	}
+	if err := vm.Conn.DomainCreate(vmInstance); err != nil {
+		return fmt.Errorf("failed to start VM %s: %w", vm.Metadata.Name, err)
+	}
 	return nil
 }
