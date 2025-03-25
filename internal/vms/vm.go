@@ -6,19 +6,20 @@ import (
 	"path/filepath"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/kebairia/kvmcli/internal/database"
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
-	"github.com/kebairia/kvmcli/internal/utils"
 )
 
 const imagesPath = "/home/zakaria/dox/homelab/images/"
 
 type VirtualMachine struct {
 	// Conn to hold the libvirt connection
-	Conn       *libvirt.Libvirt
-	ApiVersion string   `yaml:"apiVersion"`
-	Kind       string   `yaml:"kind"`
-	Metadata   Metadata `yaml:"metadata"`
-	Spec       Spec     `yaml:"spec"`
+	Conn       *libvirt.Libvirt `yaml:"-"`
+	ApiVersion string           `yaml:"apiVersion"`
+	Kind       string           `yaml:"kind"`
+	Metadata   Metadata         `yaml:"metadata"`
+	Spec       Spec             `yaml:"spec"`
 }
 type Metadata struct {
 	Name      string            `yaml:"name"`
@@ -48,30 +49,28 @@ func (vm *VirtualMachine) Create() error {
 	if vm.Conn == nil {
 		return fmt.Errorf("libvirt connection is nil")
 	}
+	// Initiliaze a new vm record
+	record := NewVMRecord(vm)
+
+	// Insert the vm record
+	_, err := db.Insert(record)
+	if err != nil {
+		return fmt.Errorf("failed to create database record for %q: %w", vm.Metadata.Name, err)
+	}
+
 	// Create overlay image
 	if err := CreateOverlay("rocky.qcow2", vm.Spec.Disk.Path); err != nil {
 		return fmt.Errorf("Failed to create overlay for VM %q: %v", vm.Metadata.Name, err)
 	}
-	// Creating domain out of infos
-	domain := utils.NewDomain(
 
-		vm.Metadata.Name,
-		vm.Spec.Memory,
-		vm.Spec.CPU,
-		vm.Spec.Disk.Path,
-		vm.Spec.Network.MacAddress,
-	)
-	xmlConfig, err := domain.GenerateXML()
+	// Prepare the domain and generate its XML configuration.
+	xmlConfig, err := vm.prepareDomain()
 	if err != nil {
-		return fmt.Errorf("failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
+		logger.Log.Errorf("%v", err)
 	}
-
-	vmInstance, err := vm.Conn.DomainDefineXML(string(xmlConfig))
-	if err != nil {
-		return fmt.Errorf("failed to define domain for VM %s: %v", vmInstance.Name, err)
-	}
-	if err := vm.Conn.DomainCreate(vmInstance); err != nil {
-		return fmt.Errorf("failed to start VM %s: %w", vmInstance.Name, err)
+	// Define the domain and start the VM.
+	if err := vm.defineAndStartDomain(xmlConfig); err != nil {
+		logger.Log.Errorf("%v", err)
 	}
 
 	fmt.Printf("vm/%s created\n", vm.Metadata.Name)
