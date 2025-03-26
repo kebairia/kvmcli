@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kebairia/kvmcli/internal/logger"
+	"github.com/kebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
 )
 
@@ -18,9 +19,7 @@ var GetVMCmd = &cobra.Command{
 	Use:   "vm",
 	Short: "Display information about virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
-		if ConfigFile == "" {
-			ConfigFile = "./configs/servers.yaml"
-		}
+		operations.ListAllVMs()
 	},
 }
 
