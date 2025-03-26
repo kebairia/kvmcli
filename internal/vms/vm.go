@@ -13,6 +13,7 @@ import (
 
 const imagesPath = "/home/zakaria/dox/homelab/images/"
 
+// Struct definition
 type VirtualMachine struct {
 	// Conn to hold the libvirt connection
 	Conn       *libvirt.Libvirt `yaml:"-"`
@@ -44,6 +45,7 @@ type Network struct {
 	MacAddress string `yaml:"macAddress"`
 }
 
+// Create Function
 func (vm *VirtualMachine) Create() error {
 	// Check connection
 	if vm.Conn == nil {
@@ -59,8 +61,11 @@ func (vm *VirtualMachine) Create() error {
 	}
 
 	// Create overlay image
+	// FIX: fix  error handling, add the CreateOverlay the error message below
+	// for better context, and use logger.Log.Errorf here.
+
 	if err := CreateOverlay("rocky.qcow2", vm.Spec.Disk.Path); err != nil {
-		return fmt.Errorf("Failed to create overlay for VM %q: %v", vm.Metadata.Name, err)
+		return fmt.Errorf("Failed to create overlay for VM %q: %w", vm.Metadata.Name, err)
 	}
 
 	// Prepare the domain and generate its XML configuration.
@@ -77,10 +82,20 @@ func (vm *VirtualMachine) Create() error {
 	return nil
 }
 
-// Delete function
+// OPTIMIZE:
+
+// 0. Check if connection is valide
+// 1. Destroy and Undefine
+// 2. Remove disk associated with the VM
+// 3. Delete VM record from database
+
+// A. DeleteMany for mongodb
+
+// Delete Function
 func (vm *VirtualMachine) Delete() error {
 	var err error
 	// Check connection
+	// if connectionIsValide(vm.Conn), then (this logic)
 	if vm.Conn == nil {
 		return fmt.Errorf("libvirt connection is nil")
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/kebairia/kvmcli/internal/resources"
 )
 
-const imagesPath = "/home/zakaria/dox/homelab/images/"
+// NOTE: I need to use DeleteMany for mongodb when I delete from a manifest
 
 func DeleteFromManifest(manifestPath string) error {
 	conn, err := internal.InitConnection()
