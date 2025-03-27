@@ -19,6 +19,10 @@ var GetVMCmd = &cobra.Command{
 	Use:   "vm",
 	Short: "Display information about virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
+		if Namespace != "" {
+			operations.ListAllVMsInNamespace(Namespace)
+			return
+		}
 		operations.ListAllVMs()
 	},
 }
@@ -52,7 +56,7 @@ var GetNetworkCmd = &cobra.Command{
 func init() {
 	// Flags for virtual machines
 	GetVMCmd.Flags().
-		StringVarP(&ConfigFile, "namespace", "n", "default", "Namespace")
+		StringVarP(&Namespace, "namespace", "n", "", "Namespace")
 		// Flags for Networks
 	GetNetworkCmd.Flags().
 		StringVarP(&ConfigFile, "file", "f", "", "Configuration file for the VM(s)")

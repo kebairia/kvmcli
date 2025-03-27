@@ -7,6 +7,7 @@ import (
 
 // Global flag variables.
 var (
+	Namespace    string // Namespace
 	ManifestPath string // Path of the manifest file.
 	ConfigFile   string // Path of the configuration file.
 	ClusterFile  string // Path of the cluster file.
