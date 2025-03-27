@@ -72,6 +72,7 @@ func (vm *VirtualMachine) prepareDomain() (string, error) {
 		vm.Spec.CPU,
 		vm.Spec.Disk.Path,
 		vm.Spec.Network.MacAddress,
+		"http://rockylinux.org/rocky/9",
 	)
 
 	xmlConfig, err := domain.GenerateXML()
