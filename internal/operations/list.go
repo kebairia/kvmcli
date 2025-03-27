@@ -21,29 +21,35 @@ const (
 	domainStateStopped = 5
 )
 
-// ListAllVMs retrieves all VM domains and prints their details in a tabulated format.
-func ListAllVMs() {
+// ListAllVMsInNamespace retrieves VMs for a given namespace from MongoDB,
+// looks up their libvirt domain, and prints their details.
+func ListAllVMsInNamespace(namespace string) {
 	conn, err := internal.InitConnection()
 	if err != nil {
-		logger.Log.Fatalf("failed to connect: %v", err)
+		logger.Log.Fatalf("failed to connect to libvirt: %v", err)
 	}
-	// Optionally, ensure the connection is closed after use:
-	// defer conn.Disconnect()
+	// Ensure the connection is closed after processing.
+	defer conn.Disconnect()
 
-	flags := libvirt.ConnectListDomainsActive | libvirt.ConnectListDomainsInactive
-	domains, _, err := conn.ConnectListAllDomains(1, flags)
+	// Retrieve VMs for the specific namespace from MongoDB.
+	vms, err := database.GetVMsByNamespace(namespace)
 	if err != nil {
-		logger.Log.Fatalf("failed to retrieve domains: %v", err)
+		logger.Log.Errorf("failed to retrieve VMs for namespace %s: %v", namespace, err)
+		return
+	}
+	if len(vms) == 0 {
+		logger.Log.Infof("no VMs found in namespace %s", namespace)
+		return
 	}
 
 	// Create a tabwriter for neat column formatting.
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
 
-	for _, domain := range domains {
-		vm, err := database.Get(domain.Name)
+	for _, vm := range vms {
+		domain, err := conn.DomainLookupByName(vm.Name)
 		if err != nil {
-			logger.Log.Errorf("failed to get details for VM %s: %v", domain.Name, err)
+			logger.Log.Errorf("failed to lookup domain for VM %s: %v", vm.Name, err)
 			continue
 		}
 
@@ -51,6 +57,7 @@ func ListAllVMs() {
 		state, err := getState(conn, domain, vm.Name)
 		if err != nil {
 			logger.Log.Errorf("failed to get state for VM %s: %v", vm.Name, err)
+			state = "Unknown"
 		}
 
 		// Retrieve the VM disk size.
@@ -72,7 +79,57 @@ func ListAllVMs() {
 			formatAge(vm.CreatedAt),
 		)
 	}
+	w.Flush()
+}
 
+// ListAllVMs retrieves all VM domains via libvirt,
+// then gets corresponding details from MongoDB and prints them.
+func ListAllVMs() {
+	conn, err := internal.InitConnection()
+	if err != nil {
+		logger.Log.Fatalf("failed to connect to libvirt: %v", err)
+	}
+	defer conn.Disconnect()
+
+	flags := libvirt.ConnectListDomainsActive | libvirt.ConnectListDomainsInactive
+	domains, _, err := conn.ConnectListAllDomains(1, flags)
+	if err != nil {
+		logger.Log.Fatalf("failed to retrieve domains: %v", err)
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
+
+	for _, domain := range domains {
+		vm, err := database.Get(domain.Name)
+		if err != nil {
+			logger.Log.Errorf("failed to get details for VM %s: %v", domain.Name, err)
+			continue
+		}
+
+		state, err := getState(conn, domain, vm.Name)
+		if err != nil {
+			logger.Log.Errorf("failed to get state for VM %s: %v", vm.Name, err)
+			state = "Unknown"
+		}
+
+		diskSizeGB, err := getDiskSize(conn, domain, vm.Name)
+		if err != nil {
+			logger.Log.Errorf("failed to get disk size for VM %s: %v", vm.Name, err)
+			diskSizeGB = 0
+		}
+
+		fmt.Fprintf(w, "%s\t%s\t%d\t%d GB\t%.2f GB\t%s\t%s\t%s\n",
+			vm.Name,
+			state,
+			vm.CPU,
+			vm.RAM/1024,
+			diskSizeGB,
+			vm.Network,
+			vm.Image,
+			formatAge(vm.CreatedAt),
+		)
+	}
 	w.Flush()
 }
 
@@ -108,12 +165,10 @@ func getDiskSize(conn *libvirt.Libvirt, domain libvirt.Domain, name string) (flo
 // formatAge returns a human-friendly string for the time elapsed since t.
 func formatAge(t time.Time) string {
 	duration := time.Since(t)
-	// Handle negative durations by taking the absolute value.
 	if duration < 0 {
 		duration = -duration
 	}
 
-	// Format based on the largest applicable unit.
 	if days := int(duration.Hours() / 24); days >= 1 {
 		return fmt.Sprintf("%dd", days)
 	}
