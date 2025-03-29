@@ -1,10 +1,7 @@
 package network
 
 import (
-	"fmt"
-
 	"github.com/digitalocean/go-libvirt"
-	"github.com/kebairia/kvmcli/internal/logger"
 )
 
 // Struct definition
@@ -29,29 +26,6 @@ type NetSpec struct {
 	Netmask    string            `yaml:"netmask"`
 	DHCP       map[string]string `yaml:"dhcp"`
 	Autostart  bool              `yaml:"autostart"`
-}
-
-func (net *VirtualNetwork) Create() error {
-	// Check connection
-	if net.Conn == nil {
-		return fmt.Errorf("libvirt connection is nil")
-	}
-	xmlConfig, err := net.prepareNetwork()
-	if err != nil {
-		logger.Log.Fatalf("%v", err)
-	}
-	// Define the network and start it
-	if err := net.defineAndStartNetwork(xmlConfig); err != nil {
-		logger.Log.Errorf("%v", err)
-	}
-
-	fmt.Printf("net/%s created\n", net.Metadata.Name)
-	return nil
-}
-
-func (net *VirtualNetwork) Delete() error {
-	fmt.Println("net get deleted")
-	return nil
 }
 
 func (net *VirtualNetwork) SetConnection(conn *libvirt.Libvirt) {
