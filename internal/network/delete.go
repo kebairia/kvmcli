@@ -7,32 +7,35 @@ import (
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
-func (net *VirtualNetwork) Delete() error {
-	if net.Conn == nil {
+// Delete removes a VirtualNetwork resource from libvirt and cleans up its database record.
+func (vn *VirtualNetwork) Delete() error {
+	if vn.Conn == nil {
 		return fmt.Errorf("libvirt connection is nil")
 	}
-	netName := net.Metadata.Name
-	network, err := net.Conn.NetworkLookupByName(netName)
+
+	name := vn.Metadata.Name
+
+	// Lookup the network by its name.
+	network, err := vn.Conn.NetworkLookupByName(name)
 	if err != nil {
-		return fmt.Errorf("Failed to find Network %s: %w", netName, err)
-	}
-	// Attempt to destroy the network.
-	if err := net.Conn.NetworkDestroy(network); err != nil {
-		return fmt.Errorf(
-			"failed to detroy network %q: %w",
-			netName,
-			err,
-		)
-	}
-	// Undefine the network
-	if err := net.Conn.NetworkUndefine(network); err != nil {
-		return fmt.Errorf("failed to undefine network %q: %w", netName, err)
-	}
-	err = database.DeleteNetwork(net.Metadata.Name)
-	if err != nil {
-		logger.Log.Errorf("failed to delete record for network %s: %v", net.Metadata.Name, err)
+		return fmt.Errorf("failed to find network %q: %w", name, err)
 	}
 
-	logger.Log.Infof("%s/%s deleted", "net", netName)
+	// Destroy the network.
+	if err := vn.Conn.NetworkDestroy(network); err != nil {
+		return fmt.Errorf("failed to destroy network %q: %w", name, err)
+	}
+
+	// Undefine the network.
+	if err := vn.Conn.NetworkUndefine(network); err != nil {
+		return fmt.Errorf("failed to undefine network %q: %w", name, err)
+	}
+
+	// Delete the network record from the database.
+	if err := database.DeleteNetwork(name); err != nil {
+		logger.Log.Errorf("failed to delete record for network %q: %v", name, err)
+	}
+
+	logger.Log.Infof("%s/%s deleted", "net", name)
 	return nil
 }
