@@ -1,17 +1,8 @@
 package vms
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/digitalocean/go-libvirt"
-	"github.com/kebairia/kvmcli/internal/database"
-	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/logger"
 )
-
-const imagesPath = "/home/zakaria/dox/homelab/images/"
 
 // Struct definition
 type VirtualMachine struct {
@@ -43,95 +34,6 @@ type Disk struct {
 type Network struct {
 	Name       string `yaml:"name"`
 	MacAddress string `yaml:"macAddress"`
-}
-
-// Create Function
-func (vm *VirtualMachine) Create() error {
-	// Check connection
-	if vm.Conn == nil {
-		return fmt.Errorf("libvirt connection is nil")
-	}
-	// Initiliaze a new vm record
-	record := NewVMRecord(vm)
-
-	// Insert the vm record
-	_, err := db.Insert(record)
-	if err != nil {
-		return fmt.Errorf("failed to create database record for %q: %w", vm.Metadata.Name, err)
-	}
-
-	// Create overlay image
-	// FIX: fix  error handling, add the CreateOverlay the error message below
-	// for better context, and use logger.Log.Errorf here.
-
-	if err := CreateOverlay("rocky-base-image.qcow2", vm.Spec.Disk.Path); err != nil {
-		return fmt.Errorf("Failed to create overlay for VM %q: %w", vm.Metadata.Name, err)
-	}
-
-	// Prepare the domain and generate its XML configuration.
-	xmlConfig, err := vm.prepareDomain()
-	if err != nil {
-		logger.Log.Errorf("%v", err)
-	}
-	// Define the domain and start the VM.
-	if err := vm.defineAndStartDomain(xmlConfig); err != nil {
-		logger.Log.Errorf("%v", err)
-	}
-
-	fmt.Printf("vm/%s created\n", vm.Metadata.Name)
-	return nil
-}
-
-// OPTIMIZE:
-
-// 0. Check if connection is valide
-// 1. Destroy and Undefine
-// 2. Remove disk associated with the VM
-// 3. Delete VM record from database
-
-// A. DeleteMany for mongodb
-
-// Delete Function
-func (vm *VirtualMachine) Delete() error {
-	var err error
-	// Check connection
-	// if connectionIsValide(vm.Conn), then (this logic)
-	if vm.Conn == nil {
-		return fmt.Errorf("libvirt connection is nil")
-	}
-
-	vmName := vm.Metadata.Name
-	domain, err := vm.Conn.DomainLookupByName(vmName)
-	if err != nil {
-		return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
-	}
-
-	// Attempt to destroy the domain.
-	if err := vm.Conn.DomainDestroy(domain); err != nil {
-		return fmt.Errorf(
-			"failed to delete VM %q (it might not be running): %w",
-			vmName,
-			err,
-		)
-	}
-
-	// Undefine the domain
-	if err := vm.Conn.DomainUndefine(domain); err != nil {
-		return fmt.Errorf("failed to undefine VM %q: %w", vmName, err)
-	}
-
-	// Remove the disk associated with the VM.
-	diskPath := filepath.Join(imagesPath, vmName+".qcow2")
-	if err := os.Remove(diskPath); err != nil {
-		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
-	}
-	err = database.Delete(vm.Metadata.Name)
-	if err != nil {
-		logger.Log.Errorf("failed to delete record for VM %s: %v", vm.Metadata.Name, err)
-	}
-	logger.Log.Infof("%s/%s deleted", "vm", vmName)
-
-	return nil
 }
 
 func (vm *VirtualMachine) SetConnection(conn *libvirt.Libvirt) {
