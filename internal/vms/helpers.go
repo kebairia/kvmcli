@@ -2,6 +2,7 @@ package vms
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -79,7 +80,7 @@ func (vm *VirtualMachine) prepareDomain() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
 	}
-	return string(xmlConfig), nil
+	return fmt.Sprint(xml.Header + string(xmlConfig)), nil
 }
 
 func (vm *VirtualMachine) defineAndStartDomain(xmlConfig string) error {
