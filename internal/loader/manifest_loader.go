@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/kebairia/kvmcli/internal/network"
 	"github.com/kebairia/kvmcli/internal/resources"
 	"github.com/kebairia/kvmcli/internal/store"
 	"github.com/kebairia/kvmcli/internal/vms"
@@ -44,6 +45,13 @@ func LoadManifest(manifestPath string) ([]resources.Resource, error) {
 				return nil, fmt.Errorf("failed to unmarshal VirtualMachine: %w", err)
 			}
 			resourceList = append(resourceList, &vm)
+		// Virtual Networks
+		case "Network":
+			var net network.VirtualNetwork
+			if err := yaml.Unmarshal(rawBytes, &net); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal VirtualNetwork: %w", err)
+			}
+			resourceList = append(resourceList, &net)
 			// Stores
 		case "Store":
 			var store store.Store
