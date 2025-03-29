@@ -31,7 +31,7 @@ func (net *VirtualNetwork) prepareNetwork() (string, error) {
 		net.Metadata.Name,
 		net.Spec.Mode,
 		net.Spec.NetAddress,
-		net.Spec.MacAddress,
+		net.Spec.Netmask,
 		net.Spec.Autostart,
 		opts...,
 	)
