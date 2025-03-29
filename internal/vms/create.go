@@ -17,7 +17,7 @@ func (vm *VirtualMachine) Create() error {
 	record := NewVMRecord(vm)
 
 	// Insert the vm record
-	_, err := db.Insert(record)
+	_, err := db.InsertVM(record)
 	if err != nil {
 		return fmt.Errorf("failed to create database record for %q: %w", vm.Metadata.Name, err)
 	}

@@ -37,7 +37,7 @@ func GetVMsByNamespace(namespace string) ([]VMRecord, error) {
 }
 
 // Get retrieves a single VMRecord by its name.
-func Get(name string) (VMRecord, error) {
+func GetVM(name string) (VMRecord, error) {
 	collection := client.Database("kvmcli").Collection("vms")
 	filter := bson.M{"name": name}
 

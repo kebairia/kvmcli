@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func Insert(record *VMRecord) (primitive.ObjectID, error) {
+func InsertVM(record *VMRecord) (primitive.ObjectID, error) {
 	record.ID = primitive.NewObjectID()
 	collection := client.Database("kvmcli").Collection("vms")
 	result, err := collection.InsertOne(ctx, record)

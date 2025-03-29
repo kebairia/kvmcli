@@ -101,7 +101,7 @@ func ListAllVMs() {
 	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
 
 	for _, domain := range domains {
-		vm, err := database.Get(domain.Name)
+		vm, err := database.GetVM(domain.Name)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for VM %s: %v", domain.Name, err)
 			continue

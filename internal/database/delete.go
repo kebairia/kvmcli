@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func Delete(name string) error {
+func DeleteVM(name string) error {
 	// Create a filter matching the record with the specified name
 	filter := bson.M{"name": name}
 	collection := client.Database("kvmcli").Collection("vms")
