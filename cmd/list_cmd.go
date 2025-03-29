@@ -45,9 +45,6 @@ var GetNetworkCmd = &cobra.Command{
 	Use:   "network",
 	Short: "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
-		if ConfigFile == "" {
-			logger.Log.Fatalf("Configuration file is required (-f flag)")
-		}
 		fmt.Println("You networks are here")
 		// op.ListSnapshost()
 	},
@@ -59,9 +56,9 @@ func init() {
 		StringVarP(&Namespace, "namespace", "n", "", "Namespace")
 		// Flags for Networks
 	GetNetworkCmd.Flags().
-		StringVarP(&ConfigFile, "file", "f", "", "Configuration file for the VM(s)")
+		StringVarP(&Namespace, "namespace", "n", "", "Namespace")
 		// Flags for Snapshots
 	GetSnapshotsCmd.Flags().
-		StringVarP(&ConfigFile, "file", "f", "", "Configuration file for the VM(s)")
+		StringVarP(&Namespace, "namespace", "n", "", "Namespace")
 	GetCmd.AddCommand(GetVMCmd, GetSnapshotsCmd, GetNetworkCmd)
 }
