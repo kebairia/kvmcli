@@ -48,3 +48,16 @@ func GetVM(name string) (VMRecord, error) {
 	}
 	return vm, nil
 }
+
+// Get retrieves a single VMRecord by its name.
+func GetNetwork(name string) (NetRecord, error) {
+	collection := client.Database("kvmcli").Collection("networks")
+	filter := bson.M{"name": name}
+
+	var network NetRecord
+	err := collection.FindOne(ctx, filter).Decode(&network)
+	if err != nil {
+		return NetRecord{}, fmt.Errorf("error finding document for name %s: %w", name, err)
+	}
+	return network, nil
+}

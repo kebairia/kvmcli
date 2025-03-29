@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kebairia/kvmcli/internal/logger"
+	"github.com/kebairia/kvmcli/internal/network"
 	"github.com/kebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
 )
@@ -45,7 +46,7 @@ var GetNetworkCmd = &cobra.Command{
 	Use:   "network",
 	Short: "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("You networks are here")
+		network.ListAllNetworks()
 		// op.ListSnapshost()
 	},
 }

@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 
+	"github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
@@ -27,6 +28,11 @@ func (net *VirtualNetwork) Delete() error {
 	if err := net.Conn.NetworkUndefine(network); err != nil {
 		return fmt.Errorf("failed to undefine network %q: %w", netName, err)
 	}
+	err = database.DeleteNetwork(net.Metadata.Name)
+	if err != nil {
+		logger.Log.Errorf("failed to delete record for network %s: %v", net.Metadata.Name, err)
+	}
+
 	logger.Log.Infof("%s/%s deleted", "net", netName)
 	return nil
 }
