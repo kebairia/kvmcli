@@ -72,6 +72,7 @@ func (vm *VirtualMachine) prepareDomain() (string, error) {
 		vm.Spec.Memory,
 		vm.Spec.CPU,
 		vm.Spec.Disk.Path,
+		vm.Spec.Network.Name,
 		vm.Spec.Network.MacAddress,
 		"http://rockylinux.org/rocky/9",
 	)

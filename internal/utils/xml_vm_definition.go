@@ -240,6 +240,7 @@ func NewDomain(
 	mem int,
 	cpu int,
 	source string,
+	network string,
 	mac_address string,
 	osInfoID string,
 ) Domain {
@@ -310,7 +311,7 @@ func NewDomain(
 					Address: mac_address,
 				},
 				Source: NetSource{
-					Network: "homelab",
+					Network: network,
 				},
 				Model: NetModel{
 					Type: VirtIO,
