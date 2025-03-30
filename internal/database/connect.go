@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -35,9 +34,11 @@ func init() {
 	}
 	logger.Log.Debugf("Connected to MongoDB")
 
-	// Create a unique compound index on "name" and "namespace"
+	// Get the database handle
 	db := client.Database("kvmcli")
-	collection := db.Collection("vms")
+	// List of collectoins to create the index on.
+	collection := []string{"vms", "networks", " snapshots"}
+	// Define the compound index model.
 	indexModel := mongo.IndexModel{
 		Keys: bson.D{
 			{"name", 1},
@@ -45,8 +46,14 @@ func init() {
 		},
 		Options: options.Index().SetUnique(true),
 	}
-	_, err = collection.Indexes().CreateOne(ctx, indexModel)
-	if err != nil {
-		fmt.Printf("failed to create index: %v", err)
+	// Loop over each collection and create the index.
+	for _, collName := range collection {
+		collection := db.Collection(collName)
+		_, err = collection.Indexes().CreateOne(ctx, indexModel)
+		if err != nil {
+			logger.Log.Errorf("failed to create index on collection %q: %v\n", collName, err)
+		} else {
+			logger.Log.Debugf("Created index on collection %q", collName)
+		}
 	}
 }
