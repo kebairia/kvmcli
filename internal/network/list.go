@@ -18,6 +18,70 @@ const (
 	networkStateInactive = 0
 )
 
+// ListNetworksByNamespace retrieves networks for a given namespace from MongoDB,
+// looks up their corresponding libvirt instances, and prints the details in a tabular format.
+func ListNetworksByNamespace(namespace string) {
+	conn, err := internal.InitConnection()
+	if err != nil {
+		logger.Log.Fatalf("failed to connect to libvirt: %v", err)
+	}
+	defer conn.Disconnect()
+
+	// Retrieve networks for the specific namespace from MongoDB.
+	networks, err := database.GetNetworksByNamespace(namespace)
+	if err != nil {
+		logger.Log.Errorf("failed to retrieve networks for namespace %q: %v", namespace, err)
+		return
+	}
+	if len(networks) == 0 {
+		logger.Log.Infof("no networks found in namespace %q", namespace)
+		return
+	}
+
+	// Setup tabwriter for clean columnar output.
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(w, "NAME\tSTATE\tBRIDGE\tSUBNET\tGATEWAY\tDHCP RANGE\tAGE")
+
+	// Process each network record.
+	for _, nwRecord := range networks {
+		// Retrieve detailed network information from the database.
+		networkDetails, err := database.GetNetwork(nwRecord.Name)
+		if err != nil {
+			logger.Log.Errorf("failed to get details for network %q: %v", nwRecord.Name, err)
+			continue
+		}
+
+		// Lookup the network instance via libvirt.
+		netInstance, err := conn.NetworkLookupByName(nwRecord.Name)
+		if err != nil {
+			logger.Log.Errorf("failed to lookup network %q: %v", nwRecord.Name, err)
+			continue
+		}
+
+		// Get the current state of the network.
+		state, err := getState(conn, netInstance, nwRecord.Name)
+		if err != nil {
+			logger.Log.Errorf("failed to get state for network %q: %v", nwRecord.Name, err)
+			state = "Unknown"
+		}
+
+		// Format the DHCP range.
+		dhcpRange := networkDetails.DHCP["start"] + " → " + networkDetails.DHCP["end"]
+
+		// Print network information.
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+			networkDetails.Name,
+			state,
+			networkDetails.Bridge,
+			networkDetails.Netmask,
+			networkDetails.NetAddress,
+			dhcpRange,
+			formatAge(networkDetails.CreatedAt),
+		)
+	}
+	w.Flush()
+}
+
 // ListAllNetworks retrieves all networks (active and inactive) from libvirt,
 // gets additional details from the database, and prints them in a tabular format.
 func ListAllNetworks() {

@@ -61,3 +61,29 @@ func GetNetwork(name string) (NetRecord, error) {
 	}
 	return network, nil
 }
+
+// GetVMsByNamespace retrieves all VMRecord documents that match the given namespace.
+func GetNetworksByNamespace(namespace string) ([]NetRecord, error) {
+	collection := client.Database("kvmcli").Collection("networks")
+	filter := bson.M{"namespace": namespace}
+
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("error finding documents for namespace %s: %w", namespace, err)
+	}
+	defer cursor.Close(ctx)
+
+	var networks []NetRecord
+	for cursor.Next(ctx) {
+		var network NetRecord
+		if err := cursor.Decode(&network); err != nil {
+			return nil, fmt.Errorf("error decoding Network record: %w", err)
+		}
+		networks = append(networks, network)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, fmt.Errorf("cursor error: %w", err)
+	}
+	return networks, nil
+}

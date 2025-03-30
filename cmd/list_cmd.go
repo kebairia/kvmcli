@@ -46,8 +46,11 @@ var GetNetworkCmd = &cobra.Command{
 	Use:   "network",
 	Short: "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
+		if Namespace != "" {
+			network.ListNetworksByNamespace(Namespace)
+			return
+		}
 		network.ListAllNetworks()
-		// op.ListSnapshost()
 	},
 }
 
