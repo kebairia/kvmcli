@@ -9,8 +9,6 @@ import (
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
-const imagesPath = "/home/zakaria/dox/homelab/images/"
-
 // OPTIMIZE:
 
 // 0. Check if connection is valide

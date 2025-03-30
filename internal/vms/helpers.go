@@ -14,38 +14,35 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const artifactsPath = "/home/zakaria/dox/homelab/artifacts/rocky"
-
 // CreateOverlay creates a qcow2 overlay image based on a backing file.
-func CreateOverlay(baseImage, destImage string) error {
-	// Construct the full path for the base image.
+func (vm *VirtualMachine) CreateOverlay(baseImage string) error {
 	baseImagePath := filepath.Join(artifactsPath, baseImage)
+	imageFile := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vm.Metadata.Name))
 
-	// Prepare the qemu-img command.
 	cmdArgs := []string{
 		"create",
 		"-o", fmt.Sprintf("backing_file=%s,backing_fmt=qcow2", baseImagePath),
 		"-f", "qcow2",
-		destImage,
+		imageFile,
 	}
 
-	// Create a context with a timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "qemu-img", cmdArgs...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Log.Debugf("%s", output)
-		return fmt.Errorf("failed execute qemu-img command: %w", err)
+		logger.Log.Debugf("qemu-img output: %s", output)
+		return fmt.Errorf("failed to execute qemu-img command: %w", err)
 	}
 
 	logger.Log.Debug("Overlay image created successfully")
 	return nil
 }
 
+// NewVMRecord constructs a new VM record from the provided virtual machine information.
 func NewVMRecord(vm *VirtualMachine) *db.VMRecord {
-	// Create vm record out of infos
+	diskImagePath := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vm.Metadata.Name))
 	return &db.VMRecord{
 		Name:      vm.Metadata.Name,
 		Namespace: vm.Metadata.Namespace,
@@ -53,8 +50,8 @@ func NewVMRecord(vm *VirtualMachine) *db.VMRecord {
 		CPU:       vm.Spec.CPU,
 		RAM:       vm.Spec.Memory,
 		Disk: db.Disk{
-			vm.Spec.Disk.Size,
-			vm.Spec.Disk.Path,
+			Size: vm.Spec.Disk.Size,
+			Path: diskImagePath,
 		},
 		Image:       vm.Spec.Image,
 		MacAddress:  vm.Spec.Network.MacAddress,
@@ -64,14 +61,17 @@ func NewVMRecord(vm *VirtualMachine) *db.VMRecord {
 	}
 }
 
+// prepareDomain generates the XML configuration for the virtual machine domain.
 func (vm *VirtualMachine) prepareDomain() (string, error) {
-	// Creating domain out of infos
-	domain := utils.NewDomain(
+	// Build the full path to the disk image with the .qcow2 extension.
+	diskImagePath := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vm.Metadata.Name))
 
+	// Create a new domain configuration.
+	domain := utils.NewDomain(
 		vm.Metadata.Name,
 		vm.Spec.Memory,
 		vm.Spec.CPU,
-		vm.Spec.Disk.Path,
+		diskImagePath,
 		vm.Spec.Network.Name,
 		vm.Spec.Network.MacAddress,
 		"http://rockylinux.org/rocky/9",
@@ -81,16 +81,21 @@ func (vm *VirtualMachine) prepareDomain() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
 	}
-	return fmt.Sprint(xml.Header + string(xmlConfig)), nil
+
+	// Prepend the XML header and return.
+	return xml.Header + string(xmlConfig), nil
 }
 
+// defineAndStartDomain defines the domain using the provided XML configuration and starts the VM.
 func (vm *VirtualMachine) defineAndStartDomain(xmlConfig string) error {
 	vmInstance, err := vm.Conn.DomainDefineXML(xmlConfig)
 	if err != nil {
 		return fmt.Errorf("failed to define domain for VM %s: %v", vm.Metadata.Name, err)
 	}
+
 	if err := vm.Conn.DomainCreate(vmInstance); err != nil {
 		return fmt.Errorf("failed to start VM %s: %w", vm.Metadata.Name, err)
 	}
+
 	return nil
 }

@@ -23,10 +23,7 @@ func (vm *VirtualMachine) Create() error {
 	}
 
 	// Create overlay image
-	// FIX: fix  error handling, add the CreateOverlay the error message below
-	// for better context, and use logger.Log.Errorf here.
-
-	if err := CreateOverlay("rocky-base-image.qcow2", vm.Spec.Disk.Path); err != nil {
+	if err := vm.CreateOverlay("rocky-base-image.qcow2"); err != nil {
 		return fmt.Errorf("Failed to create overlay for VM %q: %w", vm.Metadata.Name, err)
 	}
 
