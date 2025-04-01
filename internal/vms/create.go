@@ -23,7 +23,7 @@ func (vm *VirtualMachine) Create() error {
 	}
 
 	// Create overlay image
-	if err := vm.CreateOverlay("rocky-base-image.qcow2"); err != nil {
+	if err := vm.CreateOverlay(vm.Spec.Image); err != nil {
 		return fmt.Errorf("Failed to create overlay for VM %q: %w", vm.Metadata.Name, err)
 	}
 
