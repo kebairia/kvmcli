@@ -32,7 +32,7 @@ func ListAllVMsInNamespace(namespace string) {
 	defer conn.Disconnect()
 
 	// Retrieve VMs for the specific namespace from MongoDB.
-	vms, err := database.GetVMsByNamespace(namespace)
+	vms, err := database.GetObjectsByNamespace[database.VMRecord](namespace, database.VMsCollection)
 	if err != nil {
 		logger.Log.Errorf("failed to retrieve VMs for namespace %s: %v", namespace, err)
 		return
@@ -101,7 +101,7 @@ func ListAllVMs() {
 	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
 
 	for _, domain := range domains {
-		vm, err := database.GetVM(domain.Name)
+		vm, err := database.GetRecord[database.VMRecord](domain.Name, database.VMsCollection)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for VM %s: %v", domain.Name, err)
 			continue

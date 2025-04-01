@@ -28,7 +28,10 @@ func ListNetworksByNamespace(namespace string) {
 	defer conn.Disconnect()
 
 	// Retrieve networks for the specific namespace from MongoDB.
-	networks, err := database.GetNetworksByNamespace(namespace)
+	networks, err := database.GetObjectsByNamespace[database.NetRecord](
+		namespace,
+		database.NetworksCollection,
+	)
 	if err != nil {
 		logger.Log.Errorf("failed to retrieve networks for namespace %q: %v", namespace, err)
 		return
@@ -45,7 +48,10 @@ func ListNetworksByNamespace(namespace string) {
 	// Process each network record.
 	for _, nwRecord := range networks {
 		// Retrieve detailed network information from the database.
-		networkDetails, err := database.GetNetwork(nwRecord.Name)
+		networkDetails, err := database.GetRecord[database.NetRecord](
+			nwRecord.Name,
+			database.NetworksCollection,
+		)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for network %q: %v", nwRecord.Name, err)
 			continue
@@ -108,7 +114,10 @@ func ListAllNetworks() {
 	// Process each network.
 	for _, network := range networks {
 		// Retrieve network details from the database.
-		networkDetails, err := database.GetNetwork(network.Name)
+		networkDetails, err := database.GetRecord[database.NetRecord](
+			network.Name,
+			database.NetworksCollection,
+		)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for network %s: %v", network.Name, err)
 			continue
