@@ -32,7 +32,7 @@ func (vn *VirtualNetwork) Delete() error {
 	}
 
 	// Delete the network record from the database.
-	if err := database.DeleteNetwork(name); err != nil {
+	if err := database.Delete(name, database.NetworksCollection); err != nil {
 		logger.Log.Errorf("failed to delete record for network %q: %v", name, err)
 	}
 
