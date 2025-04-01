@@ -12,12 +12,20 @@ import (
 )
 
 var (
-	ctx    = context.Background()
-	client *mongo.Client
+	ctx                 = context.Background()
+	client              *mongo.Client
+	Database            = "kvmcli"
+	StoreCollection     = "store"
+	VMsCollection       = "vms"
+	NetworksCollection  = "networks"
+	SnapshotsCollection = "snapshots"
 )
 
 func init() {
+	// Build the MongoDB client options with the connection URI.
 	uri := options.Client().ApplyURI("mongodb://root:example@localhost:27017")
+
+	// Create a context with a timeout for connecting to MongoDB.
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -26,19 +34,20 @@ func init() {
 
 	client, err = mongo.Connect(ctx, uri)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error connecting to MongoDB:", err)
 	}
-	err = client.Ping(ctx, nil)
-	if err != nil {
+
+	// Ping the database to verify the connection.
+	if err = client.Ping(ctx, nil); err != nil {
 		log.Fatal("Failed to connect to MongoDB:", err)
 	}
 	logger.Log.Debugf("Connected to MongoDB")
 
-	// Get the database handle
+	// Get a handle for the "kvmcli" database.
 	db := client.Database("kvmcli")
-	// List of collectoins to create the index on.
-	collection := []string{"vms", "networks", " snapshots"}
-	// Define the compound index model.
+	// List of collection names on which to create indexes.
+	collections := []string{VMsCollection, NetworksCollection, SnapshotsCollection}
+	// Define the compound index model for collections that require a unique combination of name and namespace.
 	indexModel := mongo.IndexModel{
 		Keys: bson.D{
 			{"name", 1},
@@ -47,7 +56,7 @@ func init() {
 		Options: options.Index().SetUnique(true),
 	}
 	// Loop over each collection and create the index.
-	for _, collName := range collection {
+	for _, collName := range collections {
 		collection := db.Collection(collName)
 		_, err = collection.Indexes().CreateOne(ctx, indexModel)
 		if err != nil {

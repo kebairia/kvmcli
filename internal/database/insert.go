@@ -9,7 +9,7 @@ import (
 
 func InsertVM(record *VMRecord) (primitive.ObjectID, error) {
 	record.ID = primitive.NewObjectID()
-	collection := client.Database("kvmcli").Collection("vms")
+	collection := client.Database("kvmcli").Collection(VMsCollection)
 	result, err := collection.InsertOne(ctx, record)
 	if err != nil {
 		return primitive.NilObjectID, fmt.Errorf("Insert record failed: %w", err)
@@ -25,7 +25,7 @@ func InsertVM(record *VMRecord) (primitive.ObjectID, error) {
 
 func InsertNet(record *NetRecord) (primitive.ObjectID, error) {
 	record.ID = primitive.NewObjectID()
-	collection := client.Database("kvmcli").Collection("networks")
+	collection := client.Database("kvmcli").Collection(NetworksCollection)
 	result, err := collection.InsertOne(ctx, record)
 	if err != nil {
 		return primitive.NilObjectID, fmt.Errorf("Insert record failed: %w", err)

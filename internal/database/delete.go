@@ -9,7 +9,7 @@ import (
 func DeleteVM(name string) error {
 	// Create a filter matching the record with the specified name
 	filter := bson.M{"name": name}
-	collection := client.Database("kvmcli").Collection("vms")
+	collection := client.Database("kvmcli").Collection(VMsCollection)
 	result, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to delete record: %w", err)
@@ -23,7 +23,7 @@ func DeleteVM(name string) error {
 func DeleteNetwork(name string) error {
 	// Create a filter matching the record with the specified name
 	filter := bson.M{"name": name}
-	collection := client.Database("kvmcli").Collection("networks")
+	collection := client.Database("kvmcli").Collection(NetworksCollection)
 	result, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to delete record: %w", err)
