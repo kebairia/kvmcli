@@ -18,11 +18,11 @@ import (
 // CreateOverlay creates a qcow2 overlay image based on a backing file.
 func (vm *VirtualMachine) CreateOverlay(image string) error {
 	st, err := database.GetRecord[database.StoreRecord](
-		"local-image-store",
+		"homelab-store",
 		database.StoreCollection,
 	)
 	if err != nil {
-		return fmt.Errorf("can't get store %q: %w", "local-image-store", err)
+		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
 	}
 
 	baseImagePath := filepath.Join(
