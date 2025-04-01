@@ -26,7 +26,8 @@ type StoreSpec struct {
 }
 
 type StoreConfig struct {
-	Path string `bson:"path"`
+	ArtifactsPath string `bson:"artifactsPath"`
+	ImagesPath    string `bson:"imagesPath"`
 }
 
 type StoreImage struct {

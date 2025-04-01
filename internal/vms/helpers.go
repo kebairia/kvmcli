@@ -26,11 +26,11 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 	}
 
 	baseImagePath := filepath.Join(
-		st.Spec.Config.Path,
+		st.Spec.Config.ArtifactsPath,
 		st.Spec.Images[image].Directory,
 		st.Spec.Images[image].File,
 	)
-	imageFile := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vm.Metadata.Name))
+	imageFile := fmt.Sprintf("%s.qcow2", filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name))
 
 	cmdArgs := []string{
 		"create",

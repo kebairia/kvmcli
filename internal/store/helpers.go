@@ -30,7 +30,8 @@ func NewStoreRecord(s *Store) *db.StoreRecord {
 		Spec: db.StoreSpec{
 			Backend: s.Spec.Backend,
 			Config: db.StoreConfig{
-				Path: s.Spec.Config.Path,
+				ArtifactsPath: s.Spec.Config.ArtifactsPath,
+				ImagesPath:    s.Spec.Config.ImagesPath,
 			},
 			Images: images,
 		},

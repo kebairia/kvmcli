@@ -20,7 +20,8 @@ type Spec struct {
 }
 
 type Config struct {
-	Path string `yaml:"path"`
+	ArtifactsPath string `yaml:"artifactsPath"`
+	ImagesPath    string `yaml:"imagesPath"`
 }
 
 type Image struct {
