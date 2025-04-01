@@ -43,7 +43,15 @@ func GetObjectsByNamespace[T VMRecord | NetRecord | StoreRecord](
 // Get retrieves a single VMRecord by its name.
 func GetRecord[T VMRecord | NetRecord | StoreRecord](name, collectionName string) (T, error) {
 	collection := client.Database("kvmcli").Collection(collectionName)
-	filter := bson.M{"name": name}
+	// filter := bson.M{"name": name}
+	var filter bson.M
+	var dummy T
+	switch any(dummy).(type) {
+	case StoreRecord:
+		filter = bson.M{"metadata.name": name}
+	default:
+		filter = bson.M{"name": name}
+	}
 
 	var record T
 	err := collection.FindOne(ctx, filter).Decode(&record)
