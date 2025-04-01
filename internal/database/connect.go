@@ -65,4 +65,19 @@ func init() {
 			logger.Log.Debugf("Created index on collection %q", collName)
 		}
 	}
+	// Create an index of store object
+	storeCollection := db.Collection(StoreCollection)
+	storeIndexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{"name", 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+	_, err = storeCollection.Indexes().CreateOne(ctx, storeIndexModel)
+
+	if err != nil {
+		logger.Log.Errorf("failed to create index on collection %q: %v\n", storeCollection, err)
+	} else {
+		logger.Log.Debugf("Created index on collection %q", storeCollection)
+	}
 }
