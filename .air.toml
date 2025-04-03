@@ -1,0 +1,128 @@
+# Root directory of the project
+root = "."
+
+# Directory used for storing Go test data
+testdata_dir = "testdata"
+
+# Temporary directory used by Air to store compiled binaries or intermediate files
+tmp_dir = "tmp"
+
+[build]
+  # Extra arguments passed to the binary after it’s built (empty for now)
+  args_bin = []
+
+  # The name/path of the binary that will be generated after build
+  bin = "kvmcli"
+
+  # Command used to build the binary
+  cmd = "go build -o kvmcli ."
+
+  # Full path to the binary, used by Air to execute the program
+  full_bin = "./kvmcli"
+
+  # Delay (in ms) before restarting the app after detecting a file change
+  delay = 1000
+
+  # Directories to exclude from being watched
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+
+  # Specific files to exclude from watching
+  exclude_file = []
+
+  # Exclude files matching this regex pattern (e.g., test files)
+  exclude_regex = ["_test.go"]
+
+  # If true, skip watching files that haven't changed
+  exclude_unchanged = false
+
+  # If true, follow symbolic links (set false to avoid symlink loops)
+  follow_symlink = false
+
+  # (Redundant: this overrides the earlier full_bin — you may want to remove it)
+  full_bin = ""
+
+  # Only include these directories for watching (empty = all except excluded)
+  include_dir = []
+
+  # File extensions to watch; Air will rebuild if these change
+  include_ext = ["go", "yaml"]
+
+  # Specific files to always include in watching
+  include_file = []
+
+  # Wait time before killing the previous process during rebuild
+  kill_delay = "0s"
+
+  # Log file where build errors are saved
+  log = "build-errors.log"
+
+  # If true, use polling instead of file notifications (set to true on buggy file systems)
+  poll = false
+
+  # Interval to check for file changes when polling (0 = default)
+  poll_interval = 0
+
+  # Commands to run after building the app
+  post_cmd = []
+
+  # Commands to run before building the app
+  pre_cmd = []
+
+  # If true, just rerun the binary without rebuilding it
+  rerun = false
+
+  # Delay before rerunning the binary (in ms)
+  rerun_delay = 500
+
+  # If true, send an interrupt signal instead of killing the process (useful for graceful shutdown)
+  send_interrupt = false
+
+  # If true, stop everything on the first build error
+  stop_on_error = false
+
+[color]
+  # Color for app output (empty = default)
+  app = ""
+
+  # Color used for build logs
+  build = "yellow"
+
+  # Color for Air’s own logs
+  main = "magenta"
+
+  # Color used when running the binary
+  runner = "green"
+
+  # Color used for the file watcher logs
+  watcher = "cyan"
+
+[log]
+  # If true, only show logs from Air (not the app or build)
+  main_only = false
+
+  # If true, mute all logs (not recommended)
+  silent = false
+
+  # If true, show timestamps in logs
+  time = true
+
+[misc]
+  # If true, delete temporary files like the binary on exit
+  clean_on_exit = false
+
+[proxy]
+  # Port your app listens on (used only if proxy is enabled)
+  app_port = 0
+
+  # Enables or disables the Air proxy feature
+  enabled = false
+
+  # Port Air will use to proxy traffic (if enabled)
+  proxy_port = 0
+
+[screen]
+  # If true, clear the terminal before every rebuild
+  clear_on_rebuild = false
+
+  # If true, keep the terminal scrollback (good for logs)
+  keep_scroll = true
