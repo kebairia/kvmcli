@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -50,6 +51,21 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 	}
 
 	logger.Log.Debug("Overlay image created successfully")
+	return nil
+}
+
+func (vm *VirtualMachine) DeleteOverlay(image string) error {
+	st, err := db.GetRecord[db.StoreRecord](
+		"homelab-store",
+		db.StoreCollection,
+	)
+	if err != nil {
+		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+	}
+	diskPath := filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name+".qcow2")
+	if err := os.Remove(diskPath); err != nil {
+		return fmt.Errorf("failed to delete disk for VM %q: %w", vm.Metadata.Name, err)
+	}
 	return nil
 }
 
