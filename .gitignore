@@ -3,3 +3,5 @@ tmp
 kvmcli
 *.yaml
 *.yml
+/README.org
+/TODO.org
