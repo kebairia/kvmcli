@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/logger"
 )
 
 // Create Virtual Machine
@@ -16,25 +15,30 @@ func (vm *VirtualMachine) Create() error {
 	// Initiliaze a new vm record
 	record := NewVMRecord(vm)
 
-	// Insert the vm record
-	_, err := db.InsertVM(record)
-	if err != nil {
-		return fmt.Errorf("failed to create database record for %q: %w", vm.Metadata.Name, err)
-	}
-
-	// Create overlay image
+	// Step 1: Create the overlay disk image
 	if err := vm.CreateOverlay(vm.Spec.Image); err != nil {
-		return fmt.Errorf("Failed to create overlay for VM %q: %w", vm.Metadata.Name, err)
+		return fmt.Errorf("failed to create overlay for VM %q: %w", vm.Metadata.Name, err)
 	}
 
-	// Prepare the domain and generate its XML configuration.
+	// Step 2: Generate the libvirt XML configuration
 	xmlConfig, err := vm.prepareDomain()
 	if err != nil {
-		logger.Log.Errorf("%v", err)
+		_ = vm.DeleteOverlay(vm.Metadata.Name) // rollback overlay image
+		return fmt.Errorf("failed to prepare domain for VM %q: %w", vm.Metadata.Name, err)
 	}
-	// Define the domain and start the VM.
+
+	// Step 3: Define and start the VM
 	if err := vm.defineAndStartDomain(xmlConfig); err != nil {
-		logger.Log.Errorf("%v", err)
+		_ = vm.DeleteOverlay(
+			vm.Metadata.Name,
+		) // rollback, delete overlay if the domain preparation failed
+		return fmt.Errorf("failed to define/start VM %q: %w", vm.Metadata.Name, err)
+	}
+
+	// Step 4: Insert the vm record
+	if _, err = db.InsertVM(record); err != nil {
+		_ = vm.Delete() // rollback libvirt domain and disk
+		return fmt.Errorf("failed to create database record for VM %q: %w", vm.Metadata.Name, err)
 	}
 
 	fmt.Printf("vm/%s created\n", vm.Metadata.Name)

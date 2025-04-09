@@ -50,10 +50,6 @@ func (vm *VirtualMachine) Delete() error {
 		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
 	}
 
-	// diskPath := filepath.Join(imagesPath, vmName+".qcow2")
-	// if err := os.Remove(diskPath); err != nil {
-	// 	return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
-	// }
 	err = database.Delete(vm.Metadata.Name, database.VMsCollection)
 	if err != nil {
 		logger.Log.Errorf("failed to delete record for VM %s: %v", vm.Metadata.Name, err)
