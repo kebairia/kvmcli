@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/kebairia/kvmcli/cmd"
-	_ "github.com/kebairia/kvmcli/internal/database"
+	// _ "github.com/kebairia/kvmcli/internal/database"
 )
 
 func main() {
