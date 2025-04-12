@@ -78,9 +78,22 @@ func (vm *VirtualMachine) DeleteOverlay(image string) error {
 	return nil
 }
 
-// NewVMRecord constructs a new VM record from the provided virtual machine information.
-func NewVMRecord(vm *VirtualMachine) *db.VMRecord {
-	diskImagePath := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vm.Metadata.Name))
+// NewVMRecord constructs a new VM record from the provided VM configuration.
+// The record is then used to insert VM metadata into the database.
+func NewVMRecord(vm *VirtualMachine) (*db.VMRecord, error) {
+	st, err := database.GetRecord[database.StoreRecord](
+		"homelab-store",
+		database.StoreCollection,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+	}
+
+	// Build the disk image path (with a .qcow2 extension) based on the store configuration.
+	diskImagePath := fmt.Sprintf(
+		"%s.qcow2",
+		filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name),
+	)
 	return &db.VMRecord{
 		Name:      vm.Metadata.Name,
 		Namespace: vm.Metadata.Namespace,
@@ -96,15 +109,27 @@ func NewVMRecord(vm *VirtualMachine) *db.VMRecord {
 		Network:     vm.Spec.Network.Name,
 		SnapshotIDs: []primitive.ObjectID{},
 		CreatedAt:   time.Now(),
-	}
+	}, nil
 }
 
 // prepareDomain generates the XML configuration for the virtual machine domain.
-func (vm *VirtualMachine) prepareDomain() (string, error) {
+// It uses the store record to determine the disk image location and creates the domain configuration.
+func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Build the full path to the disk image with the .qcow2 extension.
-	diskImagePath := fmt.Sprintf("%s.qcow2", filepath.Join(imagesPath, vm.Metadata.Name))
+	st, err := database.GetRecord[database.StoreRecord](
+		"homelab-store",
+		database.StoreCollection,
+	)
+	if err != nil {
+		return "", fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+	}
+	// Build the disk image path for the domain configuration.
+	diskImagePath := fmt.Sprintf(
+		"%s.qcow2",
+		filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name),
+	)
 
-	// Create a new domain configuration.
+	// Create a new domain configuration using utility functions.
 	domain := utils.NewDomain(
 		vm.Metadata.Name,
 		vm.Spec.Memory,
@@ -112,7 +137,7 @@ func (vm *VirtualMachine) prepareDomain() (string, error) {
 		diskImagePath,
 		vm.Spec.Network.Name,
 		vm.Spec.Network.MacAddress,
-		"http://rockylinux.org/rocky/9",
+		st.Spec.Images[image].OsProfile,
 	)
 
 	xmlConfig, err := domain.GenerateXML()
