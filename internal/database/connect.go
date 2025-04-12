@@ -76,8 +76,8 @@ func init() {
 	_, err = storeCollection.Indexes().CreateOne(ctx, storeIndexModel)
 
 	if err != nil {
-		logger.Log.Errorf("failed to create index on collection %q: %v\n", storeCollection, err)
+		logger.Log.Errorf("failed to create index on collection %v: %v\n", storeCollection, err)
 	} else {
-		logger.Log.Debugf("Created index on collection %q", storeCollection)
+		logger.Log.Debugf("Created index on collection %v", storeCollection)
 	}
 }

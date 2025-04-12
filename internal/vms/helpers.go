@@ -16,23 +16,27 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CreateOverlay creates a qcow2 overlay image based on a backing file.
+// CreateOverlay creates a qcow2 overlay image using a backing file obtained from the store record.
+// It invokes the 'qemu-img' utility with a timeout context.
 func (vm *VirtualMachine) CreateOverlay(image string) error {
 	st, err := database.GetRecord[database.StoreRecord](
 		"homelab-store",
 		database.StoreCollection,
 	)
 	if err != nil {
-		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+		return fmt.Errorf("can't get store %v: %w", "homelab-store", err)
 	}
 
+	// Build the full path to the base image from the store configuration.
 	baseImagePath := filepath.Join(
 		st.Spec.Config.ArtifactsPath,
 		st.Spec.Images[image].Directory,
 		st.Spec.Images[image].File,
 	)
+	// Construct target overlay image file name.
 	imageFile := fmt.Sprintf("%s.qcow2", filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name))
 
+	// Define the qemu-img command arguments.
 	cmdArgs := []string{
 		"create",
 		"-o", fmt.Sprintf("backing_file=%s,backing_fmt=qcow2", baseImagePath),
@@ -40,9 +44,11 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 		imageFile,
 	}
 
+	// Set a timeout context for running the external command.
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	// Execute the command.
 	cmd := exec.CommandContext(ctx, "qemu-img", cmdArgs...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -54,6 +60,8 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 	return nil
 }
 
+// DeleteOverlay deletes the qcow2 overlay image file from the file system.
+// It gets the target disk image path based on the store configuration and VM metadata.
 func (vm *VirtualMachine) DeleteOverlay(image string) error {
 	st, err := db.GetRecord[db.StoreRecord](
 		"homelab-store",
@@ -62,6 +70,7 @@ func (vm *VirtualMachine) DeleteOverlay(image string) error {
 	if err != nil {
 		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
 	}
+	// Construct the disk image path.
 	diskPath := filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name+".qcow2")
 	if err := os.Remove(diskPath); err != nil {
 		return fmt.Errorf("failed to delete disk for VM %q: %w", vm.Metadata.Name, err)

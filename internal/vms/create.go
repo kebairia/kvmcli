@@ -13,7 +13,10 @@ func (vm *VirtualMachine) Create() error {
 		return fmt.Errorf("libvirt connection is nil")
 	}
 	// Initiliaze a new vm record
-	record := NewVMRecord(vm)
+	record, err := NewVMRecord(vm)
+	if err != nil {
+		return fmt.Errorf("can't Initiliaze a new vm: %w", err)
+	}
 
 	// Step 1: Create the overlay disk image
 	if err := vm.CreateOverlay(vm.Spec.Image); err != nil {
