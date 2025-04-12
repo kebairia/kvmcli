@@ -44,6 +44,7 @@ func GetObjectsByNamespace[T VMRecord | NetRecord | StoreRecord](
 func GetRecord[T VMRecord | NetRecord | StoreRecord](name, collectionName string) (T, error) {
 	collection := client.Database("kvmcli").Collection(collectionName)
 	// filter := bson.M{"name": name}
+	// FIX: I need to change the schema of other objects
 	var filter bson.M
 	var dummy T
 	switch any(dummy).(type) {
