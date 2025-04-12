@@ -14,6 +14,7 @@ func NewStoreRecord(s *Store) *db.StoreRecord {
 	for dist, img := range s.Spec.Images {
 		images[dist] = database.StoreImage{
 			Version:   img.Version,
+			OsProfile: img.OsProfile,
 			Directory: img.Directory,
 			File:      img.File,
 			Checksum:  img.Checksum,

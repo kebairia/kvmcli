@@ -26,6 +26,7 @@ type Config struct {
 
 type Image struct {
 	Version   string `yaml:"version"`
+	OsProfile string `yaml:"osProfile"`
 	Directory string `yaml:"directory"`
 	File      string `yaml:"file"`
 	Checksum  string `yaml:"checksum"`

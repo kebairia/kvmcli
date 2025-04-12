@@ -4,11 +4,6 @@ import (
 	"github.com/digitalocean/go-libvirt"
 )
 
-const (
-	artifactsPath = "/home/zakaria/dox/homelab/artifacts/rocky"
-	imagesPath    = "/home/zakaria/dox/homelab/images/"
-)
-
 // Struct definition
 type VirtualMachine struct {
 	// Conn to hold the libvirt connection

@@ -32,6 +32,7 @@ type StoreConfig struct {
 
 type StoreImage struct {
 	Version   string `bson:"version"`
+	OsProfile string `bson:"osprofile"`
 	Directory string `bson:"directory"` // New field for the directory portion
 	File      string `bson:"file"`
 	Checksum  string `bson:"checksum"`

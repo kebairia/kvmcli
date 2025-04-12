@@ -21,7 +21,7 @@ func (vm *VirtualMachine) Create() error {
 	}
 
 	// Step 2: Generate the libvirt XML configuration
-	xmlConfig, err := vm.prepareDomain()
+	xmlConfig, err := vm.prepareDomain(vm.Spec.Image)
 	if err != nil {
 		_ = vm.DeleteOverlay(vm.Metadata.Name) // rollback overlay image
 		return fmt.Errorf("failed to prepare domain for VM %q: %w", vm.Metadata.Name, err)
