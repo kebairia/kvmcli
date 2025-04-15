@@ -5,3 +5,4 @@ kvmcli
 *.yml
 /README.org
 /TODO.org
+/kvmcli.db
