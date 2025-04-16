@@ -3,7 +3,7 @@ package vms
 import (
 	"fmt"
 
-	"github.com/kebairia/kvmcli/internal/database"
+	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
@@ -50,7 +50,8 @@ func (vm *VirtualMachine) Delete() error {
 		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
 	}
 
-	err = database.Delete(vm.Metadata.Name, database.VMsCollection)
+	// err = database.Delete(vm.Metadata.Name, database.VMsCollection)
+	err = databasesql.Delete(databasesql.Ctx, databasesql.DB, vm.Metadata.Name, "vms")
 	if err != nil {
 		logger.Log.Errorf("failed to delete record for VM %s: %v", vm.Metadata.Name, err)
 	}
