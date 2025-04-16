@@ -2,6 +2,7 @@ package vms
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"os"
@@ -11,9 +12,9 @@ import (
 
 	"github.com/kebairia/kvmcli/internal/database"
 	db "github.com/kebairia/kvmcli/internal/database"
+	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/utils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CreateOverlay creates a qcow2 overlay image using a backing file obtained from the store record.
@@ -78,9 +79,28 @@ func (vm *VirtualMachine) DeleteOverlay(image string) error {
 	return nil
 }
 
+func getNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (int, error) {
+	const query = `
+		SELECT id FROM networks
+		WHERE name = ? 
+	`
+
+	var networkID int
+	err := db.QueryRowContext(ctx, query, networkName).Scan(&networkID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to retrieve network ID for Network %q: %w", networkName, err)
+	}
+
+	return networkID, nil
+}
+
 // NewVMRecord constructs a new VM record from the provided VM configuration.
 // The record is then used to insert VM metadata into the database.
-func NewVMRecord(vm *VirtualMachine) (*db.VMRecord, error) {
+func NewVMRecord(
+	ctx context.Context,
+	db *sql.DB,
+	vm *VirtualMachine,
+) (*databasesql.VirtualMachineRecord, error) {
 	st, err := database.GetRecord[database.StoreRecord](
 		"homelab-store",
 		database.StoreCollection,
@@ -94,21 +114,23 @@ func NewVMRecord(vm *VirtualMachine) (*db.VMRecord, error) {
 		"%s.qcow2",
 		filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name),
 	)
-	return &db.VMRecord{
-		Name:      vm.Metadata.Name,
-		Namespace: vm.Metadata.Namespace,
-		Labels:    vm.Metadata.Labels,
-		CPU:       vm.Spec.CPU,
-		RAM:       vm.Spec.Memory,
-		Disk: db.Disk{
-			Size: vm.Spec.Disk.Size,
-			Path: diskImagePath,
-		},
-		Image:       vm.Spec.Image,
-		MacAddress:  vm.Spec.Network.MacAddress,
-		Network:     vm.Spec.Network.Name,
-		SnapshotIDs: []primitive.ObjectID{},
-		CreatedAt:   time.Now(),
+	// Lookup the network ID based on the network name
+	networkID, err := getNetworkIDByName(ctx, db, "homelab")
+	if err != nil {
+		return nil, fmt.Errorf("cannot retrieve network ID: %w", err)
+	}
+	return &databasesql.VirtualMachineRecord{
+		Name:       vm.Metadata.Name,
+		Namespace:  vm.Metadata.Namespace,
+		Labels:     vm.Metadata.Labels,
+		CPU:        vm.Spec.CPU,
+		RAM:        vm.Spec.Memory,
+		DiskSize:   vm.Spec.Disk.Size,
+		DiskPath:   diskImagePath,
+		Image:      vm.Spec.Image,
+		MacAddress: vm.Spec.Network.MacAddress,
+		NetworkID:  networkID,
+		CreatedAt:  time.Now(),
 	}, nil
 }
 
