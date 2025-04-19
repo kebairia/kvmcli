@@ -105,13 +105,10 @@ func ListAllNetworks() {
 
 	// Process each network.
 	for _, network := range networks {
-		// Retrieve network details from the database.
-		networkDetails, err := db.GetNetworkRecord(
-			db.Ctx,
-			db.DB,
-			network.Name,
-			db.NetworksTable,
-		)
+
+		net := VirtualNetwork{}
+		networkDetails := NewVirtualNetworkRecord(&net)
+		networkDetails.GetRecord(db.Ctx, db.DB, network.Name)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for network %s: %v", network.Name, err)
 			continue
