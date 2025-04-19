@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/digitalocean/go-libvirt"
@@ -16,8 +17,9 @@ type Resource interface {
 type Record interface {
 	// Insert() error
 	// Delete() error
-	ScanRow(row *sql.Row) error
-	ScanRows(rows *sql.Rows) error
+	// ScanRow(row *sql.Row) error
+	// ScanRows(rows *sql.Rows) error
+	GetRecord(ctx context.Context, db *sql.DB, name string)
 }
 
 // ClientSetter is implemented by types that require a libvirt connection.
