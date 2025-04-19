@@ -3,7 +3,7 @@ package network
 import (
 	"fmt"
 
-	db "github.com/kebairia/kvmcli/internal/database"
+	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
@@ -12,10 +12,12 @@ func (net *VirtualNetwork) Create() error {
 	if net.Conn == nil {
 		return fmt.Errorf("libvirt connection is nil")
 	}
-	record := NewNetRecord(net)
+	// record := NewNetRecord(net)
+	record := NewVirtualNetworkRecord(net)
 
 	// Insert the net record
-	_, err := db.InsertNet(record)
+	// _, err := db.InsertNet(record)
+	err := databasesql.InsertNet(databasesql.Ctx, databasesql.DB, record)
 	if err != nil {
 		return fmt.Errorf("failed to create database record for %q: %w", net.Metadata.Name, err)
 	}
