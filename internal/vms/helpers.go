@@ -115,7 +115,7 @@ func NewVMRecord(
 		filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name),
 	)
 	// Lookup the network ID based on the network name
-	networkID, err := getNetworkIDByName(ctx, db, "homelab")
+	networkID, err := getNetworkIDByName(ctx, db, vm.Spec.Network.Name)
 	if err != nil {
 		return nil, fmt.Errorf("cannot retrieve network ID: %w", err)
 	}

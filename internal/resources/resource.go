@@ -1,6 +1,10 @@
 package resources
 
-import "github.com/digitalocean/go-libvirt"
+import (
+	"database/sql"
+
+	"github.com/digitalocean/go-libvirt"
+)
 
 // Resource defines operations for managing a resource.
 type Resource interface {
@@ -10,8 +14,10 @@ type Resource interface {
 
 // Record defines operations for managing a records on database.
 type Record interface {
-	Insert() error
-	Delete() error
+	// Insert() error
+	// Delete() error
+	ScanRow(row *sql.Row) error
+	ScanRows(rows *sql.Rows) error
 }
 
 // ClientSetter is implemented by types that require a libvirt connection.
