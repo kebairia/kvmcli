@@ -8,7 +8,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal"
-	"github.com/kebairia/kvmcli/internal/database"
+	db "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
@@ -32,7 +32,13 @@ func ListAllVMsInNamespace(namespace string) {
 	defer conn.Disconnect()
 
 	// Retrieve VMs for the specific namespace from MongoDB.
-	vms, err := database.GetObjectsByNamespace[database.VMRecord](namespace, database.VMsCollection)
+	// vms, err := database.GetObjectsByNamespace[database.VMRecord](namespace, database.VMsCollection)
+	vms, err := db.BringObjectsByNamespace(
+		db.Ctx,
+		db.DB,
+		namespace,
+		db.VMsTable,
+	)
 	if err != nil {
 		logger.Log.Errorf("failed to retrieve VMs for namespace %s: %v", namespace, err)
 		return
@@ -66,6 +72,14 @@ func ListAllVMsInNamespace(namespace string) {
 			logger.Log.Errorf("failed to get disk size for VM %s: %v", vm.Name, err)
 			diskSizeGB = 0
 		}
+		networkName, err := db.GetNetworkNameByID(
+			db.Ctx,
+			db.DB,
+			vm.NetworkID,
+		)
+		if err != nil {
+			logger.Log.Errorf("failed to get network name for ID %d: %v", vm.NetworkID, err)
+		}
 
 		// Print the VM details.
 		fmt.Fprintf(w, "%s\t%s\t%d\t%d GB\t%.2f GB\t%s\t%s\t%s\n",
@@ -74,7 +88,7 @@ func ListAllVMsInNamespace(namespace string) {
 			vm.CPU,
 			vm.RAM/1024,
 			diskSizeGB,
-			vm.Network,
+			networkName,
 			vm.Image,
 			formatAge(vm.CreatedAt),
 		)
@@ -101,7 +115,8 @@ func ListAllVMs() {
 	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
 
 	for _, domain := range domains {
-		vm, err := database.GetRecord[database.VMRecord](domain.Name, database.VMsCollection)
+		// vm, err := database.GetRecord[database.VMRecord](domain.Name, database.VMsCollection)
+		vm, err := db.BringRecord(db.Ctx, db.DB, domain.Name, db.VMsTable)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for VM %s: %v", domain.Name, err)
 			continue
@@ -118,6 +133,14 @@ func ListAllVMs() {
 			logger.Log.Errorf("failed to get disk size for VM %s: %v", vm.Name, err)
 			diskSizeGB = 0
 		}
+		networkName, err := db.GetNetworkNameByID(
+			db.Ctx,
+			db.DB,
+			vm.NetworkID,
+		)
+		if err != nil {
+			logger.Log.Errorf("failed to get network name for ID %d: %v", vm.NetworkID, err)
+		}
 
 		fmt.Fprintf(w, "%s\t%s\t%d\t%d GB\t%.2f GB\t%s\t%s\t%s\n",
 			vm.Name,
@@ -125,7 +148,7 @@ func ListAllVMs() {
 			vm.CPU,
 			vm.RAM/1024,
 			diskSizeGB,
-			vm.Network,
+			networkName,
 			vm.Image,
 			formatAge(vm.CreatedAt),
 		)

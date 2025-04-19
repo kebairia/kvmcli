@@ -8,7 +8,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal"
-	"github.com/kebairia/kvmcli/internal/database"
+	db "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
@@ -27,13 +27,14 @@ func ListNetworksByNamespace(namespace string) {
 	}
 	defer conn.Disconnect()
 
-	// Retrieve networks for the specific namespace from MongoDB.
-	networks, err := database.GetObjectsByNamespace[database.NetRecord](
+	networks, err := db.GetNetworkObjectsByNamespace(
+		db.Ctx,
+		db.DB,
 		namespace,
-		database.NetworksCollection,
+		db.NetworksTable,
 	)
 	if err != nil {
-		logger.Log.Errorf("failed to retrieve networks for namespace %q: %v", namespace, err)
+		logger.Log.Errorf("failed to retrieve VMs for namespace %s: %v", namespace, err)
 		return
 	}
 	if len(networks) == 0 {
@@ -47,15 +48,6 @@ func ListNetworksByNamespace(namespace string) {
 
 	// Process each network record.
 	for _, nwRecord := range networks {
-		// Retrieve detailed network information from the database.
-		networkDetails, err := database.GetRecord[database.NetRecord](
-			nwRecord.Name,
-			database.NetworksCollection,
-		)
-		if err != nil {
-			logger.Log.Errorf("failed to get details for network %q: %v", nwRecord.Name, err)
-			continue
-		}
 
 		// Lookup the network instance via libvirt.
 		netInstance, err := conn.NetworkLookupByName(nwRecord.Name)
@@ -72,17 +64,17 @@ func ListNetworksByNamespace(namespace string) {
 		}
 
 		// Format the DHCP range.
-		dhcpRange := networkDetails.DHCP["start"] + " → " + networkDetails.DHCP["end"]
+		dhcpRange := nwRecord.DHCP["start"] + " → " + nwRecord.DHCP["end"]
 
 		// Print network information.
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-			networkDetails.Name,
+			nwRecord.Name,
 			state,
-			networkDetails.Bridge,
-			networkDetails.Netmask,
-			networkDetails.NetAddress,
+			nwRecord.Bridge,
+			nwRecord.Netmask,
+			nwRecord.NetAddress,
 			dhcpRange,
-			formatAge(networkDetails.CreatedAt),
+			formatAge(nwRecord.CreatedAt),
 		)
 	}
 	w.Flush()
@@ -114,9 +106,11 @@ func ListAllNetworks() {
 	// Process each network.
 	for _, network := range networks {
 		// Retrieve network details from the database.
-		networkDetails, err := database.GetRecord[database.NetRecord](
+		networkDetails, err := db.GetNetworkRecord(
+			db.Ctx,
+			db.DB,
 			network.Name,
-			database.NetworksCollection,
+			db.NetworksTable,
 		)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for network %s: %v", network.Name, err)
