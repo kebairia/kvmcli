@@ -3,7 +3,7 @@ package network
 import (
 	"fmt"
 
-	"github.com/kebairia/kvmcli/internal/database"
+	db "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
@@ -32,7 +32,7 @@ func (vn *VirtualNetwork) Delete() error {
 	}
 
 	// Delete the network record from the database.
-	if err := database.Delete(name, database.NetworksCollection); err != nil {
+	if err := db.Delete(db.Ctx, db.DB, name, db.NetworksTable); err != nil {
 		logger.Log.Errorf("failed to delete record for network %q: %v", name, err)
 	}
 
