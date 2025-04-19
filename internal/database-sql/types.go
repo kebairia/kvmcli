@@ -3,6 +3,8 @@ package databasesql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -50,4 +52,56 @@ func EnsureVMTable(ctx context.Context, db *sql.DB) error {
 		return fmt.Errorf("failed to create vms table: %w", err)
 	}
 	return nil
+}
+
+func BringRecord(
+	ctx context.Context,
+	db *sql.DB,
+	name, table string,
+) (*VirtualMachineRecord, error) {
+	// Only allow known tables (basic safety)
+	if table != "vms" {
+		return nil, fmt.Errorf("table %q is not allowed", table)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, name, namespace, 
+		       cpu, ram, mac_address, 
+		       network_id, image, 
+		       disk_size, disk_path, 
+		       created_at, labels
+		FROM %s
+		WHERE name = ?`, table)
+
+	var (
+		record    VirtualMachineRecord
+		labelText string
+	)
+
+	err := db.QueryRowContext(ctx, query, name).Scan(
+		&record.ID,
+		&record.Name,
+		&record.Namespace,
+		&record.CPU,
+		&record.RAM,
+		&record.MacAddress,
+		&record.NetworkID,
+		&record.Image,
+		&record.DiskSize,
+		&record.DiskPath,
+		&record.CreatedAt,
+		&labelText,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("VM with name %q not found: %w", name, err)
+		}
+		return nil, fmt.Errorf("failed to fetch VM record: %w", err)
+	}
+
+	if err := json.Unmarshal([]byte(labelText), &record.Labels); err != nil {
+		return nil, fmt.Errorf("failed to parse labels JSON: %w", err)
+	}
+
+	return &record, nil
 }

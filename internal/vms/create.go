@@ -3,7 +3,7 @@ package vms
 import (
 	"fmt"
 
-	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database-sql"
 )
 
 // Create Virtual Machine
@@ -14,7 +14,7 @@ func (vm *VirtualMachine) Create() error {
 	}
 	// Initiliaze a new vm record
 
-	record, err := NewVMRecord(databasesql.Ctx, databasesql.DB, vm)
+	record, err := NewVMRecord(db.Ctx, db.DB, vm)
 	if err != nil {
 		return fmt.Errorf("can't Initiliaze a new vm: %w", err)
 	}
@@ -40,7 +40,7 @@ func (vm *VirtualMachine) Create() error {
 	}
 
 	// Step 4: Insert the vm record
-	if err = databasesql.InsertVM(databasesql.Ctx, databasesql.DB, record); err != nil {
+	if err = db.InsertVM(db.Ctx, db.DB, record); err != nil {
 		_ = vm.Delete() // rollback libvirt domain and disk
 		return fmt.Errorf("failed to create database record for VM %q: %w", vm.Metadata.Name, err)
 	}
