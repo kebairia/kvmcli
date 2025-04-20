@@ -18,6 +18,16 @@ const (
 	networkStateInactive = 0
 )
 
+type VirtualNetworkInfo struct {
+	Name      string
+	State     string
+	Bridge    string
+	Subnet    string
+	Gateway   string
+	DHCPRange string
+	Age       string
+}
+
 // ListNetworksByNamespace retrieves networks for a given namespace from MongoDB,
 // looks up their corresponding libvirt instances, and prints the details in a tabular format.
 func ListNetworksByNamespace(namespace string) {
@@ -94,21 +104,22 @@ func ListAllNetworks() {
 	flags := libvirt.ConnectListNetworksActive | libvirt.ConnectListNetworksInactive
 
 	// Retrieve networks.
+	// IDEA: Should I have to retreive networks from libvirt, why don't I just take it from my database, and eliminate the possiblity
+	// of auto created networks by libvirt,
+	// is this the good approach ? I need to check that
 	networks, _, err := conn.ConnectListAllNetworks(1, flags)
 	if err != nil {
 		logger.Log.Fatalf("failed to retrieve networks: %v", err)
 	}
 
-	// Setup tabwriter for clean columnar output.
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATE\tBRIDGE\tSUBNET\tGATEWAY\tDHCP RANGE\tAGE")
-
+	vn := &VirtualNetwork{}
+	record := NewVirtualNetworkRecord(vn)
+	// Print header
+	w := vn.Header()
 	// Process each network.
 	for _, network := range networks {
 
-		net := VirtualNetwork{}
-		networkDetails := NewVirtualNetworkRecord(&net)
-		networkDetails.GetRecord(db.Ctx, db.DB, network.Name)
+		record.GetRecord(db.Ctx, db.DB, network.Name)
 		if err != nil {
 			logger.Log.Errorf("failed to get details for network %s: %v", network.Name, err)
 			continue
@@ -119,20 +130,21 @@ func ListAllNetworks() {
 		if err != nil {
 			logger.Log.Errorf("failed to get state for network %s: %v", network.Name, err)
 		}
-
 		// Format the DHCP range.
-		dhcpRange := networkDetails.DHCP["start"] + " → " + networkDetails.DHCP["end"]
+		dhcpRange := record.DHCP["start"] + " → " + record.DHCP["end"]
+
+		info := &VirtualNetworkInfo{
+			Name:      record.Name,
+			State:     state,
+			Bridge:    record.Bridge,
+			Subnet:    record.Netmask,
+			Gateway:   record.NetAddress,
+			DHCPRange: dhcpRange,
+			Age:       formatAge(record.CreatedAt),
+		}
+		vn.PrintRow(w, info)
 
 		// Print network information.
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-			networkDetails.Name,
-			state,
-			networkDetails.Bridge,
-			networkDetails.Netmask,
-			networkDetails.NetAddress,
-			dhcpRange,
-			formatAge(networkDetails.CreatedAt),
-		)
 	}
 	w.Flush()
 }
@@ -172,3 +184,25 @@ func formatAge(t time.Time) string {
 		return fmt.Sprintf("%ds", int(duration.Seconds()))
 	}
 }
+
+func (net *VirtualNetwork) Header() *tabwriter.Writer {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(w, "NAME\tSTATE\tBRIDGE\tSUBNET\tGATEWAY\tDHCP RANGE\tAGE")
+	return w
+}
+
+func (vn *VirtualNetwork) PrintRow(w *tabwriter.Writer, info *VirtualNetworkInfo) {
+	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		info.Name,
+		info.State,
+		info.Bridge,
+		info.Subnet,
+		info.Gateway,
+		info.DHCPRange,
+		info.Age,
+	)
+}
+
+// func NetVirtualNetworkInfo(networkInfo *VirtualNetworkInfo) {
+// 	return &networkInfo{}
+// }
