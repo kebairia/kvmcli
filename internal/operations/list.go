@@ -21,6 +21,11 @@ const (
 	domainStateStopped = 5
 )
 
+// NOTE:: Later, it must be (ListResourcesByNamespace), something like that
+// Since namespaces are subset in (all), I can add it as a condition.
+// if no namespace is required, I list all resources
+// of course resources are specified as argument or something like that
+
 // ListAllVMsInNamespace retrieves VMs for a given namespace from MongoDB,
 // looks up their libvirt domain, and prints their details.
 func ListAllVMsInNamespace(namespace string) {
@@ -96,6 +101,7 @@ func ListAllVMsInNamespace(namespace string) {
 	w.Flush()
 }
 
+// List
 // ListAllVMs retrieves all VM domains via libvirt,
 // then gets corresponding details from MongoDB and prints them.
 func ListAllVMs() {
