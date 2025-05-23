@@ -3,12 +3,12 @@ package store
 import (
 	"fmt"
 
-	"github.com/kebairia/kvmcli/internal/database"
+	db "github.com/kebairia/kvmcli/internal/database-sql"
 )
 
 func (s *Store) Create() error {
 	record := NewStoreRecord(s)
-	_, err := database.InsertStore(record)
+	err := db.InsertStore(db.Ctx, db.DB, record)
 	if err != nil {
 		panic(err)
 	}
