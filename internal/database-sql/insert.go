@@ -128,3 +128,45 @@ func InsertNet(ctx context.Context, db *sql.DB, record *VirtualNetworkRecord) er
 
 	return nil
 }
+
+func InsertStore(ctx context.Context, db *sql.DB, record *StoreRecord) error {
+	if db == nil {
+		return fmt.Errorf("DB is nil")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	labelsJSON, err := json.Marshal(record.Labels)
+	if err != nil {
+		return err
+	}
+	imagesJSON, err := json.Marshal(record.Images)
+	if err != nil {
+		return err
+	}
+	// NOTE: Add EnstureStoreTable function
+
+	// Ensure the vms table exists.
+	if err := EnsureStoreTable(ctx, db); err != nil {
+		return fmt.Errorf("failed to ensure %q table exists: %w", NetworksTable, err)
+	}
+	const query = `
+		INSERT INTO store (
+		name, namespace, labels, backend, artifacts_path, images_path, images, created_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		`
+	if _, err := db.Exec(query,
+		record.Name,
+		record.Namespace,
+		string(labelsJSON),
+		record.Backend,
+		record.ArtifactsPath,
+		record.ImagesPath,
+		string(imagesJSON),
+		record.Created_at,
+	); err != nil {
+		panic(err)
+	}
+	return nil
+}
