@@ -11,6 +11,7 @@ import (
 type Resource interface {
 	Create() error
 	Delete() error
+	// Header() *tabwriter.Writer
 }
 
 // Record defines operations for managing a records on database.
