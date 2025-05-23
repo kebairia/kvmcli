@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/kebairia/kvmcli/cmd"
-	_ "github.com/kebairia/kvmcli/internal/database"
 	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
