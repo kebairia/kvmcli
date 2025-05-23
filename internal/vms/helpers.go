@@ -10,9 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kebairia/kvmcli/internal/database"
-	db "github.com/kebairia/kvmcli/internal/database"
-	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database-sql"
 	"github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/utils"
 )
@@ -20,22 +18,25 @@ import (
 // CreateOverlay creates a qcow2 overlay image using a backing file obtained from the store record.
 // It invokes the 'qemu-img' utility with a timeout context.
 func (vm *VirtualMachine) CreateOverlay(image string) error {
-	st, err := database.GetRecord[database.StoreRecord](
-		"homelab-store",
-		database.StoreCollection,
-	)
-	if err != nil {
-		return fmt.Errorf("can't get store %v: %w", "homelab-store", err)
+	var st db.StoreRecord
+	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
+		return fmt.Errorf("can't get store %q: %w", "test-store", err)
+	}
+
+	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
+	img, ok := st.Images[image]
+	if !ok {
+		return fmt.Errorf("image %q not found in store", image)
 	}
 
 	// Build the full path to the base image from the store configuration.
 	baseImagePath := filepath.Join(
-		st.Spec.Config.ArtifactsPath,
-		st.Spec.Images[image].Directory,
-		st.Spec.Images[image].File,
+		st.ArtifactsPath,
+		img.Directory,
+		img.File,
 	)
 	// Construct target overlay image file name.
-	imageFile := fmt.Sprintf("%s.qcow2", filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name))
+	imageFile := fmt.Sprintf("%s.qcow2", filepath.Join(st.ImagesPath, vm.Metadata.Name))
 
 	// Define the qemu-img command arguments.
 	cmdArgs := []string{
@@ -64,15 +65,12 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 // DeleteOverlay deletes the qcow2 overlay image file from the file system.
 // It gets the target disk image path based on the store configuration and VM metadata.
 func (vm *VirtualMachine) DeleteOverlay(image string) error {
-	st, err := db.GetRecord[db.StoreRecord](
-		"homelab-store",
-		db.StoreCollection,
-	)
-	if err != nil {
-		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+	var st db.StoreRecord
+	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
+		return fmt.Errorf("can't get store %q: %w", "test-store", err)
 	}
 	// Construct the disk image path.
-	diskPath := filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name+".qcow2")
+	diskPath := filepath.Join(st.ImagesPath, vm.Metadata.Name+".qcow2")
 	if err := os.Remove(diskPath); err != nil {
 		return fmt.Errorf("failed to delete disk for VM %q: %w", vm.Metadata.Name, err)
 	}
@@ -98,28 +96,25 @@ func getNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (in
 // The record is then used to insert VM metadata into the database.
 func NewVMRecord(
 	ctx context.Context,
-	db *sql.DB,
+	mydb *sql.DB,
 	vm *VirtualMachine,
-) (*databasesql.VirtualMachineRecord, error) {
-	st, err := database.GetRecord[database.StoreRecord](
-		"homelab-store",
-		database.StoreCollection,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+) (*db.VirtualMachineRecord, error) {
+	var st db.StoreRecord
+	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
+		return &db.VirtualMachineRecord{}, fmt.Errorf("can't get store %q: %w", "test-store", err)
 	}
 
 	// Build the disk image path (with a .qcow2 extension) based on the store configuration.
 	diskImagePath := fmt.Sprintf(
 		"%s.qcow2",
-		filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name),
+		filepath.Join(st.ImagesPath, vm.Metadata.Name),
 	)
 	// Lookup the network ID based on the network name
-	networkID, err := getNetworkIDByName(ctx, db, vm.Spec.Network.Name)
+	networkID, err := getNetworkIDByName(ctx, mydb, vm.Spec.Network.Name)
 	if err != nil {
 		return nil, fmt.Errorf("cannot retrieve network ID: %w", err)
 	}
-	return &databasesql.VirtualMachineRecord{
+	return &db.VirtualMachineRecord{
 		Name:       vm.Metadata.Name,
 		Namespace:  vm.Metadata.Namespace,
 		Labels:     vm.Metadata.Labels,
@@ -138,17 +133,19 @@ func NewVMRecord(
 // It uses the store record to determine the disk image location and creates the domain configuration.
 func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Build the full path to the disk image with the .qcow2 extension.
-	st, err := database.GetRecord[database.StoreRecord](
-		"homelab-store",
-		database.StoreCollection,
-	)
-	if err != nil {
-		return "", fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+	var st db.StoreRecord
+	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
+		return "", fmt.Errorf("can't get store %q: %w", "test-store", err)
+	}
+	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
+	img, ok := st.Images[image]
+	if !ok {
+		return "", fmt.Errorf("image %q not found in store", image)
 	}
 	// Build the disk image path for the domain configuration.
 	diskImagePath := fmt.Sprintf(
 		"%s.qcow2",
-		filepath.Join(st.Spec.Config.ImagesPath, vm.Metadata.Name),
+		filepath.Join(st.ImagesPath, vm.Metadata.Name),
 	)
 
 	// Create a new domain configuration using utility functions.
@@ -159,7 +156,7 @@ func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 		diskImagePath,
 		vm.Spec.Network.Name,
 		vm.Spec.Network.MacAddress,
-		st.Spec.Images[image].OsProfile,
+		img.OsProfile,
 	)
 
 	xmlConfig, err := domain.GenerateXML()

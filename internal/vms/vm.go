@@ -1,6 +1,10 @@
 package vms
 
 import (
+	"fmt"
+	"os"
+	"text/tabwriter"
+
 	"github.com/digitalocean/go-libvirt"
 )
 
@@ -38,4 +42,11 @@ type Network struct {
 
 func (vm *VirtualMachine) SetConnection(conn *libvirt.Libvirt) {
 	vm.Conn = conn
+}
+
+func (net *VirtualMachine) Header() *tabwriter.Writer {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
+
+	return w
 }
