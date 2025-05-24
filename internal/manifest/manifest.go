@@ -1,4 +1,4 @@
-package loader
+package manifest
 
 import (
 	"fmt"
@@ -12,7 +12,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func LoadManifest(manifestPath string) ([]resources.Resource, error) {
+type Manifest interface {
+	Load(path string) ([]resources.Resource, error)
+}
+
+// var loader = map[string]func() ([]resources.Resource, error){
+// 	"VirtualMachine": LoadVirtualMachine,
+// 	"Network":        LoadNetwork,
+// 	"Store":          LoadStore,
+// }
+//
+// func LoadResource(kind string) ([]resources.Resource, error) {
+// 	f, ok := loader[kind]
+// 	if !ok {
+// 		return nil, fmt.Errorf("unknown kind: %s", kind)
+// 	}
+// 	return f()
+// }
+
+func Load(manifestPath string) ([]resources.Resource, error) {
 	var resourceList []resources.Resource
 	file, err := os.Open(manifestPath)
 	if err != nil {

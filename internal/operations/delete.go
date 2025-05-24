@@ -1,8 +1,8 @@
 package operations
 
 import (
-	"github.com/kebairia/kvmcli/internal/loader"
 	"github.com/kebairia/kvmcli/internal/logger"
+	"github.com/kebairia/kvmcli/internal/manifest"
 )
 
 func DeleteFromManifest(manifestPath string) error {
@@ -13,8 +13,7 @@ func DeleteFromManifest(manifestPath string) error {
 		return err
 	}
 	defer operator.Close()
-	// resources := manifest.Load(manifestPath)
-	resources, err := loader.LoadManifest(manifestPath)
+	resources, err := manifest.Load(manifestPath)
 	if err != nil {
 		logger.Log.Errorf("failed to load configuration: %v", err)
 		return err
