@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 
-	db "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 func (s *Store) Create() error {

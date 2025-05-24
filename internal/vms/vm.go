@@ -44,9 +44,12 @@ func (vm *VirtualMachine) SetConnection(conn *libvirt.Libvirt) {
 	vm.Conn = conn
 }
 
-func (net *VirtualMachine) Header() *tabwriter.Writer {
+func (vm *VirtualMachine) Header() *tabwriter.Writer {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
 
 	return w
+}
+
+func (vm *VirtualMachine) Load() {
 }

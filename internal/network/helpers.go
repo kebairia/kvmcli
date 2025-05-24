@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/utils"
 )
 
@@ -82,9 +82,9 @@ func (net *VirtualNetwork) defineAndStartNetwork(xmlConfig string) error {
 // 	}
 // }
 
-func NewVirtualNetworkRecord(net *VirtualNetwork) *databasesql.VirtualNetworkRecord {
+func NewVirtualNetworkRecord(net *VirtualNetwork) *db.VirtualNetworkRecord {
 	// Create network record out of infos
-	return &databasesql.VirtualNetworkRecord{
+	return &db.VirtualNetworkRecord{
 		Name:       net.Metadata.Name,
 		Namespace:  net.Metadata.Namespace,
 		Labels:     net.Metadata.Labels,

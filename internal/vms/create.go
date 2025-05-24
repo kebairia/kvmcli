@@ -3,7 +3,7 @@ package vms
 import (
 	"fmt"
 
-	db "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // Create Virtual Machine

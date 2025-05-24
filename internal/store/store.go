@@ -1,6 +1,6 @@
 package store
 
-import databasesql "github.com/kebairia/kvmcli/internal/database-sql"
+import db "github.com/kebairia/kvmcli/internal/database"
 
 type Store struct {
 	APIVersion string   `yaml:"apiVersion"`
@@ -16,9 +16,9 @@ type Metadata struct {
 }
 
 type Spec struct {
-	Backend string                            `yaml:"backend"`
-	Config  Config                            `yaml:"config"`
-	Images  map[string]databasesql.StoreImage `yaml:"images"`
+	Backend string                   `yaml:"backend"`
+	Config  Config                   `yaml:"config"`
+	Images  map[string]db.StoreImage `yaml:"images"`
 }
 
 type Config struct {

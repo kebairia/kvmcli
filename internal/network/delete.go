@@ -3,7 +3,7 @@ package network
 import (
 	"fmt"
 
-	db "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 

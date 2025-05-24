@@ -3,7 +3,7 @@ package store
 import (
 	"time"
 
-	db "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // NewStoreRecord converts a Store into a database StoreRecord.
@@ -41,12 +41,6 @@ import (
 func NewStoreRecord(s *Store) *db.StoreRecord {
 	images := make(map[string]db.StoreImage, len(s.Spec.Images))
 
-	// for name, img := range s.Spec.Images {
-	// 	images[name] = img
-
-	// imgJSON, _ := json.Marshal(img)
-	// images[name] = string(imgJSON)
-	// }
 	for name, img := range s.Spec.Images {
 		images[name] = img // keep it structured
 	}

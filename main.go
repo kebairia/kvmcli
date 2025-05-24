@@ -2,13 +2,13 @@ package main
 
 import (
 	"github.com/kebairia/kvmcli/cmd"
-	databasesql "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
 func main() {
 	var err error
-	databasesql.DB, err = databasesql.InitDB()
+	db.DB, err = db.InitDB()
 	if err != nil {
 		logger.Log.Fatalf("DB initialization failed: %v", err)
 	}

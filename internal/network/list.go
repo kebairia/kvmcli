@@ -8,7 +8,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal"
-	db "github.com/kebairia/kvmcli/internal/database-sql"
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
 )
 
