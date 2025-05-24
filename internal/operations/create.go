@@ -1,38 +1,40 @@
 package operations
 
 import (
-	"github.com/kebairia/kvmcli/internal"
 	"github.com/kebairia/kvmcli/internal/loader"
 	"github.com/kebairia/kvmcli/internal/logger"
-	"github.com/kebairia/kvmcli/internal/resources"
 )
 
-// CreateFromManifest loads a resource manifest from the given path,
-// injects a libvirt connection where necessary, and creates the resources.
+// TODO: Create a context with a timeout for the operations.
+//		   This function is responsible for creating resources defined in a manifest file.
+//		   1. Create a new operator
+//	     2. Load the manifest file, and extract the resources.
+//	     3. Loop through the resources and create them one by one.
+//			 !. the operator has a connection to the libvirt daemon.
+//			 !. Create/Delete/Update the resources as needed.
+
+// IDEA: use go routines to create the resources in parallel.
+
+// NOTICE: using go routines has an issue, because sometimes I need to create network resources
+//       before creating the VMs.
+
 func CreateFromManifest(manifestPath string) error {
-	conn, err := internal.InitConnection()
+	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// defer cancel()
+	operator, err := NewOperator()
 	if err != nil {
-		logger.Log.Errorf("failed to establish libvirt connection: %v", err)
 		return err
 	}
-	// Ensure that the libvirt connection is closed when the function exits.
-	defer conn.Disconnect()
-
-	resList, err := loader.LoadManifest(manifestPath)
+	defer operator.Close()
+	// resources := manifest.Load(manifestPath)
+	resources, err := loader.LoadManifest(manifestPath)
 	if err != nil {
 		logger.Log.Errorf("failed to load configuration: %v", err)
 		return err
 	}
-
-	for _, res := range resList {
-		// If the resource requires a libvirt connection, inject it.
-		if cs, ok := res.(resources.ClientSetter); ok {
-			cs.SetConnection(conn)
-		}
-		// Create the resource and log any errors.
-		if err := res.Create(); err != nil {
-			logger.Log.Errorf("failed to create resource: %v", err)
-			// Optionally, you could return the error here instead of continuing.
+	for _, resource := range resources {
+		if err := operator.Create(resource); err != nil {
+			logger.Log.Errorf("failed to create resource: %v\n", err)
 			continue
 		}
 	}
