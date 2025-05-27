@@ -1,6 +1,10 @@
 package network
 
 import (
+	"fmt"
+	"os"
+	"text/tabwriter"
+
 	"github.com/digitalocean/go-libvirt"
 )
 
@@ -30,4 +34,24 @@ type NetSpec struct {
 
 func (net *VirtualNetwork) SetConnection(conn *libvirt.Libvirt) {
 	net.Conn = conn
+}
+
+func (net *VirtualNetwork) Header() *tabwriter.Writer {
+	// Setup tabwriter for clean columnar output.
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintln(w, "NAME\tSTATE\tBRIDGE\tSUBNET\tGATEWAY\tDHCP RANGE\tAGE")
+
+	return w
+}
+
+func (net *VirtualNetwork) PrintRow(w *tabwriter.Writer, info *VirtualNetworkInfo) {
+	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		info.Name,
+		info.State,
+		info.Bridge,
+		info.Subnet,
+		info.Gateway,
+		info.DHCPRange,
+		info.Age,
+	)
 }

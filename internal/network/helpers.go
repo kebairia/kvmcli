@@ -66,22 +66,6 @@ func (net *VirtualNetwork) defineAndStartNetwork(xmlConfig string) error {
 	return nil
 }
 
-// func NewNetRecord(net *VirtualNetwork) *db.NetRecord {
-// 	// Create vm record out of infos
-// 	return &db.NetRecord{
-// 		Name:       net.Metadata.Name,
-// 		Namespace:  net.Metadata.Namespace,
-// 		Labels:     net.Metadata.Labels,
-// 		MacAddress: net.Spec.MacAddress,
-// 		Bridge:     net.Spec.Bridge,
-// 		Mode:       net.Spec.Mode,
-// 		NetAddress: net.Spec.NetAddress,
-// 		Netmask:    net.Spec.Netmask,
-// 		DHCP:       net.Spec.DHCP,
-// 		CreatedAt:  time.Now(),
-// 	}
-// }
-
 func NewVirtualNetworkRecord(net *VirtualNetwork) *db.VirtualNetworkRecord {
 	// Create network record out of infos
 	return &db.VirtualNetworkRecord{

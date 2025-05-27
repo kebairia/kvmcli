@@ -185,24 +185,6 @@ func formatAge(t time.Time) string {
 	}
 }
 
-func (net *VirtualNetwork) Header() *tabwriter.Writer {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATE\tBRIDGE\tSUBNET\tGATEWAY\tDHCP RANGE\tAGE")
-	return w
-}
-
-func (vn *VirtualNetwork) PrintRow(w *tabwriter.Writer, info *VirtualNetworkInfo) {
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-		info.Name,
-		info.State,
-		info.Bridge,
-		info.Subnet,
-		info.Gateway,
-		info.DHCPRange,
-		info.Age,
-	)
-}
-
 // func NetVirtualNetworkInfo(networkInfo *VirtualNetworkInfo) {
 // 	return &networkInfo{}
 // }
