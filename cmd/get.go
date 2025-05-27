@@ -21,10 +21,11 @@ var GetVMCmd = &cobra.Command{
 	Short: "Display information about virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
 		if Namespace != "" {
-			operations.ListAllVMsInNamespace(Namespace)
+			operations.ListByNamespace(Namespace)
+			// operations.ListAll()
 			return
 		}
-		operations.ListAllVMs()
+		operations.ListAll()
 	},
 }
 
