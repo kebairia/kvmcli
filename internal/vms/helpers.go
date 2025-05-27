@@ -10,11 +10,20 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/digitalocean/go-libvirt"
 	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/utils"
 )
 
+const (
+	deviceName = "vda"
+
+	// Domain state constants.
+	domainStateRunning = 1
+	domainStatePaused  = 3
+	domainStateStopped = 5
+)
 // CreateOverlay creates a qcow2 overlay image using a backing file obtained from the store record.
 // It invokes the 'qemu-img' utility with a timeout context.
 func (vm *VirtualMachine) CreateOverlay(image string) error {
@@ -180,4 +189,52 @@ func (vm *VirtualMachine) defineAndStartDomain(xmlConfig string) error {
 	}
 
 	return nil
+}
+
+// getState returns a string representation of the VM state based on its domain info.
+func getState(conn *libvirt.Libvirt, domain libvirt.Domain) (string, error) {
+	state, _, _, _, _, err := conn.DomainGetInfo(domain)
+	if err != nil {
+		return "", fmt.Errorf("failed to get info for domain %s: %w", domain.Name, err)
+	}
+
+	switch int(state) {
+	case domainStateRunning:
+		return "Running", nil
+	case domainStatePaused:
+		return "Paused", nil
+	case domainStateStopped:
+		return "Stopped", nil
+	default:
+		return "Unknown", nil
+	}
+}
+
+// getDiskSize returns the disk size (in gigabytes) for the specified VM domain.
+func getDiskSize(conn *libvirt.Libvirt, domain libvirt.Domain) (float64, error) {
+	_, _, diskPhysSize, err := conn.DomainGetBlockInfo(domain, deviceName, 0)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get block info for domain %s: %w", domain.Name, err)
+	}
+
+	return float64(diskPhysSize) / (1024 * 1024 * 1024), nil
+}
+
+// formatAge returns a human-friendly string for the time elapsed since t.
+func formatAge(t time.Time) string {
+	duration := time.Since(t)
+	if duration < 0 {
+		duration = -duration
+	}
+
+	if days := int(duration.Hours() / 24); days >= 1 {
+		return fmt.Sprintf("%dd", days)
+	}
+	if hours := int(duration.Hours()); hours >= 1 {
+		return fmt.Sprintf("%dh", hours)
+	}
+	if minutes := int(duration.Minutes()); minutes >= 1 {
+		return fmt.Sprintf("%dm", minutes)
+	}
+	return fmt.Sprintf("%ds", int(duration.Seconds()))
 }

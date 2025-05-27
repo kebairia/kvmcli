@@ -50,6 +50,3 @@ func (vm *VirtualMachine) Header() *tabwriter.Writer {
 
 	return w
 }
-
-func (vm *VirtualMachine) Load() {
-}
