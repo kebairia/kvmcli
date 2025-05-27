@@ -1,6 +1,12 @@
 package store
 
-import db "github.com/kebairia/kvmcli/internal/database"
+import (
+	"fmt"
+	"os"
+	"text/tabwriter"
+
+	db "github.com/kebairia/kvmcli/internal/database"
+)
 
 type Store struct {
 	APIVersion string   `yaml:"apiVersion"`
@@ -33,4 +39,24 @@ type Image struct {
 	File      string `yaml:"file"      json:"file"`
 	Checksum  string `yaml:"checksum"  json:"checksum"`
 	Size      string `yaml:"size"      json:"size"`
+}
+
+func (st *Store) Header() *tabwriter.Writer {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	// Columns: store name, namespace, backend, artifacts path,
+	// images path, and how many images are defined
+	fmt.Fprintln(w, "NAME\tNAMESPACE\tBACKEND\tARTIFACTS_PATH\tIMAGES_PATH\tIMAGE_COUNT")
+	return w
+}
+
+func (st *Store) PrintRow(w *tabwriter.Writer) {
+	imageCount := len(st.Spec.Images)
+	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%d\n",
+		st.Metadata.Name,
+		st.Metadata.Namespace,
+		st.Spec.Backend,
+		st.Spec.Config.ArtifactsPath,
+		st.Spec.Config.ImagesPath,
+		imageCount,
+	)
 }
