@@ -8,6 +8,11 @@ import (
 	db "github.com/kebairia/kvmcli/internal/database"
 )
 
+// TODO: 1. Delete function for store
+//       2. Index for store table on database
+//       3. Print function for store (kvmcli get sotre)
+// 			 4. Connect stores with other instances using labels
+
 type Store struct {
 	APIVersion string   `yaml:"apiVersion"`
 	Kind       string   `yaml:"kind"`

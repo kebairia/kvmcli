@@ -12,6 +12,6 @@ func (s *Store) Create() error {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Creating store")
+	fmt.Printf("store/%s created\n", s.Metadata.Name)
 	return nil
 }
