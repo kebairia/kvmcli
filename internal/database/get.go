@@ -6,9 +6,57 @@ import (
 	"fmt"
 )
 
+// GetRecords retrieves all documents of type T from the specified collection
+// that match the given namespace.
+func GetRecords(
+	ctx context.Context,
+	db *sql.DB,
+) ([]VirtualMachineRecord, error) {
+	query := fmt.Sprintf(`
+		SELECT id, name, namespace, 
+		       cpu, ram, mac_address, 
+		       network_id, image, 
+		       disk_size, disk_path, 
+		       created_at, labels
+		FROM %s`, VMsTable)
+	var (
+		objects   []VirtualMachineRecord
+		labelText string
+	)
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var object VirtualMachineRecord
+		if err := rows.Scan(
+			&object.ID,
+			&object.Name,
+			&object.Namespace,
+			&object.CPU,
+			&object.RAM,
+			&object.MacAddress,
+			&object.NetworkID,
+			&object.Image,
+			&object.DiskSize,
+			&object.DiskPath,
+			&object.CreatedAt,
+			&labelText,
+		); err != nil {
+			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+		objects = append(objects, object)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+	return objects, nil
+}
+
 // GetObjectsByNamespace retrieves all documents of type T from the specified collection
 // that match the given namespace.
-func BringObjectsByNamespace(
+func GetRecordsByNamespace(
 	ctx context.Context,
 	db *sql.DB,
 	namespace, table string,

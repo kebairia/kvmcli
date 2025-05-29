@@ -57,14 +57,16 @@ func (net *VirtualNetworkRecord) GetRecord(
 	db *sql.DB,
 	name string,
 ) error {
-	const query = `
+	query := fmt.Sprintf(`
 		SELECT id, name, namespace,
 		labels, mac_address, 
 		bridge, mode, 
 		net_address, netmask,
 		dhcp, autostart, created_at
-		FROM networks WHERE name = ?
-		`
+		FROM %s WHERE name = ?`,
+		NetworksTable,
+	)
+
 	var (
 		labelText string
 		DHCPText  string
