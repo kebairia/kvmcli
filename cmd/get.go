@@ -55,6 +55,19 @@ var GetNetworkCmd = &cobra.Command{
 	},
 }
 
+// 'get store' subcommand: shows stores.
+var GetStoreCmd = &cobra.Command{
+	Use:   "store",
+	Short: "Display stores details",
+	Run: func(cmd *cobra.Command, args []string) {
+		if Namespace != "" {
+			network.ListByNamespace(Namespace)
+			return
+		}
+		network.ListAll()
+	},
+}
+
 func init() {
 	// Flags for virtual machines
 	GetVMCmd.Flags().
@@ -65,5 +78,8 @@ func init() {
 		// Flags for Snapshots
 	GetSnapshotsCmd.Flags().
 		StringVarP(&Namespace, "namespace", "n", "", "Namespace")
-	GetCmd.AddCommand(GetVMCmd, GetSnapshotsCmd, GetNetworkCmd)
+		// Flags for stores
+	GetStoreCmd.Flags().
+		StringVarP(&Namespace, "namespace", "n", "", "Namespace")
+	GetCmd.AddCommand(GetVMCmd, GetSnapshotsCmd, GetNetworkCmd, GetStoreCmd)
 }
