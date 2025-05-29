@@ -1,14 +1,19 @@
 package operations
 
 import (
+	"context"
+	"time"
+
 	"github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/manifest"
 )
 
 func DeleteFromManifest(manifestPath string) error {
-	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	// defer cancel()
-	operator, err := NewOperator()
+	// log := logger.Logger
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	operator, err := NewOperator(ctx)
 	if err != nil {
 		return err
 	}

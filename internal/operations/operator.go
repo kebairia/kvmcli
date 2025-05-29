@@ -2,69 +2,98 @@ package operations
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal"
+	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/resources"
 )
 
-// Operator manages the lifecycle of resource lifecycle.
-// and other !operations!
-// It holds the execution context, configuration, libvirt connection, and logger.
+// Operator orchestrates lifecycle actions for any kvmcli Resource.
+// It owns a database handle and a libvirt connection, plus context & logger.
 type Operator struct {
-	ctx context.Context
-	// configuration file
-	// config config.Config
-	// libvirt connection
+	ctx  context.Context
+	db   *sql.DB
 	conn *libvirt.Libvirt
-	// logger
-	// log logger.Logger
+	// log  logger.Logger
 }
 
-func NewOperator() (*Operator, error) {
-	ctx := context.Background()
+// NewOperator initialises all shared dependencies.
+//
+// A nil ctx is promoted to context.Background().
+// If any step fails, resources created earlier are released before the error
+// is returned.
+// func NewOperator(ctx context.Context, log logger.Logger) (*Operator, error) {
+func NewOperator(ctx context.Context) (*Operator, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	// if log == nil {
+	// 	log = logger.Log
+	// }
+
 	conn, err := internal.InitConnection()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("init libvirt: %w", err)
 	}
-	// setting logger
-	// log := logger.Global()
+
+	// TODO:  sync.Once -> to ensure the database is initialized only once
+	database, err := db.InitDB()
+	if err != nil {
+		_ = conn.Disconnect()
+		return nil, fmt.Errorf("init database: %w", err)
+	}
 
 	return &Operator{
 		ctx:  ctx,
+		db:   database,
 		conn: conn,
 		// log:  log,
 	}, nil
 }
 
+// Close releases all shared resources.
+// It is safe to call multiple times.
 func (o *Operator) Close() {
 	if o.conn != nil {
-		o.conn.Disconnect()
+		_ = o.conn.Disconnect()
+	}
+	if o.db != nil {
+		_ = o.db.Close()
 	}
 }
 
-func (o *Operator) Create(resource resources.Resource) error {
-	// If the resource requires a libvirt connection, inject it.
-	if cs, ok := resource.(resources.ClientSetter); ok {
-		cs.SetConnection(o.conn)
-	}
-	// create resource
-	err := resource.Create()
-	if err != nil {
-		return err
-	}
-	return nil
+// Create provisions the given Resource.
+func (o *Operator) Create(r resources.Resource) error {
+	o.setConnection(r)
+	return r.Create() // assumes your interface takes (ctx, db)
 }
 
-func (o *Operator) Delete(resource resources.Resource) error {
-	// If the resource requires a libvirt connection, inject it.
-	if cs, ok := resource.(resources.ClientSetter); ok {
-		cs.SetConnection(o.conn)
+// Delete removes the given Resource.
+func (o *Operator) Delete(r resources.Resource) error {
+	o.setConnection(r)
+	return r.Delete()
+}
+
+// func (o *Operator) Get(resource resources.Resource) error {
+// 	// If the resource requires a libvirt connection, inject it.
+// 	if cs, ok := resource.(resources.ClientSetter); ok {
+// 		cs.SetConnection(o.conn)
+// 	}
+// 	// get resource
+// 	err := resource.Get()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+// -- Helpers ------------------------------------------------------------
+// setConnection provides libvirt connectivity to Resources that require it.
+func (o *Operator) setConnection(r resources.Resource) {
+	if s, ok := r.(resources.ClientSetter); ok {
+		s.SetConnection(o.conn)
 	}
-	// delete resource
-	err := resource.Delete()
-	if err != nil {
-		return err
-	}
-	return nil
 }
