@@ -24,12 +24,13 @@ const (
 	domainStatePaused  = 3
 	domainStateStopped = 5
 )
+
 // CreateOverlay creates a qcow2 overlay image using a backing file obtained from the store record.
 // It invokes the 'qemu-img' utility with a timeout context.
 func (vm *VirtualMachine) CreateOverlay(image string) error {
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
-		return fmt.Errorf("can't get store %q: %w", "test-store", err)
+	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
 	}
 
 	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
@@ -75,8 +76,8 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 // It gets the target disk image path based on the store configuration and VM metadata.
 func (vm *VirtualMachine) DeleteOverlay(image string) error {
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
-		return fmt.Errorf("can't get store %q: %w", "test-store", err)
+	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
 	}
 	// Construct the disk image path.
 	diskPath := filepath.Join(st.ImagesPath, vm.Metadata.Name+".qcow2")
@@ -109,8 +110,12 @@ func NewVMRecord(
 	vm *VirtualMachine,
 ) (*db.VirtualMachineRecord, error) {
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
-		return &db.VirtualMachineRecord{}, fmt.Errorf("can't get store %q: %w", "test-store", err)
+	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+		return &db.VirtualMachineRecord{}, fmt.Errorf(
+			"can't get store %q: %w",
+			"homelab-store",
+			err,
+		)
 	}
 
 	// Build the disk image path (with a .qcow2 extension) based on the store configuration.
@@ -143,8 +148,8 @@ func NewVMRecord(
 func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Build the full path to the disk image with the .qcow2 extension.
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "test-store"); err != nil {
-		return "", fmt.Errorf("can't get store %q: %w", "test-store", err)
+	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+		return "", fmt.Errorf("can't get store %q: %w", "homelab-store", err)
 	}
 	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
 	img, ok := st.Images[image]

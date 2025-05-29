@@ -48,10 +48,10 @@ var GetNetworkCmd = &cobra.Command{
 	Short: "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
 		if Namespace != "" {
-			network.ListNetworksByNamespace(Namespace)
+			network.ListByNamespace(Namespace)
 			return
 		}
-		network.ListAllNetworks()
+		network.ListAll()
 	},
 }
 

@@ -33,11 +33,11 @@ func (info *VirtualMachineInfo) Header() *tabwriter.Writer {
 }
 
 func (info *VirtualMachineInfo) PrintInfo(w *tabwriter.Writer) {
-	fmt.Fprintf(w, "%s\t%s\t%d\t%d GB\t%.2f GB\t%s\t%s\t%s\n",
+	fmt.Fprintf(w, "%s\t%s\t%d\t%d MB\t%.2f GB\t%s\t%s\t%s\n",
 		info.Name,
 		info.State,
 		info.CPU,
-		info.RAM/1024, // Convert to MB
+		info.RAM, // Convert to MB
 		info.Disk,
 		info.Network,
 		info.Image,
@@ -56,7 +56,7 @@ func NewVirtualMachineInfo(
 	conn *libvirt.Libvirt,
 	rec db.VirtualMachineRecord,
 ) (*VirtualMachineInfo, error) {
-	log := logger.Logger
+	// log := logger.Logger
 	// Domain lookup
 	dom, err := conn.DomainLookupByName(rec.Name)
 	if err != nil {
@@ -66,20 +66,20 @@ func NewVirtualMachineInfo(
 	// State
 	state, err := getState(conn, dom)
 	if err != nil {
-		log.Error("cannot get state for %q: %v", rec.Name, err)
+		logger.Log.Errorf("cannot get state for %q: %v", rec.Name, err)
 		state = "unknown"
 	}
 
 	// Disk size
 	disk, err := getDiskSize(conn, dom)
 	if err != nil {
-		log.Error("cannot get disk size for %q: %v", rec.Name, err)
+		logger.Log.Errorf("cannot get disk size for %q: %v", rec.Name, err)
 	}
 
 	// Network name
 	network, err := db.GetNetworkNameByID(ctx, db.DB, rec.NetworkID)
 	if err != nil {
-		log.Error("cannot get network name for %q: %v", rec.Name, err)
+		logger.Log.Errorf("cannot get network name for %q: %v", rec.Name, err)
 	}
 
 	return &VirtualMachineInfo{
@@ -95,29 +95,21 @@ func NewVirtualMachineInfo(
 }
 
 func GetVirtualMachines(conn *libvirt.Libvirt) ([]VirtualMachineInfo, error) {
-	log := logger.Logger
+	// log := logger.Logger
 
-	flags := libvirt.ConnectListDomainsActive | libvirt.ConnectListDomainsInactive
-
-	domains, _, err := conn.ConnectListAllDomains(allDomains, flags)
+	records, err := db.GetRecords(db.Ctx, db.DB)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list libvirt domains: %w", err)
+		return nil, fmt.Errorf("failed to get VM records  %w", err)
 	}
 
-	vms := make([]VirtualMachineInfo, 0, len(domains))
-	for _, dom := range domains {
-		var rec db.VirtualMachineRecord
-		if err := rec.GetRecord(db.Ctx, db.DB, dom.Name); err != nil {
-			log.Error("could not fetch DB record for domain %q: %v", dom.Name, err)
-			continue
-		}
+	vms := make([]VirtualMachineInfo, 0, len(records))
 
+	for _, rec := range records {
 		vmInfo, err := NewVirtualMachineInfo(db.Ctx, conn, rec)
 		if err != nil {
-			log.Error("could not build VM info for %q: %v", rec.Name, err)
+			logger.Log.Errorf("could not build VM info for %q: %v", rec.Name, err)
 			continue
 		}
-
 		vms = append(vms, *vmInfo)
 	}
 
@@ -128,7 +120,7 @@ func GetVirtualMachineByNamespace(
 	conn *libvirt.Libvirt,
 	namespace string,
 ) ([]VirtualMachineInfo, error) {
-	log := logger.Logger
+	// log := logger.Logger
 
 	records, err := db.GetRecordsByNamespace(db.Ctx, db.DB, namespace, db.VMsTable)
 	if err != nil {
@@ -140,7 +132,7 @@ func GetVirtualMachineByNamespace(
 	for _, rec := range records {
 		vmInfo, err := NewVirtualMachineInfo(db.Ctx, conn, rec)
 		if err != nil {
-			log.Error("could not build VM info for %q: %v", rec.Name, err)
+			logger.Log.Errorf("could not build VM info for %q: %v", rec.Name, err)
 			continue
 		}
 		vms = append(vms, *vmInfo)
