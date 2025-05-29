@@ -30,6 +30,6 @@ func (net *VirtualNetwork) Create() error {
 		return err
 	}
 
-	fmt.Printf("net/%s created\n", net.Metadata.Name)
+	fmt.Printf("network/%s created\n", net.Metadata.Name)
 	return nil
 }

@@ -30,7 +30,7 @@ type VirtualNetworkInfo struct {
 
 // ListNetworksByNamespace retrieves networks for a given namespace from MongoDB,
 // looks up their corresponding libvirt instances, and prints the details in a tabular format.
-func ListNetworksByNamespace(namespace string) {
+func ListByNamespace(namespace string) {
 	conn, err := internal.InitConnection()
 	if err != nil {
 		logger.Log.Fatalf("failed to connect to libvirt: %v", err)
@@ -92,7 +92,7 @@ func ListNetworksByNamespace(namespace string) {
 
 // ListAllNetworks retrieves all networks (active and inactive) from libvirt,
 // gets additional details from the database, and prints them in a tabular format.
-func ListAllNetworks() {
+func ListAll() {
 	// Initialize libvirt connection.
 	conn, err := internal.InitConnection()
 	if err != nil {
@@ -112,10 +112,10 @@ func ListAllNetworks() {
 		logger.Log.Fatalf("failed to retrieve networks: %v", err)
 	}
 
-	vn := &VirtualNetwork{}
-	record := NewVirtualNetworkRecord(vn)
+	virtualNetwork := &VirtualNetwork{}
+	record := NewVirtualNetworkRecord(virtualNetwork)
 	// Print header
-	w := vn.Header()
+	w := virtualNetwork.Header()
 	// Process each network.
 	for _, network := range networks {
 
@@ -142,7 +142,7 @@ func ListAllNetworks() {
 			DHCPRange: dhcpRange,
 			Age:       formatAge(record.CreatedAt),
 		}
-		vn.PrintRow(w, info)
+		virtualNetwork.PrintRow(w, info)
 
 		// Print network information.
 	}
