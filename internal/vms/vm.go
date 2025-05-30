@@ -21,6 +21,7 @@ type Metadata struct {
 	Name      string            `yaml:"name"`
 	Namespace string            `yaml:"namespace"`
 	Labels    map[string]string `yaml:"labels"`
+	Store     string            `yaml:"store"`
 }
 type Spec struct {
 	CPU       int     `yaml:"cpu"`

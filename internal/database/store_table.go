@@ -85,29 +85,49 @@ type ImageRecord struct {
 func (store *StoreRecord) GetRecord(
 	ctx context.Context,
 	db *sql.DB,
-	storeID int64,
 	name string,
-) (*ImageRecord, error) {
-	// const query = `
-	// 	SELECT
-	// 	id, store_id, name, version, os_profile,
-	// 	directory, file, checksum, size, created_at
-	// 	FROM images
-	// 	WHERE store_id = ? AND name = ? ;
-	// `
+) error {
 	const query = `
 		SELECT
-      i.id, i.store_id, i.name, i.version, i.os_profile,
-      i.directory, i.file, i.checksum, i.size, i.created_at,
-      s.id, s.name, s.namespace, s.backend,
-      s.artifacts_path, s.images_path, s.created_at
-    FROM images AS i
-    JOIN stores AS s ON i.store_id = s.id
-    WHERE i.store_id = ? AND i.name = ?;
+      id, name, namespace, backend,
+      artifacts_path, images_path, created_at
+    WHERE name = ?;
 		`
+	row := db.QueryRowContext(ctx, query, name)
+	if err := row.Scan(
+		&store.ID,
+		&store.Name,
+		&store.Namespace,
+		&store.Backend,
+		&store.ArtifactsPath,
+		&store.ImagesPath,
+		&store.Created_at,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("no store record for  %q ", name)
+		}
+	}
+	return nil
+}
 
+// func getImageRecord(
+func (store *StoreRecord) GetImageRecord(
+	ctx context.Context,
+	db *sql.DB,
+	imageName string,
+) (*ImageRecord, error) {
+	const query = `
+		SELECT
+      image.id, image.store_id, image.name, image.version, image.os_profile,
+      image.directory, image.file, image.checksum, image.size, image.created_at,
+      store.id, store.name, store.namespace, store.backend,
+      store.artifacts_path, store.images_path, store.created_at
+    FROM images AS image
+    JOIN stores AS store ON image.store_id = store.id
+    WHERE image.store_id = ? AND image.name = ?;
+		`
 	rec := &ImageRecord{}
-	row := db.QueryRowContext(ctx, query, storeID, name)
+	row := db.QueryRowContext(ctx, query, store.ID, imageName)
 	if err := row.Scan(
 		&rec.ID,
 		&rec.StoreID,
@@ -128,11 +148,31 @@ func (store *StoreRecord) GetRecord(
 		&store.Created_at,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no image %q in store %d", name, storeID)
+			return nil, fmt.Errorf("no image %q in store %d", imageName, store.ID)
 		}
 
 		return nil, fmt.Errorf("scan image: %w", err)
 	}
 
 	return rec, nil
+}
+
+// GetStoreIDByName retrieves the database ID of a store by its name.
+// Returns sql.ErrNoRows if no store with that name exists.
+func GetStoreIDByName(ctx context.Context, db *sql.DB, name string) (int, error) {
+	const query = `
+        SELECT id
+        FROM stores
+        WHERE name = ?
+    `
+
+	var id int
+	err := db.QueryRowContext(ctx, query, name).Scan(&id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, fmt.Errorf("store %q not found", name)
+		}
+		return 0, fmt.Errorf("query store ID by name: %w", err)
+	}
+	return id, nil
 }

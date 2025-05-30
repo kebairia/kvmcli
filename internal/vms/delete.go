@@ -55,7 +55,7 @@ func (vm *VirtualMachine) Delete() error {
 	if err != nil {
 		logger.Log.Errorf("failed to delete record for VM %s: %v", vm.Metadata.Name, err)
 	}
-	logger.Log.Infof("%s/%s deleted", "vm", vmName)
+	fmt.Printf("vm/%s deleted\n", vmName)
 
 	return nil
 }

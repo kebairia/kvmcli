@@ -27,31 +27,23 @@ const (
 
 // CreateOverlay creates a qcow2 overlay image using a backing file obtained from the store record.
 // It invokes the 'qemu-img' utility with a timeout context.
-func (vm *VirtualMachine) CreateOverlay(image string) error {
-	var st db.StoreRecord
-	// var img *db.ImageRecord
-	// var err error
-	// if img, err := st.GetRecord(db.Ctx, db.DB, "homelab-store", image); err != nil {
-	img, err := st.GetRecord(db.Ctx, db.DB, 1, image)
+func (vm *VirtualMachine) CreateOverlay(imageName string) error {
+	store, img, err := vm.getStoreAndImage(imageName)
 	if err != nil {
-		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+		return fmt.Errorf("failed to get store and image: %w", err)
 	}
-
-	// Build the full path to the base image from the store configuration.
-	baseImagePath := filepath.Join(
-		st.ArtifactsPath,
-		img.Directory,
-		img.File,
-	)
+	// Build the path to the base image (from where we will create the overlay)
+	baseImagePath := filepath.Join(store.ArtifactsPath, img.Directory, img.File)
+	// build the path for the overlay image (destination image)
 	// Construct target overlay image file name.
-	imageFile := fmt.Sprintf("%s.qcow2", filepath.Join(st.ImagesPath, vm.Metadata.Name))
+	overlayPath := vm.buildOverlayPath(store)
 
 	// Define the qemu-img command arguments.
-	cmdArgs := []string{
+	args := []string{
 		"create",
 		"-o", fmt.Sprintf("backing_file=%s,backing_fmt=qcow2", baseImagePath),
 		"-f", "qcow2",
-		imageFile,
+		overlayPath,
 	}
 
 	// Set a timeout context for running the external command.
@@ -59,7 +51,7 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 	defer cancel()
 
 	// Execute the command.
-	cmd := exec.CommandContext(ctx, "qemu-img", cmdArgs...)
+	cmd := exec.CommandContext(ctx, "qemu-img", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		logger.Log.Errorf("qemu-img output: %s", output)
@@ -72,15 +64,23 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 
 // DeleteOverlay deletes the qcow2 overlay image file from the file system.
 // It gets the target disk image path based on the store configuration and VM metadata.
-func (vm *VirtualMachine) DeleteOverlay(image string) error {
-	var st db.StoreRecord
-	_, err := st.GetRecord(db.Ctx, db.DB, 1, image)
+func (vm *VirtualMachine) DeleteOverlay(imageName string) error {
+	store, err := vm.getStore()
 	if err != nil {
-		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+		return fmt.Errorf("failed to get store: %w", err)
 	}
 
+	// _, err = st.GetImageRecord(db.Ctx, db.DB, vm.Spec.Image)
+	// if err != nil {
+	// 	return fmt.Errorf("can't get store %q: %w", vm.Metadata.Store, err)
+	// }
+
+	if _, err := store.GetImageRecord(db.Ctx, db.DB, vm.Spec.Image); err != nil {
+		return fmt.Errorf("image not found in store %q: %w", vm.Metadata.Store, err)
+	}
 	// Construct the disk image path.
-	diskPath := filepath.Join(st.ImagesPath, vm.Metadata.Name+".qcow2")
+	diskPath := filepath.Join(store.ImagesPath, vm.Metadata.Name+".qcow2")
+	// overlayPath := vm.buildOverlayPath(store)
 	if err := os.Remove(diskPath); err != nil {
 		return fmt.Errorf("failed to delete disk for VM %q: %w", vm.Metadata.Name, err)
 	}
@@ -103,31 +103,32 @@ func getNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (in
 }
 
 // NewVMRecord constructs a new VM record from the provided VM configuration.
-// The record is then used to insert VM metadata into the database.
-func NewVMRecord(
+// then creates a database record for the virtual machine.
+func NewVirtualMachineRecord(
 	ctx context.Context,
-	mydb *sql.DB,
+	database *sql.DB,
 	vm *VirtualMachine,
 ) (*db.VirtualMachineRecord, error) {
-	var st db.StoreRecord
-	if _, err := st.GetRecord(db.Ctx, db.DB, 1, vm.Spec.Image); err != nil {
-		return &db.VirtualMachineRecord{}, fmt.Errorf(
-			"can't get store %q: %w",
-			"homelab-store",
+	store, err := vm.getStore()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get store: %w", err)
+	}
+
+	// Verify image exists in store
+	if _, err := store.GetImageRecord(db.Ctx, db.DB, vm.Spec.Image); err != nil {
+		return nil, fmt.Errorf(
+			"image %q not found in store %q: %w",
+			vm.Spec.Image,
+			vm.Metadata.Store,
 			err,
 		)
 	}
 
-	// Build the disk image path (with a .qcow2 extension) based on the store configuration.
-	diskImagePath := fmt.Sprintf(
-		"%s.qcow2",
-		filepath.Join(st.ImagesPath, vm.Metadata.Name),
-	)
-	// Lookup the network ID based on the network name
-	networkID, err := getNetworkIDByName(ctx, mydb, vm.Spec.Network.Name)
+	networkID, err := getNetworkIDByName(ctx, database, vm.Spec.Network.Name)
 	if err != nil {
-		return nil, fmt.Errorf("cannot retrieve network ID: %w", err)
+		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
+
 	return &db.VirtualMachineRecord{
 		Name:       vm.Metadata.Name,
 		Namespace:  vm.Metadata.Namespace,
@@ -135,7 +136,7 @@ func NewVMRecord(
 		CPU:        vm.Spec.CPU,
 		RAM:        vm.Spec.Memory,
 		DiskSize:   vm.Spec.Disk.Size,
-		DiskPath:   diskImagePath,
+		DiskPath:   vm.buildOverlayPath(store),
 		Image:      vm.Spec.Image,
 		MacAddress: vm.Spec.Network.MacAddress,
 		NetworkID:  networkID,
@@ -148,9 +149,11 @@ func NewVMRecord(
 func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Build the full path to the disk image with the .qcow2 extension.
 	var st db.StoreRecord
-	img, err := st.GetRecord(db.Ctx, db.DB, 1, image)
+	var err error
+	st.ID, err = db.GetStoreIDByName(db.Ctx, db.DB, vm.Metadata.Store)
+	img, err := st.GetImageRecord(db.Ctx, db.DB, image)
 	if err != nil {
-		return "", fmt.Errorf("can't get store %q: %w", "homelab-store", err)
+		return "", fmt.Errorf("can't get store %q: %w", vm.Metadata.Store, err)
 	}
 	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
 	// img, ok := st.Images[image]
@@ -243,4 +246,44 @@ func formatAge(t time.Time) string {
 		return fmt.Sprintf("%dm", minutes)
 	}
 	return fmt.Sprintf("%ds", int(duration.Seconds()))
+}
+
+// getStore retrieves the store record for the VM.
+func (vm *VirtualMachine) getStore() (*db.StoreRecord, error) {
+	var store db.StoreRecord
+	var err error
+
+	store.ID, err = db.GetStoreIDByName(db.Ctx, db.DB, vm.Metadata.Store)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Metadata.Store, err)
+	}
+
+	return &store, nil
+}
+
+// getStoreAndImage retrieves both store and image records.
+func (vm *VirtualMachine) getStoreAndImage(
+	imageName string,
+) (*db.StoreRecord, *db.ImageRecord, error) {
+	store, err := vm.getStore()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	img, err := store.GetImageRecord(db.Ctx, db.DB, imageName)
+	if err != nil {
+		return nil, nil, fmt.Errorf(
+			"failed to get image %q from store %q: %w",
+			imageName,
+			vm.Metadata.Store,
+			err,
+		)
+	}
+
+	return store, img, nil
+}
+
+// buildOverlayPath constructs the full path for the overlay image.
+func (vm *VirtualMachine) buildOverlayPath(store *db.StoreRecord) string {
+	return filepath.Join(store.ImagesPath, vm.Metadata.Name+".qcow2")
 }
