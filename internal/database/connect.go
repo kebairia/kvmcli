@@ -12,7 +12,7 @@ import (
 const (
 	DBFilePath     = "/home/zakaria/dox/homelab/kvmcli/kvmcli.db"
 	DatabaseName   = "kvmcli"
-	StoreTable     = "store"
+	StoreTable     = "stores"
 	VMsTable       = "vms"
 	NetworksTable  = "networks"
 	SnapshotsTable = "snapshots"

@@ -29,14 +29,12 @@ const (
 // It invokes the 'qemu-img' utility with a timeout context.
 func (vm *VirtualMachine) CreateOverlay(image string) error {
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+	// var img *db.ImageRecord
+	// var err error
+	// if img, err := st.GetRecord(db.Ctx, db.DB, "homelab-store", image); err != nil {
+	img, err := st.GetRecord(db.Ctx, db.DB, 1, image)
+	if err != nil {
 		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
-	}
-
-	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
-	img, ok := st.Images[image]
-	if !ok {
-		return fmt.Errorf("image %q not found in store", image)
 	}
 
 	// Build the full path to the base image from the store configuration.
@@ -64,7 +62,7 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 	cmd := exec.CommandContext(ctx, "qemu-img", cmdArgs...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Log.Debugf("qemu-img output: %s", output)
+		logger.Log.Errorf("qemu-img output: %s", output)
 		return fmt.Errorf("failed to execute qemu-img command: %w", err)
 	}
 
@@ -76,9 +74,11 @@ func (vm *VirtualMachine) CreateOverlay(image string) error {
 // It gets the target disk image path based on the store configuration and VM metadata.
 func (vm *VirtualMachine) DeleteOverlay(image string) error {
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+	_, err := st.GetRecord(db.Ctx, db.DB, 1, image)
+	if err != nil {
 		return fmt.Errorf("can't get store %q: %w", "homelab-store", err)
 	}
+
 	// Construct the disk image path.
 	diskPath := filepath.Join(st.ImagesPath, vm.Metadata.Name+".qcow2")
 	if err := os.Remove(diskPath); err != nil {
@@ -110,7 +110,7 @@ func NewVMRecord(
 	vm *VirtualMachine,
 ) (*db.VirtualMachineRecord, error) {
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+	if _, err := st.GetRecord(db.Ctx, db.DB, 1, vm.Spec.Image); err != nil {
 		return &db.VirtualMachineRecord{}, fmt.Errorf(
 			"can't get store %q: %w",
 			"homelab-store",
@@ -148,14 +148,15 @@ func NewVMRecord(
 func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Build the full path to the disk image with the .qcow2 extension.
 	var st db.StoreRecord
-	if err := st.GetRecord(db.Ctx, db.DB, "homelab-store"); err != nil {
+	img, err := st.GetRecord(db.Ctx, db.DB, 1, image)
+	if err != nil {
 		return "", fmt.Errorf("can't get store %q: %w", "homelab-store", err)
 	}
 	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
-	img, ok := st.Images[image]
-	if !ok {
-		return "", fmt.Errorf("image %q not found in store", image)
-	}
+	// img, ok := st.Images[image]
+	// if !ok {
+	// 	return "", fmt.Errorf("image %q not found in store", image)
+	// }
 	// Build the disk image path for the domain configuration.
 	diskImagePath := fmt.Sprintf(
 		"%s.qcow2",
