@@ -65,18 +65,6 @@ func (o *Operator) Close() {
 	}
 }
 
-// Create provisions the given Resource.
-func (o *Operator) Create(r resources.Resource) error {
-	o.setConnection(r)
-	return r.Create() // assumes your interface takes (ctx, db)
-}
-
-// Delete removes the given Resource.
-func (o *Operator) Delete(r resources.Resource) error {
-	o.setConnection(r)
-	return r.Delete()
-}
-
 // func (o *Operator) Get(resource resources.Resource) error {
 // 	// If the resource requires a libvirt connection, inject it.
 // 	if cs, ok := resource.(resources.ClientSetter); ok {
@@ -92,7 +80,7 @@ func (o *Operator) Delete(r resources.Resource) error {
 
 // -- Helpers ------------------------------------------------------------
 // setConnection provides libvirt connectivity to Resources that require it.
-func (o *Operator) setConnection(r resources.Resource) {
+func (o *Operator) SetConnection(r resources.Resource) {
 	if s, ok := r.(resources.ClientSetter); ok {
 		s.SetConnection(o.conn)
 	}

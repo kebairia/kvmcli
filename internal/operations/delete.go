@@ -6,6 +6,7 @@ import (
 
 	"github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/manifest"
+	"github.com/kebairia/kvmcli/internal/resources"
 )
 
 func DeleteFromManifest(manifestPath string) error {
@@ -31,4 +32,10 @@ func DeleteFromManifest(manifestPath string) error {
 	}
 
 	return nil
+}
+
+// Delete removes the given Resource.
+func (o *Operator) Delete(r resources.Resource) error {
+	o.SetConnection(r)
+	return r.Delete()
 }

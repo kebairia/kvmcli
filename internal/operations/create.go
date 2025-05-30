@@ -6,6 +6,7 @@ import (
 
 	"github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/manifest"
+	"github.com/kebairia/kvmcli/internal/resources"
 )
 
 // TODO: Create a context with a timeout for the operations.
@@ -42,4 +43,10 @@ func CreateFromManifest(manifestPath string) error {
 	}
 
 	return nil
+}
+
+// Create provisions the given Resource.
+func (o *Operator) Create(r resources.Resource) error {
+	o.SetConnection(r)
+	return r.Create() // assumes your interface takes (ctx, db)
 }
