@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/kebairia/kvmcli/internal/logger"
@@ -10,7 +11,6 @@ import (
 )
 
 func DeleteFromManifest(manifestPath string) error {
-	// log := logger.Logger
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -24,6 +24,8 @@ func DeleteFromManifest(manifestPath string) error {
 		logger.Log.Errorf("failed to load configuration: %v", err)
 		return err
 	}
+
+	slices.Reverse(resources)
 	for _, resource := range resources {
 		if err := operator.Delete(resource); err != nil {
 			logger.Log.Errorf("failed to delete resource: %v\n", err)
