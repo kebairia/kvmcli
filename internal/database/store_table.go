@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -164,4 +165,84 @@ func GetStoreIDByName(ctx context.Context, db *sql.DB, name string) (int, error)
 		return 0, fmt.Errorf("query store ID by name: %w", err)
 	}
 	return id, nil
+}
+
+func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
+	// 1. Ensure tables exist (including the images table!)
+	if err := EnsureStoreTable(ctx, db); err != nil {
+		return fmt.Errorf("failed to ensure schema: %w", err)
+	}
+
+	// 2. Marshal labels if you still store them as JSON
+	labelsJSON, err := json.Marshal(store.Labels)
+	if err != nil {
+		return fmt.Errorf("marshal labels: %w", err)
+	}
+
+	// 3. Start a transaction
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	// In case of any error, roll back
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 4. Insert the store row (no more images JSON here)
+	const storeInsert = `
+		INSERT INTO stores (
+			name, namespace, labels,
+			backend, artifacts_path, images_path
+		) VALUES (?, ?, ?, ?, ?, ?)
+	`
+	res, err := tx.ExecContext(ctx, storeInsert,
+		store.Name,
+		// record.Namespace,
+		"k8s",
+		string(labelsJSON),
+		store.Backend,
+		store.ArtifactsPath,
+		store.ImagesPath,
+	)
+	if err != nil {
+		return fmt.Errorf("insert store: %w", err)
+	}
+
+	// 5. Get the new store’s primary key
+	storeID, err := res.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("get last insert id: %w", err)
+	}
+
+	// 6. Insert each image pointing back to the store
+	const imgInsert = `
+		INSERT INTO images (
+			store_id, name, version, os_profile,
+			directory, file, checksum, size
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`
+	for _, img := range store.Images {
+		_, err = tx.ExecContext(ctx, imgInsert,
+			storeID,
+			img.Name,
+			img.Version,
+			"http://rockylinux.org/rocky/9",
+			img.Directory,
+			img.File,
+			img.Checksum,
+			img.Size,
+		)
+		if err != nil {
+			return fmt.Errorf("insert image %v: %w", img, err)
+		}
+	}
+
+	// 7. Commit the transaction
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("tx commit: %w", err)
+	}
+	return nil
 }

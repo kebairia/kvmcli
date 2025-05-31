@@ -8,7 +8,7 @@ import (
 
 func (s *Store) Create() error {
 	record := NewStoreRecord(s)
-	err := db.InsertStore(db.Ctx, db.DB, record)
+	err := record.Insert(db.Ctx, db.DB)
 	if err != nil {
 		panic(err)
 	}
