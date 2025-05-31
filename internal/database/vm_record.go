@@ -7,9 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-	// "github.com/digitalocean/go-libvirt"
-	// "github.com/kebairia/kvmcli/internal/logger"
-	// "github.com/kebairia/kvmcli/internal/vms"
 )
 
 // VMRecord represents a VM stored in the SQLite database.
@@ -30,31 +27,33 @@ type VirtualMachineRecord struct {
 	// SnapshotIDs []string we don't use snapshot id here, in the snapshot table we reference  t the vm
 }
 
-// EnsureVMTable creates the vms table if it doesn't exist.
+// EnsureVMTable creates the 'vms' table and its unique index if they do not already exist.
 func EnsureVMTable(ctx context.Context, db *sql.DB) error {
 	const schema = `
 	CREATE TABLE IF NOT EXISTS vms (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    namespace TEXT,
-    cpu INTEGER,
-    ram INTEGER,
-    mac_address TEXT,
-    network_id INTEGER,
-    store_id INTEGER,
-    image TEXT,
-    disk_size TEXT,
-    disk_path TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    labels TEXT,
-    FOREIGN KEY (network_id) REFERENCES networks(id)
+	  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+	  name        TEXT NOT NULL,
+	  namespace   TEXT,
+	  cpu         INTEGER,
+	  ram         INTEGER,
+	  mac_address TEXT,
+	  network_id  INTEGER,
+	  store_id    INTEGER,
+	  image       TEXT,
+	  disk_size   TEXT,
+	  disk_path   TEXT,
+	  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	  labels      TEXT,
+	  FOREIGN KEY (network_id) REFERENCES networks(id),
+	  FOREIGN KEY (store_id)    REFERENCES stores(id)
 	);
 
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_vm_name_namespace ON vms(name, namespace);
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_vm_name_namespace
+	  ON vms(name, namespace);
 	`
-	_, err := db.ExecContext(ctx, schema)
-	if err != nil {
-		return fmt.Errorf("failed to create vms table: %w", err)
+
+	if _, err := db.ExecContext(ctx, schema); err != nil {
+		return fmt.Errorf("EnsureVMTable: failed to create table/index: %w", err)
 	}
 	return nil
 }
