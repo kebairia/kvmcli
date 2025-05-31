@@ -22,6 +22,7 @@ type VirtualMachineRecord struct {
 	RAM        int
 	MacAddress string
 	NetworkID  int
+	StoreID    int
 	Image      string
 	DiskSize   string
 	DiskPath   string
@@ -40,6 +41,7 @@ func EnsureVMTable(ctx context.Context, db *sql.DB) error {
     ram INTEGER,
     mac_address TEXT,
     network_id INTEGER,
+    store_id INTEGER,
     image TEXT,
     disk_size TEXT,
     disk_path TEXT,
@@ -65,7 +67,7 @@ func (vmr *VirtualMachineRecord) GetRecord(
 	query := fmt.Sprintf(`
 		SELECT id, name, namespace, 
 		       cpu, ram, mac_address, 
-		       network_id, image, 
+		       network_id, store_id, image, 
 		       disk_size, disk_path, 
 		       created_at, labels
 		FROM %s
@@ -82,6 +84,7 @@ func (vmr *VirtualMachineRecord) GetRecord(
 		&vmr.RAM,
 		&vmr.MacAddress,
 		&vmr.NetworkID,
+		&vmr.StoreID,
 		&vmr.Image,
 		&vmr.DiskSize,
 		&vmr.DiskPath,
@@ -112,7 +115,7 @@ func (vmr *VirtualMachineRecord) GetRecordByNamespace(
 	query := fmt.Sprintf(`
 	SELECT id, name, namespace,
 	       cpu, ram, mac_address,
-	       network_id, image,
+	       network_id, store_id, image,
 	       disk_size, disk_path,
 	       created_at, labels
 	FROM %s

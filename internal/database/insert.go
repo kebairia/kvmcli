@@ -41,12 +41,13 @@ func InsertVM(ctx context.Context, db *sql.DB, record *VirtualMachineRecord) err
 			ram,
 			mac_address,
 			network_id,
+			store_id,
 			image,
 			disk_size,
 			disk_path,
 			created_at,
 			labels
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	// Execute the query using record values.
@@ -57,6 +58,7 @@ func InsertVM(ctx context.Context, db *sql.DB, record *VirtualMachineRecord) err
 		record.RAM,
 		record.MacAddress,
 		record.NetworkID,
+		record.StoreID,
 		record.Image,
 		record.DiskSize,
 		record.DiskPath,
