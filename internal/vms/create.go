@@ -41,7 +41,8 @@ func (vm *VirtualMachine) Create() error {
 	}
 
 	// Step 4: Insert the vm record
-	if err = db.InsertVM(db.Ctx, db.DB, record); err != nil {
+	// if err = db.InsertVM(db.Ctx, db.DB, record); err != nil {
+	if err = record.Insert(db.Ctx, db.DB); err != nil {
 		_ = vm.Delete() // rollback libvirt domain and disk
 		return fmt.Errorf("failed to create database record for VM %q: %w", vm.Metadata.Name, err)
 	}
