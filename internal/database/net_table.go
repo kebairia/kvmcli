@@ -100,6 +100,62 @@ func (net *VirtualNetworkRecord) GetRecord(
 	}
 	return nil
 }
+
+func (net *VirtualNetworkRecord) GetRecordByNamespace(
+	ctx context.Context,
+	db *sql.DB,
+	name string,
+	namespace string,
+) error {
+	query := fmt.Sprintf(`
+		SELECT id, name, namespace,
+		labels, mac_address, 
+		bridge, mode, 
+		net_address, netmask,
+		dhcp, autostart, created_at
+		FROM %s WHERE namespace = ? AND name = ?`,
+		NetworksTable,
+	)
+
+	var (
+		labelText string
+		DHCPText  string
+	)
+	err := db.QueryRowContext(ctx, query, namespace, name).Scan(
+		&net.ID,
+		&net.Name,
+		&net.Namespace,
+		&labelText,
+		&net.MacAddress,
+		&net.Bridge,
+		&net.Mode,
+		&net.NetAddress,
+		&net.Netmask,
+		&DHCPText,
+		&net.Autostart,
+		&net.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf(
+				"network with name %q in namespace %q not found: %w",
+				name,
+				namespace,
+				err,
+			)
+		}
+
+		return fmt.Errorf("failed to fetch VM record: %w", err)
+	}
+	if err := json.Unmarshal([]byte(DHCPText), &net.DHCP); err != nil {
+		return fmt.Errorf("failed to parse labels JSON: %w", err)
+	}
+	if err := json.Unmarshal([]byte(labelText), &net.Labels); err != nil {
+		return fmt.Errorf("failed to parse labels JSON: %w", err)
+	}
+	return nil
+}
+
 func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("DB is nil")

@@ -21,6 +21,7 @@ type Record interface {
 	Insert(ctx context.Context, db *sql.DB) error
 	Delete() error
 	GetRecord(ctx context.Context, db *sql.DB, name string) error
+	GetRecordByNamespace(ctx context.Context, db *sql.DB, name string, namespace string) error
 	// ScanRow(row *sql.Row) error
 	// ScanRows(rows *sql.Rows) error
 }
