@@ -129,17 +129,23 @@ func NewVirtualMachineRecord(
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
 
+	storeID, err := db.GetStoreIDByName(ctx, database, vm.Metadata.Store)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get network ID: %w", err)
+	}
+
 	return &db.VirtualMachineRecord{
 		Name:       vm.Metadata.Name,
 		Namespace:  vm.Metadata.Namespace,
 		Labels:     vm.Metadata.Labels,
-		CPU:        vm.Spec.CPU,
-		RAM:        vm.Spec.Memory,
+		CPU:        vm.Spec.Resources.CPU,
+		RAM:        vm.Spec.Resources.Memory,
 		DiskSize:   vm.Spec.Disk.Size,
 		DiskPath:   vm.buildOverlayPath(store),
 		Image:      vm.Spec.Image,
 		MacAddress: vm.Spec.Network.MacAddress,
 		NetworkID:  networkID,
+		StoreID:    storeID,
 		CreatedAt:  time.Now(),
 	}, nil
 }
@@ -169,8 +175,8 @@ func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Create a new domain configuration using utility functions.
 	domain := utils.NewDomain(
 		vm.Metadata.Name,
-		vm.Spec.Memory,
-		vm.Spec.CPU,
+		vm.Spec.Resources.Memory,
+		vm.Spec.Resources.CPU,
 		diskImagePath,
 		vm.Spec.Network.Name,
 		vm.Spec.Network.MacAddress,

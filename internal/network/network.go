@@ -23,13 +23,17 @@ type NetMetadata struct {
 	Labels    map[string]string `yaml:"labels"`
 }
 type NetSpec struct {
-	MacAddress string            `yaml:"macAddress"`
+	DHCP       map[string]string `yaml:"dhcp"`
 	Bridge     string            `yaml:"bridge"`
 	Mode       string            `yaml:"mode"`
-	NetAddress string            `yaml:"netAddress"`
-	Netmask    string            `yaml:"netmask"`
-	DHCP       map[string]string `yaml:"dhcp"`
+	Network    Network           `yaml:"network"`
 	Autostart  bool              `yaml:"autostart"`
+	MacAddress string            `yaml:"macAddress"`
+}
+
+type Network struct {
+	Address string `yaml:"address"`
+	Netmask string `yaml:"netmask"`
 }
 
 func (net *VirtualNetwork) SetConnection(conn *libvirt.Libvirt) {

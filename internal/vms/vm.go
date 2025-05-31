@@ -24,12 +24,15 @@ type Metadata struct {
 	Store     string            `yaml:"store"`
 }
 type Spec struct {
-	CPU       int     `yaml:"cpu"`
-	Memory    int     `yaml:"memory"`
-	Image     string  `yaml:"image"`
-	Disk      Disk    `yaml:"disk"`
-	Network   Network `yaml:"network"`
-	Autostart bool    `yaml:"autostart"`
+	Resources Resources `yaml:"resources"`
+	Image     string    `yaml:"image"`
+	Disk      Disk      `yaml:"disk"`
+	Network   Network   `yaml:"network"`
+	Autostart bool      `yaml:"autostart"`
+}
+type Resources struct {
+	CPU    int `yaml:"cpu"`
+	Memory int `yaml:"memory"`
 }
 
 type Disk struct {

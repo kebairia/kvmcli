@@ -2,9 +2,9 @@ package network
 
 import (
 	"fmt"
+	"log"
 
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/logger"
 )
 
 // Delete removes a VirtualNetwork resource from libvirt and cleans up its database record.
@@ -33,9 +33,9 @@ func (vn *VirtualNetwork) Delete() error {
 
 	// Delete the network record from the database.
 	if err := db.Delete(db.Ctx, db.DB, name, db.NetworksTable); err != nil {
-		logger.Log.Errorf("failed to delete record for network %q: %v", name, err)
+		log.Fatalf("failed to delete record for network %q: %v", name, err)
 	}
 
-	logger.Log.Infof("%s/%s deleted", "net", name)
+	fmt.Printf("%s/%s deleted\n", "network", name)
 	return nil
 }

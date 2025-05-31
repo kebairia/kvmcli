@@ -32,8 +32,8 @@ func (net *VirtualNetwork) prepareNetwork() (string, error) {
 	network := utils.NewNetwork(
 		net.Metadata.Name,
 		net.Spec.Mode,
-		net.Spec.NetAddress,
-		net.Spec.Netmask,
+		net.Spec.Network.Address,
+		net.Spec.Network.Netmask,
 		net.Spec.Autostart,
 		opts...,
 	)
@@ -75,8 +75,8 @@ func NewVirtualNetworkRecord(net *VirtualNetwork) *db.VirtualNetworkRecord {
 		MacAddress: net.Spec.MacAddress,
 		Bridge:     net.Spec.Bridge,
 		Mode:       net.Spec.Mode,
-		NetAddress: net.Spec.NetAddress,
-		Netmask:    net.Spec.Netmask,
+		NetAddress: net.Spec.Network.Address,
+		Netmask:    net.Spec.Network.Netmask,
 		DHCP:       net.Spec.DHCP,
 		Autostart:  net.Spec.Autostart,
 		CreatedAt:  time.Now(),
