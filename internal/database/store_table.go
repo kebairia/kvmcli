@@ -7,17 +7,6 @@ import (
 	"time"
 )
 
-// keep the detailed image description
-type StoreImage struct {
-	Version   string `json:"version"`
-	Name      string `json:"name"`
-	OsProfile string `json:"osProfile"`
-	Directory string `json:"directory"`
-	File      string `json:"file"`
-	Checksum  string `json:"checksum"`
-	Size      string `json:"size"`
-}
-
 type StoreRecord struct {
 	ID            int
 	Name          string
@@ -26,8 +15,21 @@ type StoreRecord struct {
 	Backend       string
 	ArtifactsPath string
 	ImagesPath    string
-	Images        map[string]StoreImage // <-- change here
-	Created_at    time.Time
+	Images        map[string]ImageRecord
+	CreatedAt     time.Time
+}
+
+type ImageRecord struct {
+	ID        int64
+	StoreID   int64
+	Name      string
+	Version   string
+	OsProfile string
+	Directory string
+	File      string
+	Checksum  string
+	Size      string
+	CreatedAt time.Time
 }
 
 // EnsureVMTable creates the vms table if it doesn't exist.
@@ -68,19 +70,6 @@ func EnsureStoreTable(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-type ImageRecord struct {
-	ID        int64
-	StoreID   int64
-	Name      string
-	Version   string
-	OsProfile string
-	Directory string
-	File      string
-	Checksum  string
-	Size      string
-	CreatedAt time.Time
-}
-
 // func getImageRecord(
 func (store *StoreRecord) GetRecord(
 	ctx context.Context,
@@ -101,7 +90,7 @@ func (store *StoreRecord) GetRecord(
 		&store.Backend,
 		&store.ArtifactsPath,
 		&store.ImagesPath,
-		&store.Created_at,
+		&store.CreatedAt,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("no store record for  %q ", name)
@@ -145,7 +134,7 @@ func (store *StoreRecord) GetImageRecord(
 		&store.Backend,
 		&store.ArtifactsPath,
 		&store.ImagesPath,
-		&store.Created_at,
+		&store.CreatedAt,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("no image %q in store %d", imageName, store.ID)
