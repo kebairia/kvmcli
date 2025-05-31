@@ -100,3 +100,62 @@ func (net *VirtualNetworkRecord) GetRecord(
 	}
 	return nil
 }
+func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
+	if db == nil {
+		return fmt.Errorf("DB is nil")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	// Ensure the vms table exists.
+	if err := EnsureNetworkTable(ctx, db); err != nil {
+		return fmt.Errorf("failed to ensure %q table exists: %w", NetworksTable, err)
+	}
+
+	// Marshal the Labels map into JSON for storage in the TEXT column.
+	labelsJSON, err := json.Marshal(net.Labels)
+	if err != nil {
+		return fmt.Errorf("failed to marshal labels: %w", err)
+	}
+
+	DHCPJSON, err := json.Marshal(net.DHCP)
+	if err != nil {
+		return fmt.Errorf("failed to marshal DHCP: %w", err)
+	}
+
+	// Define the INSERT query.
+	const query = `
+		INSERT INTO networks (
+			name,
+			namespace,
+			labels,
+			mac_address,
+			bridge,
+			mode,
+		  net_address,
+		  netmask,
+		  dhcp,
+			autostart,
+			created_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`
+
+	// Execute the query using record values.
+	if _, err := db.Exec(query,
+		net.Name,
+		net.Namespace,
+		string(labelsJSON),
+		net.MacAddress,
+		net.Bridge,
+		net.Mode,
+		net.NetAddress,
+		net.Netmask,
+		string(DHCPJSON),
+		net.Autostart,
+		net.CreatedAt,
+	); err != nil {
+		return fmt.Errorf("failed to insert Network record: %w", err)
+	}
+
+	return nil
+}

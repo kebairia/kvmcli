@@ -16,7 +16,7 @@ func (net *VirtualNetwork) Create() error {
 
 	// Insert the net record
 	// _, err := db.InsertNet(record)
-	err := db.InsertNet(db.Ctx, db.DB, record)
+	err := record.Insert(db.Ctx, db.DB)
 	if err != nil {
 		return fmt.Errorf("failed to create database record for %q: %w", net.Metadata.Name, err)
 	}
