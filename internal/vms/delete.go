@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/logger"
 )
 
 // OPTIMIZE:
@@ -28,16 +27,13 @@ func (vm *VirtualMachine) Delete() error {
 	vmName := vm.Metadata.Name
 	domain, err := vm.Conn.DomainLookupByName(vmName)
 	if err != nil {
-		return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
+		// return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
+		return err
 	}
 
 	// Attempt to destroy the domain.
 	if err := vm.Conn.DomainDestroy(domain); err != nil {
-		return fmt.Errorf(
-			"failed to delete VM %q (it might not be running): %w",
-			vmName,
-			err,
-		)
+		return err
 	}
 
 	// Undefine the domain
@@ -47,17 +43,17 @@ func (vm *VirtualMachine) Delete() error {
 
 	// Remove the disk associated with the VM.
 	if err := vm.DeleteOverlay(vmName); err != nil {
-		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
+		return err
 	}
 
 	record, err := NewVirtualMachineRecord(vm)
 	if err != nil {
-		return fmt.Errorf("can't Initiliaze a new vm: %w", err)
+		return err
 	}
 
 	err = record.Delete(db.Ctx, db.DB)
 	if err != nil {
-		logger.Log.Errorf("failed to delete record for VM %s: %v", vm.Metadata.Name, err)
+		return err
 	}
 	fmt.Printf("vm/%s deleted\n", vmName)
 
