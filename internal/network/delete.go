@@ -1,45 +1,43 @@
 package network
 
 import (
+	"errors"
 	"fmt"
 
 	db "github.com/kebairia/kvmcli/internal/database"
 )
 
-// Delete removes a VirtualNetwork resource from libvirt and cleans up its database record.
-func (vn *VirtualNetwork) Delete() error {
-	if vn.Conn == nil {
-		return fmt.Errorf("libvirt connection is nil")
+// Delete removes a VirtualNetwork from libvirt and deletes its database record.
+func (vnet *VirtualNetwork) Delete() error {
+	// Ensure we have a Libvirt connection
+	if vnet.Conn == nil {
+		return errors.New("libvirt connection is not initialized")
 	}
 
-	name := vn.Metadata.Name
+	name := vnet.Metadata.Name
 
-	// Lookup the network by its name.
-	network, err := vn.Conn.NetworkLookupByName(name)
+	// Lookup the network by name
+	virNet, err := vnet.Conn.NetworkLookupByName(name)
 	if err != nil {
-		return fmt.Errorf("failed to find network %q: %w", name, err)
+		return fmt.Errorf("network %q not found: %w", name, err)
 	}
 
-	// Destroy the network.
-	if err := vn.Conn.NetworkDestroy(network); err != nil {
+	// Destroy the network (stop it if it’s running)
+	if err := vnet.Conn.NetworkDestroy(virNet); err != nil {
 		return fmt.Errorf("failed to destroy network %q: %w", name, err)
 	}
 
-	// Undefine the network.
-	if err := vn.Conn.NetworkUndefine(network); err != nil {
+	// Undefine the network (remove its definition from libvirt)
+	if err := vnet.Conn.NetworkUndefine(virNet); err != nil {
 		return fmt.Errorf("failed to undefine network %q: %w", name, err)
 	}
 
-	// Delete the network record from the database.
-
-	record := NewVirtualNetworkRecord(vn)
-
-	// Insert the net record
-	err = record.Delete(db.Ctx, db.DB)
-	if err != nil {
-		return fmt.Errorf("failed to create database record for %q: %w", vn.Metadata.Name, err)
+	// Remove the record from the database
+	record := NewVirtualNetworkRecord(vnet)
+	if err := record.Delete(db.Ctx, db.DB); err != nil {
+		return fmt.Errorf("failed to delete database record for network %q: %w", name, err)
 	}
 
-	fmt.Printf("%s/%s deleted\n", "network", name)
+	fmt.Printf("network/%s deleted\n", name)
 	return nil
 }

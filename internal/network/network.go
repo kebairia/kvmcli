@@ -1,12 +1,15 @@
 package network
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
 
 	"github.com/digitalocean/go-libvirt"
 )
+
+var VirtualNetworkNameEmpty = errors.New("virtual network name is empty")
 
 // Struct definition
 type VirtualNetwork struct {

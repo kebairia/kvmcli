@@ -1,35 +1,42 @@
 package network
 
 import (
+	"errors"
 	"fmt"
 
 	db "github.com/kebairia/kvmcli/internal/database"
 )
 
-func (net *VirtualNetwork) Create() error {
-	// Check connection
-	if net.Conn == nil {
-		return fmt.Errorf("libvirt connection is nil")
-	}
-	// record := NewNetRecord(net)
-	record := NewVirtualNetworkRecord(net)
-
-	// Insert the net record
-	// _, err := db.InsertNet(record)
-	err := record.Insert(db.Ctx, db.DB)
-	if err != nil {
-		return fmt.Errorf("failed to create database record for %q: %w", net.Metadata.Name, err)
-	}
-	// Network
-	xmlConfig, err := net.prepareNetwork()
-	if err != nil {
-		return err
-	}
-	// Define the network and start it
-	if err := net.defineAndStartNetwork(xmlConfig); err != nil {
-		return err
+// Create defines a VirtualNetwork in libvirt and inserts its database record.
+func (vnet *VirtualNetwork) Create() error {
+	// Ensure Libvirt connection is initialized
+	if vnet.Conn == nil {
+		return errors.New("libvirt connection is not initialized")
 	}
 
-	fmt.Printf("network/%s created\n", net.Metadata.Name)
+	// Validate that we have a network name
+	name := vnet.Metadata.Name
+	if name == "" {
+		return errors.New("virtual network name is empty")
+	}
+
+	// Prepare the database record
+	record := NewVirtualNetworkRecord(vnet)
+	if err := record.Insert(db.Ctx, db.DB); err != nil {
+		return fmt.Errorf("failed to insert database record for network %q: %w", name, err)
+	}
+
+	// Generate the network XML definition
+	xmlConfig, err := vnet.prepareNetwork()
+	if err != nil {
+		return fmt.Errorf("failed to prepare XML for network %q: %w", name, err)
+	}
+
+	// Define and start the network in libvirt
+	if err := vnet.defineAndStartNetwork(xmlConfig); err != nil {
+		return fmt.Errorf("failed to define/start network %q: %w", name, err)
+	}
+
+	fmt.Printf("network/%s created\n", name)
 	return nil
 }
