@@ -217,8 +217,7 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 	`
 	res, err := tx.ExecContext(ctx, storeInsert,
 		store.Name,
-		// record.Namespace,
-		"k8s",
+		store.Namespace,
 		string(labelsJSON),
 		store.Backend,
 		store.ArtifactsPath,
@@ -246,7 +245,7 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 			storeID,
 			img.Name,
 			img.Version,
-			"http://rockylinux.org/rocky/9",
+			img.OsProfile,
 			img.Directory,
 			img.File,
 			img.Checksum,

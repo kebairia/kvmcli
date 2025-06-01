@@ -1,23 +1,23 @@
 package network
 
 import (
-	"errors"
 	"fmt"
 
 	db "github.com/kebairia/kvmcli/internal/database"
+	"github.com/kebairia/kvmcli/internal/vms"
 )
 
 // Create defines a VirtualNetwork in libvirt and inserts its database record.
 func (vnet *VirtualNetwork) Create() error {
 	// Ensure Libvirt connection is initialized
 	if vnet.Conn == nil {
-		return errors.New("libvirt connection is not initialized")
+		return vms.ErrNilLibvirtConn
 	}
 
 	// Validate that we have a network name
 	name := vnet.Metadata.Name
 	if name == "" {
-		return errors.New("virtual network name is empty")
+		return VirtualNetworkNameEmpty
 	}
 
 	// Prepare the database record

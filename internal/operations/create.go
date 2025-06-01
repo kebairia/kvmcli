@@ -39,7 +39,7 @@ func CreateFromManifest(manifestPath string) error {
 
 	for _, resource := range resources {
 		if err := operator.Create(resource); err != nil {
-			logger.Log.Errorf("failed to delete resource: %v", err)
+			logger.Log.Errorf("failed to create resource: %v\n", err)
 			continue
 		}
 	}

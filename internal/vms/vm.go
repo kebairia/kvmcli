@@ -1,12 +1,15 @@
 package vms
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
 
 	"github.com/digitalocean/go-libvirt"
 )
+
+var ErrNilLibvirtConn = errors.New("libvirt connection is nil")
 
 // Struct definition
 type VirtualMachine struct {

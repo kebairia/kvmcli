@@ -1,17 +1,18 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
-
-	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // TODO: 1. Delete function for store
 //       2. Index for store table on database
 //       3. Print function for store (kvmcli get sotre)
 // 			 4. Connect stores with other instances using labels
+
+var ErrStoreExist = errors.New("failed to insert new store record, store exist")
 
 type Store struct {
 	APIVersion string   `yaml:"apiVersion"`
@@ -38,12 +39,13 @@ type Config struct {
 }
 
 type Image struct {
-	Version   string `yaml:"version"   json:"version"`
-	OsProfile string `yaml:"osProfile" json:"osProfile"`
-	Directory string `yaml:"directory" json:"directory"`
-	File      string `yaml:"file"      json:"file"`
-	Checksum  string `yaml:"checksum"  json:"checksum"`
-	Size      string `yaml:"size"      json:"size"`
+	Name      string `yaml:"name"`
+	Version   string `yaml:"version"`
+	OsProfile string `yaml:"osProfile"`
+	Directory string `yaml:"directory"`
+	File      string `yaml:"file"`
+	Checksum  string `yaml:"checksum"`
+	Size      string `yaml:"size"`
 }
 
 func (st *Store) Header() *tabwriter.Writer {
