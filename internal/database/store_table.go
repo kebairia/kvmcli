@@ -246,3 +246,18 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 	}
 	return nil
 }
+
+func (store *StoreRecord) Delete(ctx context.Context, db *sql.DB) error {
+	// Create a filter matching the record with the specified name
+	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", StoreTable)
+
+	if _, err := db.ExecContext(ctx, query, store.Name); err != nil {
+		return fmt.Errorf(
+			"failed to delete from %s where name = %v: %w",
+			StoreTable,
+			store.Name,
+			err,
+		)
+	}
+	return nil
+}

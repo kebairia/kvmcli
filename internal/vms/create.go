@@ -15,7 +15,7 @@ func (vm *VirtualMachine) Create() error {
 	// Initiliaze a new vm record
 
 	// record, err := NewVMRecord(db.Ctx, db.DB, vm)
-	record, err := NewVirtualMachineRecord(db.Ctx, db.DB, vm)
+	record, err := NewVirtualMachineRecord(vm)
 	if err != nil {
 		return fmt.Errorf("can't Initiliaze a new vm: %w", err)
 	}

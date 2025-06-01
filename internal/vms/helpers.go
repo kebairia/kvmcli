@@ -105,8 +105,6 @@ func getNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (in
 // NewVMRecord constructs a new VM record from the provided VM configuration.
 // then creates a database record for the virtual machine.
 func NewVirtualMachineRecord(
-	ctx context.Context,
-	database *sql.DB,
 	vm *VirtualMachine,
 ) (*db.VirtualMachineRecord, error) {
 	store, err := vm.getStore()
@@ -124,12 +122,12 @@ func NewVirtualMachineRecord(
 		)
 	}
 
-	networkID, err := getNetworkIDByName(ctx, database, vm.Spec.Network.Name)
+	networkID, err := getNetworkIDByName(db.Ctx, db.DB, vm.Spec.Network.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
 
-	storeID, err := db.GetStoreIDByName(ctx, database, vm.Metadata.Store)
+	storeID, err := db.GetStoreIDByName(db.Ctx, db.DB, vm.Metadata.Store)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}

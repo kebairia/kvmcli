@@ -215,3 +215,18 @@ func (vmr *VirtualMachineRecord) Insert(ctx context.Context, db *sql.DB) error {
 
 	return nil
 }
+
+func (vmr *VirtualMachineRecord) Delete(ctx context.Context, db *sql.DB) error {
+	// Create a filter matching the record with the specified name
+	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", VMsTable)
+
+	if _, err := db.ExecContext(ctx, query, vmr.Name); err != nil {
+		return fmt.Errorf(
+			"failed to delete from %s where name = %v: %w",
+			VMsTable,
+			vmr.Name,
+			err,
+		)
+	}
+	return nil
+}

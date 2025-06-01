@@ -50,8 +50,12 @@ func (vm *VirtualMachine) Delete() error {
 		return fmt.Errorf("failed to delete disk for VM %q: %w", vmName, err)
 	}
 
-	// err = database.Delete(vm.Metadata.Name, database.VMsCollection)
-	err = db.Delete(db.Ctx, db.DB, vm.Metadata.Name, "vms")
+	record, err := NewVirtualMachineRecord(vm)
+	if err != nil {
+		return fmt.Errorf("can't Initiliaze a new vm: %w", err)
+	}
+
+	err = record.Delete(db.Ctx, db.DB)
 	if err != nil {
 		logger.Log.Errorf("failed to delete record for VM %s: %v", vm.Metadata.Name, err)
 	}

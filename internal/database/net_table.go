@@ -215,3 +215,18 @@ func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
 
 	return nil
 }
+
+func (net *VirtualNetworkRecord) Delete(ctx context.Context, db *sql.DB) error {
+	// Create a filter matching the record with the specified name
+	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", NetworksTable)
+
+	if _, err := db.ExecContext(ctx, query, net.Name); err != nil {
+		return fmt.Errorf(
+			"failed to delete from %s where name = %v: %w",
+			NetworksTable,
+			net.Name,
+			err,
+		)
+	}
+	return nil
+}
