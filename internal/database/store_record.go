@@ -16,7 +16,7 @@ type StoreRecord struct {
 	Backend       string
 	ArtifactsPath string
 	ImagesPath    string
-	Images        map[string]ImageRecord
+	Images        []ImageRecord
 	CreatedAt     time.Time
 }
 
@@ -32,6 +32,23 @@ type ImageRecord struct {
 	Size      string
 	CreatedAt time.Time
 }
+
+// NewStoreRecord creates a new store record from the provided store configuration.
+// func NewStoreRecord(s *store.Store) *StoreRecord {
+// 	images := make(map[string]ImageRecord, len(s.Spec.Images))
+// 	maps.Copy(images, s.Spec.Images)
+//
+// 	return &StoreRecord{
+// 		Name:          s.Metadata.Name,
+// 		Namespace:     s.Metadata.Namespace,
+// 		Labels:        s.Metadata.Labels,
+// 		Backend:       s.Spec.Backend,
+// 		ArtifactsPath: s.Spec.Config.ArtifactsPath,
+// 		ImagesPath:    s.Spec.Config.ImagesPath,
+// 		Images:        images,
+// 		CreatedAt:     time.Now(),
+// 	}
+// }
 
 // EnsureVMTable creates the vms table if it doesn't exist.
 func EnsureStoreTable(ctx context.Context, db *sql.DB) error {

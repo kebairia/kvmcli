@@ -27,9 +27,9 @@ type Metadata struct {
 }
 
 type Spec struct {
-	Backend string                    `yaml:"backend"`
-	Config  Config                    `yaml:"config"`
-	Images  map[string]db.ImageRecord `yaml:"images"`
+	Backend string  `yaml:"backend"`
+	Config  Config  `yaml:"config"`
+	Images  []Image `yaml:"images"`
 }
 
 type Config struct {
