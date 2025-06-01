@@ -31,8 +31,9 @@ var GetVMCmd = &cobra.Command{
 
 // 'get snapshots' subcommand: shows snapshots.
 var GetSnapshotsCmd = &cobra.Command{
-	Use:   "snapshot",
-	Short: "Display snapshots for virtual machines",
+	Use:     "snapshot",
+	Aliases: []string{"snap"},
+	Short:   "Display snapshots for virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
 		if ConfigFile == "" {
 			logger.Log.Fatalf("Configuration file is required (-f flag)")
@@ -44,8 +45,9 @@ var GetSnapshotsCmd = &cobra.Command{
 
 // 'get snapshots' subcommand: shows snapshots.
 var GetNetworkCmd = &cobra.Command{
-	Use:   "network",
-	Short: "Display network details",
+	Use:     "network",
+	Aliases: []string{"net"},
+	Short:   "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
 		if Namespace != "" {
 			network.ListByNamespace(Namespace)
