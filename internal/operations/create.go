@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/kebairia/kvmcli/internal/logger"
@@ -27,17 +28,18 @@ func CreateFromManifest(manifestPath string) error {
 	defer cancel()
 	operator, err := NewOperator(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create operator: %w", err)
 	}
 	defer operator.Close()
+
 	resources, err := manifest.Load(manifestPath)
 	if err != nil {
-		logger.Log.Errorf("failed to load configuration: %v", err)
-		return err
+		return fmt.Errorf("failed to load manifest %q: %w", manifestPath, err)
 	}
+
 	for _, resource := range resources {
 		if err := operator.Create(resource); err != nil {
-			logger.Log.Errorf("failed to create resource: %v\n", err)
+			logger.Log.Errorf("failed to delete resource: %v", err)
 			continue
 		}
 	}
@@ -48,5 +50,5 @@ func CreateFromManifest(manifestPath string) error {
 // Create provisions the given Resource.
 func (o *Operator) Create(r resources.Resource) error {
 	o.SetConnection(r)
-	return r.Create() // assumes your interface takes (ctx, db)
+	return r.Create()
 }

@@ -2,6 +2,7 @@ package operations
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"time"
 
@@ -16,19 +17,19 @@ func DeleteFromManifest(manifestPath string) error {
 
 	operator, err := NewOperator(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create operator: %w", err)
 	}
 	defer operator.Close()
+
 	resources, err := manifest.Load(manifestPath)
 	if err != nil {
-		logger.Log.Errorf("failed to load configuration: %v", err)
-		return err
+		return fmt.Errorf("failed to load manifest %q: %w", manifestPath, err)
 	}
 
 	slices.Reverse(resources)
 	for _, resource := range resources {
 		if err := operator.Delete(resource); err != nil {
-			logger.Log.Errorf("failed to delete resource: %v\n", err)
+			logger.Log.Errorf("failed to delete resource: %v", err)
 			continue
 		}
 	}
