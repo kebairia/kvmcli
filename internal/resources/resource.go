@@ -1,3 +1,4 @@
+// Package resources defines core interfaces for KVMCLI resource management.
 package resources
 
 import (
@@ -8,30 +9,36 @@ import (
 	"github.com/digitalocean/go-libvirt"
 )
 
-// Resource defines operations for managing a resource.
+// Resource encapsulates operations to provision and tear down a generic KVM resource.
 type Resource interface {
+	// Create provisions the resource in libvirt.
 	Create() error
+	// Delete removes the resource from libvirt.
 	Delete() error
-	// Get(name string) (Record, error)
-	// Header() *tabwriter.Writer
 }
 
-// Record defines operations for managing a records on database.
+// Record encapsulates database persistence operations for a resource.
 type Record interface {
+	// Insert persists the record into the given SQL database.
 	Insert(ctx context.Context, db *sql.DB) error
-	Delete() error
-	GetRecord(ctx context.Context, db *sql.DB, name string) error
-	GetRecordByNamespace(ctx context.Context, db *sql.DB, name string, namespace string) error
-	// ScanRow(row *sql.Row) error
-	// ScanRows(rows *sql.Rows) error
+	// Delete removes the record from the database.
+	Delete(ctx context.Context, db *sql.DB) error
+	// Get retrieves a single record by its name.
+	Get(ctx context.Context, db *sql.DB, name string) error
+	// GetByNamespace retrieves a record by both namespace and name.
+	GetByNamespace(ctx context.Context, db *sql.DB, name, namespace string) error
 }
 
+// ResourceInfo defines methods to render a resource’s information in a tabular, CLI-friendly format.
 type ResourceInfo interface {
+	// Header returns a tabwriter.Writer with column headers pre-written.
 	Header() *tabwriter.Writer
+	// PrintInfo writes the resource’s data as a row to the provided tabwriter.Writer.
 	PrintInfo(w *tabwriter.Writer)
 }
 
-// ClientSetter is implemented by types that require a libvirt connection.
+// ClientSetter is implemented by any type that needs to receive a libvirt connection.
 type ClientSetter interface {
-	SetConnection(*libvirt.Libvirt)
+	// SetConnection assigns a libvirt connection for subsequent operations.
+	SetConnection(conn *libvirt.Libvirt)
 }
