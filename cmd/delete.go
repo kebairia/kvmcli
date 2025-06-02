@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +14,7 @@ var DeleteCmd = &cobra.Command{
 			// Delete all VMs
 			return
 		} else if ManifestPath == "" {
-			logger.Log.Fatalf("Manifest file is required (-f flag)")
+			log.Errorf("Manifest file is required (-f flag)")
 		}
 		// Call your delete operation with the provided file.
 		operations.DeleteFromManifest(ManifestPath)

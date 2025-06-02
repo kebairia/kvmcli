@@ -9,7 +9,7 @@ import (
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal"
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 )
 
 const (
@@ -33,7 +33,7 @@ type VirtualNetworkInfo struct {
 func ListByNamespace(namespace string) {
 	conn, err := internal.InitConnection()
 	if err != nil {
-		logger.Log.Fatalf("failed to connect to libvirt: %v", err)
+		log.Errorf("failed to connect to libvirt: %v", err)
 	}
 	defer conn.Disconnect()
 
@@ -44,11 +44,11 @@ func ListByNamespace(namespace string) {
 		db.NetworksTable,
 	)
 	if err != nil {
-		logger.Log.Errorf("failed to retrieve VMs for namespace %s: %v", namespace, err)
+		log.Errorf("failed to retrieve VMs for namespace %s: %v", namespace, err)
 		return
 	}
 	if len(networks) == 0 {
-		logger.Log.Infof("no networks found in namespace %q", namespace)
+		log.Infof("no networks found in namespace %q", namespace)
 		return
 	}
 
@@ -62,14 +62,14 @@ func ListByNamespace(namespace string) {
 		// Lookup the network instance via libvirt.
 		netInstance, err := conn.NetworkLookupByName(nwRecord.Name)
 		if err != nil {
-			logger.Log.Errorf("failed to lookup network %q: %v", nwRecord.Name, err)
+			log.Errorf("failed to lookup network %q: %v", nwRecord.Name, err)
 			continue
 		}
 
 		// Get the current state of the network.
 		state, err := getState(conn, netInstance, nwRecord.Name)
 		if err != nil {
-			logger.Log.Errorf("failed to get state for network %q: %v", nwRecord.Name, err)
+			log.Errorf("failed to get state for network %q: %v", nwRecord.Name, err)
 			state = "Unknown"
 		}
 
@@ -96,7 +96,7 @@ func ListAll() {
 	// Initialize libvirt connection.
 	conn, err := internal.InitConnection()
 	if err != nil {
-		logger.Log.Fatalf("failed to initialize libvirt connection: %v", err)
+		log.Errorf("failed to initialize libvirt connection: %v", err)
 	}
 	defer conn.Disconnect()
 
@@ -109,7 +109,7 @@ func ListAll() {
 	// is this the good approach ? I need to check that
 	networks, _, err := conn.ConnectListAllNetworks(1, flags)
 	if err != nil {
-		logger.Log.Fatalf("failed to retrieve networks: %v", err)
+		log.Errorf("failed to retrieve networks: %v", err)
 	}
 
 	virtualNetwork := &VirtualNetwork{}
@@ -121,14 +121,14 @@ func ListAll() {
 
 		record.GetRecord(db.Ctx, db.DB, network.Name)
 		if err != nil {
-			logger.Log.Errorf("failed to get details for network %s: %v", network.Name, err)
+			log.Errorf("failed to get details for network %s: %v", network.Name, err)
 			continue
 		}
 
 		// Get the current state of the network.
 		state, err := getState(conn, network, network.Name)
 		if err != nil {
-			logger.Log.Errorf("failed to get state for network %s: %v", network.Name, err)
+			log.Errorf("failed to get state for network %s: %v", network.Name, err)
 		}
 		// Format the DHCP range.
 		dhcpRange := record.DHCP["start"] + " → " + record.DHCP["end"]

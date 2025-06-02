@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 // Execute runs the root command.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logger.Log.Errorf("Error executing command: %v", err)
+		log.Errorf("Error executing command: %v", err)
 	}
 }
 

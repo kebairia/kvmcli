@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/manifest"
 	"github.com/kebairia/kvmcli/internal/resources"
 )
@@ -29,7 +29,7 @@ func DeleteFromManifest(manifestPath string) error {
 	slices.Reverse(resources)
 	for _, resource := range resources {
 		if err := operator.Delete(resource); err != nil {
-			logger.Log.Errorf("failed to delete resource: %v", err)
+			log.Errorf("failed to delete resource: %v", err)
 			continue
 		}
 	}

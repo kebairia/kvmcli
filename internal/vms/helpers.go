@@ -12,7 +12,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/utils"
 )
 
@@ -54,11 +54,11 @@ func (vm *VirtualMachine) CreateOverlay(imageName string) error {
 	cmd := exec.CommandContext(ctx, "qemu-img", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Log.Errorf("qemu-img output: %s", output)
+		log.Errorf("qemu-img output: %s", output)
 		return fmt.Errorf("failed to execute qemu-img command: %w", err)
 	}
 
-	logger.Log.Debug("Overlay image created successfully")
+	log.Debug("Overlay image created successfully")
 	return nil
 }
 

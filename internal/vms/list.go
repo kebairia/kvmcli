@@ -9,7 +9,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 )
 
 const allDomains = -1
@@ -56,7 +56,7 @@ func NewVirtualMachineInfo(
 	conn *libvirt.Libvirt,
 	rec db.VirtualMachineRecord,
 ) (*VirtualMachineInfo, error) {
-	// log := logger.Logger
+	// log := logger
 	// Domain lookup
 	dom, err := conn.DomainLookupByName(rec.Name)
 	if err != nil {
@@ -66,20 +66,20 @@ func NewVirtualMachineInfo(
 	// State
 	state, err := getState(conn, dom)
 	if err != nil {
-		logger.Log.Errorf("cannot get state for %q: %v", rec.Name, err)
+		log.Errorf("cannot get state for %q: %v", rec.Name, err)
 		state = "unknown"
 	}
 
 	// Disk size
 	disk, err := getDiskSize(conn, dom)
 	if err != nil {
-		logger.Log.Errorf("cannot get disk size for %q: %v", rec.Name, err)
+		log.Errorf("cannot get disk size for %q: %v", rec.Name, err)
 	}
 
 	// Network name
 	network, err := db.GetNetworkNameByID(ctx, db.DB, rec.NetworkID)
 	if err != nil {
-		logger.Log.Errorf("cannot get network name for %q: %v", rec.Name, err)
+		log.Errorf("cannot get network name for %q: %v", rec.Name, err)
 	}
 
 	return &VirtualMachineInfo{
@@ -95,7 +95,6 @@ func NewVirtualMachineInfo(
 }
 
 func GetVirtualMachines(conn *libvirt.Libvirt) ([]VirtualMachineInfo, error) {
-	// log := logger.Logger
 
 	records, err := db.GetRecords(db.Ctx, db.DB)
 	if err != nil {
@@ -107,7 +106,7 @@ func GetVirtualMachines(conn *libvirt.Libvirt) ([]VirtualMachineInfo, error) {
 	for _, rec := range records {
 		vmInfo, err := NewVirtualMachineInfo(db.Ctx, conn, rec)
 		if err != nil {
-			logger.Log.Errorf("could not build VM info for %q: %v", rec.Name, err)
+			log.Errorf("could not build VM info for %q: %v", rec.Name, err)
 			continue
 		}
 		vms = append(vms, *vmInfo)
@@ -120,7 +119,6 @@ func GetVirtualMachineByNamespace(
 	conn *libvirt.Libvirt,
 	namespace string,
 ) ([]VirtualMachineInfo, error) {
-	// log := logger.Logger
 
 	records, err := db.GetRecordsByNamespace(db.Ctx, db.DB, namespace, db.VMsTable)
 	if err != nil {
@@ -132,7 +130,7 @@ func GetVirtualMachineByNamespace(
 	for _, rec := range records {
 		vmInfo, err := NewVirtualMachineInfo(db.Ctx, conn, rec)
 		if err != nil {
-			logger.Log.Errorf("could not build VM info for %q: %v", rec.Name, err)
+			log.Errorf("could not build VM info for %q: %v", rec.Name, err)
 			continue
 		}
 		vms = append(vms, *vmInfo)
@@ -146,7 +144,6 @@ func GetVirtualMachineByNamespace(
 // 	ctx context.Context,
 // 	conn *libvirt.Libvirt,
 // ) (*VirtualMachineInfo, error) {
-// 	log := logger.Logger
 // 	// NOTE: <-----
 // 	// defer conn.Disconnect()
 //

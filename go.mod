@@ -5,7 +5,6 @@ go 1.23.4
 require (
 	github.com/digitalocean/go-libvirt v0.0.0-20250226181018-4d5f24afb7c2
 	github.com/mattn/go-sqlite3 v1.14.27
-	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	gopkg.in/yaml.v3 v3.0.1
 )

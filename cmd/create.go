@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
 )
@@ -12,12 +12,12 @@ var CreateCmd = &cobra.Command{
 	Short: "Create resource(s) from a manifest file",
 	Run: func(cmd *cobra.Command, args []string) {
 		if ManifestPath == "" {
-			logger.Log.Fatalf("Manifest file is required (-f flag)")
+			log.Errorf("Manifest file is required (-f flag)")
 		}
 
 		// Use the provided configuration file to create resources.
 		if err := operations.CreateFromManifest(ManifestPath); err != nil {
-			logger.Log.Errorf("failed to create resource(s): %v", err)
+			log.Errorf("failed to create resource(s): %v", err)
 		}
 	},
 }

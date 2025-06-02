@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/kebairia/kvmcli/internal/logger"
 	"github.com/kebairia/kvmcli/internal/network"
 	"github.com/kebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
@@ -36,7 +36,7 @@ var GetSnapshotsCmd = &cobra.Command{
 	Short:   "Display snapshots for virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
 		if ConfigFile == "" {
-			logger.Log.Fatalf("Configuration file is required (-f flag)")
+			log.Errorf("Configuration file is required (-f flag)")
 		}
 		fmt.Println("You snapshosts are here")
 		// op.ListSnapshost()
