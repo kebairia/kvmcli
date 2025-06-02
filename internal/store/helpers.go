@@ -4,7 +4,6 @@ import (
 	"time"
 
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/resources"
 )
 
 // NOTE: I need to move this to store package
@@ -15,7 +14,7 @@ import (
 // on database package
 
 // NewStoreRecord creates a new store record from the provided store configuration.
-func NewStoreRecord(s *Store) resources.Record {
+func NewStoreRecord(s *Store) *db.StoreRecord {
 	images := make([]db.ImageRecord, len(s.Spec.Images))
 
 	for index, img := range s.Spec.Images {
