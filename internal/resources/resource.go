@@ -24,9 +24,9 @@ type Record interface {
 	// Delete removes the record from the database.
 	Delete(ctx context.Context, db *sql.DB) error
 	// Get retrieves a single record by its name.
-	Get(ctx context.Context, db *sql.DB, name string) error
+	GetRecord(ctx context.Context, db *sql.DB, name string) error
 	// GetByNamespace retrieves a record by both namespace and name.
-	GetByNamespace(ctx context.Context, db *sql.DB, name, namespace string) error
+	GetRecordByNamespace(ctx context.Context, db *sql.DB, name, namespace string) error
 }
 
 // ResourceInfo defines methods to render a resource’s information in a tabular, CLI-friendly format.
