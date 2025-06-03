@@ -277,3 +277,11 @@ func (store *StoreRecord) Delete(ctx context.Context, db *sql.DB) error {
 	}
 	return nil
 }
+
+func (store *StoreRecord) GetRecordByNamespace(
+	ctx context.Context,
+	db *sql.DB,
+	name, namespace string,
+) error {
+	return nil
+}
