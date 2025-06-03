@@ -75,7 +75,7 @@ func (vm *VirtualMachine) DeleteOverlay(imageName string) error {
 	// 	return fmt.Errorf("can't get store %q: %w", vm.Metadata.Store, err)
 	// }
 
-	if _, err := store.GetImageRecord(db.Ctx, db.DB, vm.Spec.Image); err != nil {
+	if _, err := store.GetImageRecord(vm.Context, vm.DB, vm.Spec.Image); err != nil {
 		return fmt.Errorf("image not found in store %q: %w", vm.Metadata.Store, err)
 	}
 	// Construct the disk image path.
@@ -113,7 +113,7 @@ func NewVirtualMachineRecord(
 	}
 
 	// Verify image exists in store
-	if _, err := store.GetImageRecord(db.Ctx, db.DB, vm.Spec.Image); err != nil {
+	if _, err := store.GetImageRecord(vm.Context, vm.DB, vm.Spec.Image); err != nil {
 		return nil, fmt.Errorf(
 			"image %q not found in store %q: %w",
 			vm.Spec.Image,
@@ -122,12 +122,12 @@ func NewVirtualMachineRecord(
 		)
 	}
 
-	networkID, err := getNetworkIDByName(db.Ctx, db.DB, vm.Spec.Network.Name)
+	networkID, err := getNetworkIDByName(vm.Context, vm.DB, vm.Spec.Network.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
 
-	storeID, err := db.GetStoreIDByName(db.Ctx, db.DB, vm.Metadata.Store)
+	storeID, err := db.GetStoreIDByName(vm.Context, vm.DB, vm.Metadata.Store)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
@@ -154,8 +154,8 @@ func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Build the full path to the disk image with the .qcow2 extension.
 	var st db.StoreRecord
 	var err error
-	st.ID, err = db.GetStoreIDByName(db.Ctx, db.DB, vm.Metadata.Store)
-	img, err := st.GetImageRecord(db.Ctx, db.DB, image)
+	st.ID, err = db.GetStoreIDByName(vm.Context, vm.DB, vm.Metadata.Store)
+	img, err := st.GetImageRecord(vm.Context, vm.DB, image)
 	if err != nil {
 		return "", fmt.Errorf("can't get store %q: %w", vm.Metadata.Store, err)
 	}
@@ -257,7 +257,7 @@ func (vm *VirtualMachine) getStore() (*db.StoreRecord, error) {
 	var store db.StoreRecord
 	var err error
 
-	store.ID, err = db.GetStoreIDByName(db.Ctx, db.DB, vm.Metadata.Store)
+	store.ID, err = db.GetStoreIDByName(vm.Context, vm.DB, vm.Metadata.Store)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Metadata.Store, err)
 	}
@@ -274,7 +274,7 @@ func (vm *VirtualMachine) getStoreAndImage(
 		return nil, nil, err
 	}
 
-	img, err := store.GetImageRecord(db.Ctx, db.DB, imageName)
+	img, err := store.GetImageRecord(vm.Context, vm.DB, imageName)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"failed to get image %q from store %q: %w",

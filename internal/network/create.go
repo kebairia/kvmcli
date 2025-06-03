@@ -1,9 +1,11 @@
 package network
 
 import (
+	// "context"
+	// "database/sql"
 	"fmt"
 
-	db "github.com/kebairia/kvmcli/internal/database"
+	// db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/vms"
 )
 
@@ -22,7 +24,7 @@ func (vnet *VirtualNetwork) Create() error {
 
 	// Prepare the database record
 	record := NewVirtualNetworkRecord(vnet)
-	if err := record.Insert(db.Ctx, db.DB); err != nil {
+	if err := record.Insert(vnet.Context, vnet.DB); err != nil {
 		return fmt.Errorf("failed to insert database record for network %q: %w", name, err)
 	}
 

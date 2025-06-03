@@ -1,6 +1,8 @@
 package network
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -15,6 +17,8 @@ var VirtualNetworkNameEmpty = errors.New("virtual network name is empty")
 type VirtualNetwork struct {
 	// Conn to hold the libvirt connection
 	Conn       *libvirt.Libvirt `yaml:"-"`
+	DB         *sql.DB          `yaml:"-"`
+	Context    context.Context  `yaml:"_"`
 	ApiVersion string           `yaml:"apiVersion"`
 	Kind       string           `yaml:"kind"`
 	Metadata   NetMetadata      `yaml:"metadata"`
@@ -39,8 +43,10 @@ type Network struct {
 	Netmask string `yaml:"netmask"`
 }
 
-func (net *VirtualNetwork) SetConnection(conn *libvirt.Libvirt) {
+func (net *VirtualNetwork) SetConnection(ctx context.Context, db *sql.DB, conn *libvirt.Libvirt) {
 	net.Conn = conn
+	net.DB = db
+	net.Context = ctx
 }
 
 func (net *VirtualNetwork) Header() *tabwriter.Writer {

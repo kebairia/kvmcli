@@ -3,8 +3,6 @@ package network
 import (
 	"errors"
 	"fmt"
-
-	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // Delete removes a VirtualNetwork from libvirt and deletes its database record.
@@ -34,7 +32,7 @@ func (vnet *VirtualNetwork) Delete() error {
 
 	// Remove the record from the database
 	record := NewVirtualNetworkRecord(vnet)
-	if err := record.Delete(db.Ctx, db.DB); err != nil {
+	if err := record.Delete(vnet.Context, vnet.DB); err != nil {
 		return fmt.Errorf("failed to delete database record for network %q: %w", name, err)
 	}
 

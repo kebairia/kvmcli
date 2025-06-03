@@ -2,6 +2,7 @@ package vms
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -53,6 +54,7 @@ func (info *VirtualMachineInfo) PrintInfo(w *tabwriter.Writer) {
 // NewVirtualMachineInfo constructs a VirtualMachineInfo by querying libvirt and the DB.
 func NewVirtualMachineInfo(
 	ctx context.Context,
+	database *sql.DB,
 	conn *libvirt.Libvirt,
 	rec db.VirtualMachineRecord,
 ) (*VirtualMachineInfo, error) {
@@ -77,7 +79,7 @@ func NewVirtualMachineInfo(
 	}
 
 	// Network name
-	network, err := db.GetNetworkNameByID(ctx, db.DB, rec.NetworkID)
+	network, err := db.GetNetworkNameByID(ctx, database, rec.NetworkID)
 	if err != nil {
 		log.Errorf("cannot get network name for %q: %v", rec.Name, err)
 	}
@@ -94,9 +96,12 @@ func NewVirtualMachineInfo(
 	}, nil
 }
 
-func GetVirtualMachines(conn *libvirt.Libvirt) ([]VirtualMachineInfo, error) {
-
-	records, err := db.GetRecords(db.Ctx, db.DB)
+func GetVirtualMachines(
+	ctx context.Context,
+	database *sql.DB,
+	conn *libvirt.Libvirt,
+) ([]VirtualMachineInfo, error) {
+	records, err := db.GetRecords(ctx, database)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get VM records  %w", err)
 	}
@@ -104,7 +109,7 @@ func GetVirtualMachines(conn *libvirt.Libvirt) ([]VirtualMachineInfo, error) {
 	vms := make([]VirtualMachineInfo, 0, len(records))
 
 	for _, rec := range records {
-		vmInfo, err := NewVirtualMachineInfo(db.Ctx, conn, rec)
+		vmInfo, err := NewVirtualMachineInfo(ctx, database, conn, rec)
 		if err != nil {
 			log.Errorf("could not build VM info for %q: %v", rec.Name, err)
 			continue
@@ -116,11 +121,12 @@ func GetVirtualMachines(conn *libvirt.Libvirt) ([]VirtualMachineInfo, error) {
 }
 
 func GetVirtualMachineByNamespace(
+	ctx context.Context,
+	database *sql.DB,
 	conn *libvirt.Libvirt,
 	namespace string,
 ) ([]VirtualMachineInfo, error) {
-
-	records, err := db.GetRecordsByNamespace(db.Ctx, db.DB, namespace, db.VMsTable)
+	records, err := db.GetRecordsByNamespace(ctx, database, namespace, db.VMsTable)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get VM records for namespace %q: %w", namespace, err)
 	}
@@ -128,7 +134,7 @@ func GetVirtualMachineByNamespace(
 	vms := make([]VirtualMachineInfo, 0, len(records))
 
 	for _, rec := range records {
-		vmInfo, err := NewVirtualMachineInfo(db.Ctx, conn, rec)
+		vmInfo, err := NewVirtualMachineInfo(ctx, database, conn, rec)
 		if err != nil {
 			log.Errorf("could not build VM info for %q: %v", rec.Name, err)
 			continue

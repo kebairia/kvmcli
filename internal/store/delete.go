@@ -2,15 +2,13 @@ package store
 
 import (
 	"fmt"
-
-	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 func (s *Store) Delete() error {
-	name := s.Metadata.Name
+	record := NewStoreRecord(s)
 	// Delete the store record from the database.
-	if err := db.Delete(db.Ctx, db.DB, name, db.StoreTable); err != nil {
-		return fmt.Errorf("failed to delete record for store %q: %v", name, err)
+	if err := record.Delete(s.Context, s.DB); err != nil {
+		return fmt.Errorf("failed to delete record for store %q: %v", s.Metadata.Name, err)
 	}
 
 	fmt.Printf("store/%s deleted\n", s.Metadata.Name)

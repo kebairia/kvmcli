@@ -82,6 +82,6 @@ func (o *Operator) Close() {
 // setConnection provides libvirt connectivity to Resources that require it.
 func (o *Operator) SetConnection(r resources.Resource) {
 	if s, ok := r.(resources.ClientSetter); ok {
-		s.SetConnection(o.conn)
+		s.SetConnection(o.ctx, o.db, o.conn)
 	}
 }

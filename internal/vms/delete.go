@@ -2,8 +2,7 @@ package vms
 
 import (
 	"fmt"
-
-	db "github.com/kebairia/kvmcli/internal/database"
+	// db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // OPTIMIZE:
@@ -50,8 +49,8 @@ func (vm *VirtualMachine) Delete() error {
 	if err != nil {
 		return err
 	}
-
-	err = record.Delete(db.Ctx, db.DB)
+	fmt.Printf("database @ from vm deletion : %p\n", vm.DB)
+	err = record.Delete(vm.Context, vm.DB)
 	if err != nil {
 		return err
 	}

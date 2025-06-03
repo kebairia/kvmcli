@@ -41,7 +41,12 @@ func ListByNamespace(namespace string) error {
 	}
 	defer operator.Close()
 	// resources , err := operator.GetResourcesByNamespace(namespace)
-	virtualMachines, err := vms.GetVirtualMachineByNamespace(operator.conn, namespace)
+	virtualMachines, err := vms.GetVirtualMachineByNamespace(
+		operator.ctx,
+		operator.db,
+		operator.conn,
+		namespace,
+	)
 
 	info := &vms.VirtualMachineInfo{}
 	w := info.Header()
@@ -64,7 +69,7 @@ func ListAll() error {
 	}
 	defer operator.Close()
 
-	virtualMachines, err := vms.GetVirtualMachines(operator.conn)
+	virtualMachines, err := vms.GetVirtualMachines(operator.ctx, operator.db, operator.conn)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve VMs: %w", err)
 	}

@@ -2,15 +2,13 @@ package vms
 
 import (
 	"fmt"
-
-	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // Create Virtual Machine
 func (vm *VirtualMachine) Create() error {
 	// Check connection
 	if vm.Conn == nil {
-		return fmt.Errorf("libvirt connection is nil")
+		return ErrNilLibvirtConn
 	}
 	// Initiliaze a new vm record
 
@@ -39,8 +37,9 @@ func (vm *VirtualMachine) Create() error {
 		return fmt.Errorf("failed to define/start VM %q: %w", vm.Metadata.Name, err)
 	}
 
+	fmt.Printf("database @ from vm creation : %p\n", vm.DB)
 	// Step 4: Insert the vm record
-	if err = record.Insert(db.Ctx, db.DB); err != nil {
+	if err = record.Insert(vm.Context, vm.DB); err != nil {
 		_ = vm.Delete() // rollback libvirt domain and disk
 		return fmt.Errorf("failed to create database record for VM %q: %w", vm.Metadata.Name, err)
 	}

@@ -1,10 +1,14 @@
 package store
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
+
+	"github.com/digitalocean/go-libvirt"
 )
 
 // TODO: 1. Delete function for store
@@ -15,6 +19,9 @@ import (
 var ErrStoreExist = errors.New("failed to insert new store record, store exist")
 
 type Store struct {
+	DB      *sql.DB         `yaml:"-"`
+	Context context.Context `yaml:"_"`
+
 	APIVersion string   `yaml:"apiVersion"`
 	Kind       string   `yaml:"kind"`
 	Metadata   Metadata `yaml:"metadata"`
@@ -46,6 +53,12 @@ type Image struct {
 	File      string `yaml:"file"`
 	Checksum  string `yaml:"checksum"`
 	Size      string `yaml:"size"`
+}
+
+func (store *Store) SetConnection(ctx context.Context, db *sql.DB, conn *libvirt.Libvirt) {
+	_ = conn
+	store.DB = db
+	store.Context = ctx
 }
 
 func (st *Store) Header() *tabwriter.Writer {
