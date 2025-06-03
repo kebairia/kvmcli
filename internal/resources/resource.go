@@ -40,5 +40,5 @@ type ResourceInfo interface {
 // ClientSetter is implemented by any type that needs to receive a libvirt connection.
 type ClientSetter interface {
 	// SetConnection assigns a libvirt connection for subsequent operations.
-	SetConnection(conn *libvirt.Libvirt)
+	SetConnection(ctx context.Context, database *sql.DB, conn *libvirt.Libvirt)
 }
