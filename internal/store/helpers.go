@@ -22,7 +22,6 @@ func NewStoreRecord(s *Store) *db.StoreRecord {
 			Name:      img.Name,
 			Version:   img.Version,
 			OsProfile: img.OsProfile,
-			Directory: img.Directory,
 			File:      img.File,
 			Checksum:  img.Checksum,
 			Size:      img.Size,
@@ -34,8 +33,8 @@ func NewStoreRecord(s *Store) *db.StoreRecord {
 		Namespace:     s.Metadata.Namespace,
 		Labels:        s.Metadata.Labels,
 		Backend:       s.Spec.Backend,
-		ArtifactsPath: s.Spec.Config.ArtifactsPath,
-		ImagesPath:    s.Spec.Config.ImagesPath,
+		ArtifactsPath: s.Spec.Paths.ArtifactsPath,
+		ImagesPath:    s.Spec.Paths.ImagesPath,
 		Images:        images,
 		CreatedAt:     time.Now(),
 	}

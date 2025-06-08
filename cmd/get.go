@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	log "github.com/kebairia/kvmcli/internal/logger"
-	"github.com/kebairia/kvmcli/internal/network"
 	"github.com/kebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +20,8 @@ var GetVMCmd = &cobra.Command{
 	Short: "Display information about virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
 		if Namespace != "" {
-			operations.ListByNamespace(Namespace)
+			// operations.ListByNamespace(Namespace)
+			fmt.Println("List by namespace here for vms")
 			// operations.ListAll()
 			return
 		}
@@ -50,23 +50,27 @@ var GetNetworkCmd = &cobra.Command{
 	Short:   "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
 		if Namespace != "" {
-			network.ListByNamespace(Namespace)
+			// network.ListByNamespace(Namespace)
+			fmt.Println("List by namespace here for networks")
 			return
 		}
-		network.ListAll()
+		operations.ListAllNetworks()
 	},
 }
 
 // 'get store' subcommand: shows stores.
 var GetStoreCmd = &cobra.Command{
-	Use:   "store",
-	Short: "Display stores details",
+	Use:     "store",
+	Aliases: []string{"st"},
+	Short:   "Display stores details",
 	Run: func(cmd *cobra.Command, args []string) {
 		if Namespace != "" {
-			network.ListByNamespace(Namespace)
+			// network.ListByNamespace(Namespace)
+			fmt.Println("List by namespace here for stores")
 			return
 		}
-		network.ListAll()
+		// network.ListAll()
+		fmt.Println("List all here for stores")
 	},
 }
 

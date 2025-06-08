@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
-	"text/tabwriter"
 
 	"github.com/digitalocean/go-libvirt"
 	"gopkg.in/yaml.v3"
@@ -42,18 +40,16 @@ type Metadata struct {
 
 // Spec holds the VM’s desired configuration.
 type Spec struct {
-	Resources Resources `yaml:"resources"`
-	Image     string    `yaml:"image"`
-	Disk      Disk      `yaml:"disk"`
-	Network   Network   `yaml:"network"`
-	Autostart bool      `yaml:"autostart"`
+	Image     string  `yaml:"image"`
+	CPU       int     `yaml:"cpu"`
+	Memory    int     `yaml:"memory"`
+	Disk      Disk    `yaml:"disk"`
+	Network   Network `yaml:"network"`
+	Autostart bool    `yaml:"autostart"`
 }
 
 // Resources defines CPU and memory for the VM.
-type Resources struct {
-	CPU    int `yaml:"cpu"`
-	Memory int `yaml:"memory"`
-}
+type Resources struct{}
 
 // Disk describes the VM’s disk configuration.
 type Disk struct {
@@ -64,7 +60,8 @@ type Disk struct {
 // Network describes the VM’s network configuration.
 type Network struct {
 	Name       string `yaml:"name"`
-	MacAddress string `yaml:"macAddress"`
+	IP         string `yaml:"ip"`
+	MacAddress string `yaml:"mac"`
 }
 
 // VirtualMachineOption is a functional option for configuring a VirtualMachine.
@@ -99,14 +96,6 @@ func (vm *VirtualMachine) SetConnection(ctx context.Context, db *sql.DB, conn *l
 	vm.Conn = conn
 	vm.DB = db
 	vm.Context = ctx
-}
-
-// Header returns a tabwriter.Writer preconfigured with a table header for VMs.
-func (vm *VirtualMachine) Header() *tabwriter.Writer {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
-
-	return w
 }
 
 // NewVirtualMachine parses the YAML manifest into a VirtualMachine struct,

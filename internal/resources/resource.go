@@ -27,6 +27,10 @@ type Record interface {
 	GetRecord(ctx context.Context, db *sql.DB, name string) error
 	// GetByNamespace retrieves a record by both namespace and name.
 	GetRecordByNamespace(ctx context.Context, db *sql.DB, name, namespace string) error
+	// Get retrieves all record for a specific table .
+	// GetRecords(ctx context.Context, db *sql.DB, table string) error
+	// // Get retrieves all record for a specific table .
+	// GetRecordsByNamespace(ctx context.Context, db *sql.DB, namespace, table string) error
 }
 
 // ResourceInfo defines methods to render a resource’s information in a tabular, CLI-friendly format.
@@ -34,7 +38,7 @@ type ResourceInfo interface {
 	// Header returns a tabwriter.Writer with column headers pre-written.
 	Header() *tabwriter.Writer
 	// PrintInfo writes the resource’s data as a row to the provided tabwriter.Writer.
-	PrintInfo(w *tabwriter.Writer)
+	PrintRow(w *tabwriter.Writer)
 }
 
 // ClientSetter is implemented by any type that needs to receive a libvirt connection.

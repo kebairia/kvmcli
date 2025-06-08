@@ -18,6 +18,7 @@ type VirtualMachineRecord struct {
 	CPU        int
 	RAM        int
 	MacAddress string
+	IP         string
 	NetworkID  int
 	StoreID    int
 	Image      string

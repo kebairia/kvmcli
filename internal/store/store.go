@@ -36,23 +36,22 @@ type Metadata struct {
 
 type Spec struct {
 	Backend string  `yaml:"backend"`
-	Config  Config  `yaml:"config"`
+	Paths   Paths   `yaml:"paths"`
 	Images  []Image `yaml:"images"`
 }
 
-type Config struct {
-	ArtifactsPath string `yaml:"artifactsPath"`
-	ImagesPath    string `yaml:"imagesPath"`
+type Paths struct {
+	ArtifactsPath string `yaml:"artifacts"`
+	ImagesPath    string `yaml:"images"`
 }
 
 type Image struct {
 	Name      string `yaml:"name"`
 	Version   string `yaml:"version"`
 	OsProfile string `yaml:"osProfile"`
-	Directory string `yaml:"directory"`
 	File      string `yaml:"file"`
-	Checksum  string `yaml:"checksum"`
 	Size      string `yaml:"size"`
+	Checksum  string `yaml:"checksum"`
 }
 
 func (store *Store) SetConnection(ctx context.Context, db *sql.DB, conn *libvirt.Libvirt) {
@@ -75,8 +74,15 @@ func (st *Store) PrintRow(w *tabwriter.Writer) {
 		st.Metadata.Name,
 		st.Metadata.Namespace,
 		st.Spec.Backend,
-		st.Spec.Config.ArtifactsPath,
-		st.Spec.Config.ImagesPath,
+		st.Spec.Paths.ArtifactsPath,
+		st.Spec.Paths.ImagesPath,
 		imageCount,
 	)
 }
+
+// func (st *Store) GetBaseImagePath(name string) (string, error) {
+// 	return filepath.Join(st.Spec.Paths.ArtifactsPath, st.Spec.Images[name].File)
+// }
+
+// NOTE: I can create Getters here for images, directories .. versions ..etc
+// this will faciliate my operations
