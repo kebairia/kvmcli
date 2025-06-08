@@ -117,6 +117,35 @@ func (store *StoreRecord) GetRecord(
 	return nil
 }
 
+// NOTE: I need to add checker for the namespace if exist no before doing the query
+func (store *StoreRecord) GetRecordByNamespace(
+	ctx context.Context,
+	db *sql.DB,
+	name, namespace string,
+) error {
+	const query = `
+		SELECT
+      id, name, namespace, backend,
+      artifacts_path, images_path, created_at
+    WHERE namespace = ? AND name = ?;
+		`
+	row := db.QueryRowContext(ctx, query, namespace, name)
+	if err := row.Scan(
+		&store.ID,
+		&store.Name,
+		&store.Namespace,
+		&store.Backend,
+		&store.ArtifactsPath,
+		&store.ImagesPath,
+		&store.CreatedAt,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("no store record for  %q ", name)
+		}
+	}
+	return nil
+}
+
 // func getImageRecord(
 func (store *StoreRecord) GetImageRecord(
 	ctx context.Context,
@@ -275,13 +304,5 @@ func (store *StoreRecord) Delete(ctx context.Context, db *sql.DB) error {
 			err,
 		)
 	}
-	return nil
-}
-
-func (store *StoreRecord) GetRecordByNamespace(
-	ctx context.Context,
-	db *sql.DB,
-	name, namespace string,
-) error {
 	return nil
 }
