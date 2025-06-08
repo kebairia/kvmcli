@@ -33,7 +33,7 @@ func (vm *VirtualMachine) CreateOverlay(imageName string) error {
 		return fmt.Errorf("failed to get store and image: %w", err)
 	}
 	// Build the path to the base image (from where we will create the overlay)
-	baseImagePath := filepath.Join(store.ArtifactsPath, img.Directory, img.File)
+	baseImagePath := filepath.Join(store.ArtifactsPath, img.File)
 	// build the path for the overlay image (destination image)
 	// Construct target overlay image file name.
 	overlayPath := vm.buildOverlayPath(store)
@@ -136,12 +136,13 @@ func NewVirtualMachineRecord(
 		Name:       vm.Metadata.Name,
 		Namespace:  vm.Metadata.Namespace,
 		Labels:     vm.Metadata.Labels,
-		CPU:        vm.Spec.Resources.CPU,
-		RAM:        vm.Spec.Resources.Memory,
+		CPU:        vm.Spec.CPU,
+		RAM:        vm.Spec.Memory,
 		DiskSize:   vm.Spec.Disk.Size,
 		DiskPath:   vm.buildOverlayPath(store),
 		Image:      vm.Spec.Image,
 		MacAddress: vm.Spec.Network.MacAddress,
+		IP:         vm.Spec.Network.IP,
 		NetworkID:  networkID,
 		StoreID:    storeID,
 		CreatedAt:  time.Now(),
@@ -173,8 +174,8 @@ func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
 	// Create a new domain configuration using utility functions.
 	domain := utils.NewDomain(
 		vm.Metadata.Name,
-		vm.Spec.Resources.Memory,
-		vm.Spec.Resources.CPU,
+		vm.Spec.Memory,
+		vm.Spec.CPU,
 		diskImagePath,
 		vm.Spec.Network.Name,
 		vm.Spec.Network.MacAddress,

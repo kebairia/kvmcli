@@ -9,6 +9,11 @@ import (
 // GetRecords retrieves all documents of type T from the specified collection
 // that match the given namespace.
 func GetRecords(
+const (
+	vmColumns      = `id, name, namespace, cpu, ram, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
+	networkColumns = `id, name, namespace, mac_address, bridge, mode, net_address, netmask, dhcp, autostart, created_at, labels`
+)
+
 	ctx context.Context,
 	db *sql.DB,
 ) ([]VirtualMachineRecord, error) {
@@ -54,102 +59,102 @@ func GetRecords(
 	return objects, nil
 }
 
-// GetObjectsByNamespace retrieves all documents of type T from the specified collection
+// GetRecords retrieves all documents of type T from the specified collection
 // that match the given namespace.
-func GetRecordsByNamespace(
+func GetVMRecords(
 	ctx context.Context,
 	db *sql.DB,
-	namespace, table string,
+	namespace string,
 ) ([]VirtualMachineRecord, error) {
-	query := fmt.Sprintf(`
-		SELECT id, name, namespace, 
-		       cpu, ram, mac_address, 
-		       network_id, image, 
-		       disk_size, disk_path, 
-		       created_at, labels
-		FROM %s
-		WHERE namespace = ?`, table)
+	query := fmt.Sprintf("SELECT %s FROM %s", vmColumns, VMsTable)
+	args := []any{}
+	if namespace != "" {
+		query += " WHERE namespace = ?"
+		args = append(args, namespace)
+	}
 	var (
-		objects   []VirtualMachineRecord
-		labelText string
+		vms       []VirtualMachineRecord
+		rawLabels string
 	)
-	rows, err := db.QueryContext(ctx, query, namespace)
+	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var object VirtualMachineRecord
+		var vm VirtualMachineRecord
 		if err := rows.Scan(
-			&object.ID,
-			&object.Name,
-			&object.Namespace,
-			&object.CPU,
-			&object.RAM,
-			&object.MacAddress,
-			&object.NetworkID,
-			&object.Image,
-			&object.DiskSize,
-			&object.DiskPath,
-			&object.CreatedAt,
-			&labelText,
+			&vm.ID,
+			&vm.Name,
+			&vm.Namespace,
+			&vm.CPU,
+			&vm.RAM,
+			&vm.MacAddress,
+			&vm.NetworkID,
+			&vm.Image,
+			&vm.DiskSize,
+			&vm.DiskPath,
+			&vm.CreatedAt,
+			&rawLabels,
 		); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
-		objects = append(objects, object)
+		// parse JSON labels
+		if err := json.Unmarshal([]byte(rawLabels), &vm.Labels); err != nil {
+			return nil, fmt.Errorf("invalid labels JSON: %w", err)
+		}
+		vms = append(vms, vm)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
-	return objects, nil
+	return vms, nil
 }
 
-func GetNetworkObjectsByNamespace(
+func GetNetworkRecords(
 	ctx context.Context,
 	db *sql.DB,
-	namespace, table string,
+	namespace string,
 ) ([]VirtualNetworkRecord, error) {
-	query := fmt.Sprintf(`
-		SELECT id, name, namespace, 
-		       labels, mac_address, 
-		       bridge, mode, 
-		       net_address, netmask, 
-		       dhcp, autostart, created_at
-		FROM %s
-		WHERE namespace = ?`, table)
-
+	query := fmt.Sprintf("SELECT %s FROM %s", networkColumns, NetworksTable)
+	args := []any{}
+	if namespace != "" {
+		query += " WHERE namespace = ?"
+		args = append(args, namespace)
+	}
 	var (
-		objects   []VirtualNetworkRecord
-		labelText string
-		DHCPText  string
+		networks           []VirtualNetworkRecord
+		rawLabels, rawDHCP string
 	)
-	rows, err := db.QueryContext(ctx, query, namespace)
+
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var object VirtualNetworkRecord
+		var network VirtualNetworkRecord
 		if err := rows.Scan(
-			&object.ID,
-			&object.Name,
-			&object.Namespace,
-			&labelText,
-			&object.MacAddress,
-			&object.Bridge,
-			&object.Mode,
-			&object.NetAddress,
-			&object.Netmask,
-			&DHCPText,
-			&object.Autostart,
-			&object.CreatedAt,
+			&network.ID,
+			&network.Name,
+			&network.Namespace,
+			&network.MacAddress,
+			&network.Bridge,
+			&network.Mode,
+			&network.NetAddress,
+			&network.Netmask,
+			&rawDHCP,
+			&network.Autostart,
+			&network.CreatedAt,
+			&rawLabels,
 		); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
-		objects = append(objects, object)
+		fmt.Println(network)
+		networks = append(networks, network)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
-	return objects, nil
+	return networks, nil
 }

@@ -4,9 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"os"
-	"text/tabwriter"
 
 	"github.com/digitalocean/go-libvirt"
 )
@@ -47,24 +44,4 @@ func (net *VirtualNetwork) SetConnection(ctx context.Context, db *sql.DB, conn *
 	net.Conn = conn
 	net.DB = db
 	net.Context = ctx
-}
-
-func (net *VirtualNetwork) Header() *tabwriter.Writer {
-	// Setup tabwriter for clean columnar output.
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATE\tBRIDGE\tSUBNET\tGATEWAY\tDHCP RANGE\tAGE")
-
-	return w
-}
-
-func (net *VirtualNetwork) PrintRow(w *tabwriter.Writer, info *VirtualNetworkInfo) {
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-		info.Name,
-		info.State,
-		info.Bridge,
-		info.Subnet,
-		info.Gateway,
-		info.DHCPRange,
-		info.Age,
-	)
 }
