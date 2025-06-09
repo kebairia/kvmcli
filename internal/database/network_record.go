@@ -27,7 +27,7 @@ type VirtualNetworkRecord struct {
 // EnsureVMTable creates the vms table if it doesn't exist.
 func EnsureNetworkTable(ctx context.Context, db *sql.DB) error {
 	const schema = `
-  CREATE TABLE IF NOT EXISTS networks (
+  CREATE TABLE IF NOT EXISTS ` + networksTable + ` (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     namespace TEXT,
@@ -42,7 +42,7 @@ func EnsureNetworkTable(ctx context.Context, db *sql.DB) error {
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 
-	CREATE UNIQUE INDEX IF NOT EXISTS idx_net_name_namespace ON networks(name, namespace);
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_net_name_namespace ON ` + networksTable + `(name, namespace);
 
 	`
 	_, err := db.ExecContext(ctx, schema)
@@ -57,31 +57,29 @@ func (net *VirtualNetworkRecord) GetRecord(
 	db *sql.DB,
 	name string,
 ) error {
-	query := fmt.Sprintf(`
+	const query = `
 		SELECT id, name, namespace,
 		labels, mac_address, 
 		bridge, mode, 
 		net_address, netmask,
 		dhcp, autostart, created_at
-		FROM %s WHERE name = ?`,
-		NetworksTable,
-	)
+		FROM networks WHERE name = ?`
 
 	var (
-		labelText string
-		DHCPText  string
+		rawLabels string
+		rawDHCP   string
 	)
 	err := db.QueryRowContext(ctx, query, name).Scan(
 		&net.ID,
 		&net.Name,
 		&net.Namespace,
-		&labelText,
+		&rawLabels,
 		&net.MacAddress,
 		&net.Bridge,
 		&net.Mode,
 		&net.NetAddress,
 		&net.Netmask,
-		&DHCPText,
+		&rawDHCP,
 		&net.Autostart,
 		&net.CreatedAt,
 	)
@@ -92,10 +90,10 @@ func (net *VirtualNetworkRecord) GetRecord(
 
 		return fmt.Errorf("failed to fetch VM record: %w", err)
 	}
-	if err := json.Unmarshal([]byte(DHCPText), &net.DHCP); err != nil {
+	if err := json.Unmarshal([]byte(rawDHCP), &net.DHCP); err != nil {
 		return fmt.Errorf("failed to parse labels JSON: %w", err)
 	}
-	if err := json.Unmarshal([]byte(labelText), &net.Labels); err != nil {
+	if err := json.Unmarshal([]byte(rawLabels), &net.Labels); err != nil {
 		return fmt.Errorf("failed to parse labels JSON: %w", err)
 	}
 	return nil
@@ -114,7 +112,7 @@ func (net *VirtualNetworkRecord) GetRecordByNamespace(
 		net_address, netmask,
 		dhcp, autostart, created_at
 		FROM %s WHERE namespace = ? AND name = ?`,
-		NetworksTable,
+		networksTable,
 	)
 
 	var (
@@ -165,7 +163,7 @@ func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
 	}
 	// Ensure the vms table exists.
 	if err := EnsureNetworkTable(ctx, db); err != nil {
-		return fmt.Errorf("failed to ensure %q table exists: %w", NetworksTable, err)
+		return fmt.Errorf("failed to ensure %q table exists: %w", networksTable, err)
 	}
 
 	// Marshal the Labels map into JSON for storage in the TEXT column.
@@ -218,12 +216,12 @@ func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
 
 func (net *VirtualNetworkRecord) Delete(ctx context.Context, db *sql.DB) error {
 	// Create a filter matching the record with the specified name
-	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", NetworksTable)
+	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", networksTable)
 
 	if _, err := db.ExecContext(ctx, query, net.Name); err != nil {
 		return fmt.Errorf(
 			"failed to delete from %s where name = %v: %w",
-			NetworksTable,
+			networksTable,
 			net.Name,
 			err,
 		)

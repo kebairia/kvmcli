@@ -71,7 +71,7 @@ func (vmr *VirtualMachineRecord) GetRecord(
 		       disk_size, disk_path, 
 		       created_at, labels
 		FROM %s
-		WHERE name = ?`, VMsTable)
+		WHERE name = ?`, vmsTable)
 
 	// record    VirtualMachineRecord
 	var labelText string
@@ -120,7 +120,7 @@ func (vmr *VirtualMachineRecord) GetRecordByNamespace(
 	       created_at, labels
 	FROM %s
 	WHERE namespace = ? AND name = ? `,
-		VMsTable,
+		vmsTable,
 	)
 
 	var labelText string
@@ -163,7 +163,7 @@ func (vmr *VirtualMachineRecord) Insert(ctx context.Context, db *sql.DB) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	// Ensure the vms table exists.
+	// Ensure the vms/networks/stores tables exists.
 	if err := EnsureVMTable(ctx, db); err != nil {
 		return fmt.Errorf("failed to ensure vms table exists: %w", err)
 	}
@@ -172,15 +172,18 @@ func (vmr *VirtualMachineRecord) Insert(ctx context.Context, db *sql.DB) error {
 		return fmt.Errorf("failed to ensure networks table exists: %w", err)
 	}
 
+	if err := EnsureStoreTable(ctx, db); err != nil {
+		return fmt.Errorf("failed to ensure stores table exists: %w", err)
+	}
+
 	// Marshal the Labels map into JSON for storage in the TEXT column.
 	labelsJSON, err := json.Marshal(vmr.Labels)
 	if err != nil {
 		return fmt.Errorf("failed to marshal labels: %w", err)
 	}
-
 	// Define the INSERT query.
 	const query = `
-		INSERT INTO vms (
+		INSERT INTO ` + vmsTable + ` (
 			name,
 			namespace,
 			cpu,
@@ -194,7 +197,7 @@ func (vmr *VirtualMachineRecord) Insert(ctx context.Context, db *sql.DB) error {
 			created_at,
 			labels
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`
+		`
 
 	// Execute the query using record values.
 	if _, err := db.Exec(query,
@@ -217,17 +220,15 @@ func (vmr *VirtualMachineRecord) Insert(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (vmr *VirtualMachineRecord) Delete(ctx context.Context, db *sql.DB) error {
-	// Create a filter matching the record with the specified name
-	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", VMsTable)
-
-	if _, err := db.ExecContext(ctx, query, vmr.Name); err != nil {
-		return fmt.Errorf(
-			"failed to delete from %s where name = %v: %w",
-			VMsTable,
-			vmr.Name,
-			err,
-		)
+// Delete removes a network row by name+namespace.
+func (v *VirtualMachineRecord) Delete(ctx context.Context, db *sql.DB) error {
+	const stmt = `
+	DELETE FROM ` + vmsTable + `
+	WHERE name = ? AND namespace = ?
+	`
+	_, err := db.ExecContext(ctx, stmt, v.Name, v.Namespace)
+	if err != nil {
+		return fmt.Errorf("delete vm: %w", err)
 	}
 	return nil
 }

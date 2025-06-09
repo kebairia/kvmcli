@@ -48,9 +48,6 @@ type Spec struct {
 	Autostart bool    `yaml:"autostart"`
 }
 
-// Resources defines CPU and memory for the VM.
-type Resources struct{}
-
 // Disk describes the VM’s disk configuration.
 type Disk struct {
 	Size string `yaml:"size"`

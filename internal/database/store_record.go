@@ -53,7 +53,7 @@ type ImageRecord struct {
 // EnsureVMTable creates the vms table if it doesn't exist.
 func EnsureStoreTable(ctx context.Context, db *sql.DB) error {
 	const schema = `
-		CREATE TABLE IF NOT EXISTS stores (
+		CREATE TABLE IF NOT EXISTS ` + storesTable + ` (
 		  id              INTEGER PRIMARY KEY AUTOINCREMENT,
 		  name            TEXT    NOT NULL,
 		  namespace       TEXT,
@@ -64,9 +64,9 @@ func EnsureStoreTable(ctx context.Context, db *sql.DB) error {
 		  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_stores_name_namespace
-		  ON stores(name, namespace);
+		  ON ` + storesTable + `(name, namespace);
 		
-		CREATE TABLE IF NOT EXISTS images (
+		CREATE TABLE IF NOT EXISTS ` + imagesTable + ` (
 		  id         INTEGER PRIMARY KEY AUTOINCREMENT,
 		  store_id   INTEGER NOT NULL,
 			name 			 TEXT,
@@ -77,9 +77,9 @@ func EnsureStoreTable(ctx context.Context, db *sql.DB) error {
 		  checksum   TEXT,
 		  size       TEXT,
 		  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		  FOREIGN KEY(store_id) REFERENCES stores(id) ON DELETE CASCADE
+		  FOREIGN KEY(store_id) REFERENCES ` + storesTable + `(id) ON DELETE CASCADE
 		);
-		CREATE INDEX IF NOT EXISTS idx_images_store_id_name ON images(store_id, name);
+		CREATE INDEX IF NOT EXISTS idx_images_store_id_name ON ` + imagesTable + `(store_id, name);
 		`
 	_, err := db.ExecContext(ctx, schema)
 	if err != nil {
@@ -98,6 +98,7 @@ func (store *StoreRecord) GetRecord(
 		SELECT
       id, name, namespace, backend,
       artifacts_path, images_path, created_at
+		FROM ` + storesTable + `
     WHERE name = ?;
 		`
 	row := db.QueryRowContext(ctx, query, name)
@@ -127,6 +128,7 @@ func (store *StoreRecord) GetRecordByNamespace(
 		SELECT
       id, name, namespace, backend,
       artifacts_path, images_path, created_at
+		FROM ` + storesTable + `
     WHERE namespace = ? AND name = ?;
 		`
 	row := db.QueryRowContext(ctx, query, namespace, name)
@@ -158,8 +160,8 @@ func (store *StoreRecord) GetImageRecord(
       image.directory, image.file, image.checksum, image.size, image.created_at,
       store.id, store.name, store.namespace, store.backend,
       store.artifacts_path, store.images_path, store.created_at
-    FROM images AS image
-    JOIN stores AS store ON image.store_id = store.id
+    FROM ` + imagesTable + ` AS image
+    JOIN ` + storesTable + ` AS store ON image.store_id = store.id
     WHERE image.store_id = ? AND image.name = ?;
 		`
 	rec := &ImageRecord{}
@@ -197,8 +199,7 @@ func (store *StoreRecord) GetImageRecord(
 // Returns sql.ErrNoRows if no store with that name exists.
 func GetStoreIDByName(ctx context.Context, db *sql.DB, name string) (int, error) {
 	const query = `
-        SELECT id
-        FROM stores
+        SELECT id FROM ` + storesTable + `
         WHERE name = ?
     `
 
@@ -239,7 +240,7 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 
 	// 4. Insert the store row (no more images JSON here)
 	const storeInsert = `
-		INSERT INTO stores (
+		INSERT INTO ` + storesTable + ` (
 			name, namespace, labels,
 			backend, artifacts_path, images_path
 		) VALUES (?, ?, ?, ?, ?, ?)
@@ -264,7 +265,7 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 
 	// 6. Insert each image pointing back to the store
 	const imgInsert = `
-		INSERT INTO images (
+		INSERT INTO ` + imagesTable + ` (
 			store_id, name, version, os_profile,
 			directory, file, checksum, size
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -294,12 +295,15 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 
 func (store *StoreRecord) Delete(ctx context.Context, db *sql.DB) error {
 	// Create a filter matching the record with the specified name
-	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", StoreTable)
+	const query = `
+		DELETE FROM ` + storesTable + `
+		WHERE name = ? and namespace = ?
+		`
 
-	if _, err := db.ExecContext(ctx, query, store.Name); err != nil {
+	if _, err := db.ExecContext(ctx, query, store.Name, store.Namespace); err != nil {
 		return fmt.Errorf(
 			"failed to delete from %s where name = %v: %w",
-			StoreTable,
+			storesTable,
 			store.Name,
 			err,
 		)

@@ -40,7 +40,7 @@ func NewOperator(ctx context.Context) (*Operator, error) {
 	}
 
 	// TODO:  sync.Once -> to ensure the database is initialized only once
-	database, err := db.InitDB()
+	database, err := db.InitDB(ctx)
 	if err != nil {
 		_ = conn.Disconnect()
 		return nil, fmt.Errorf("init database: %w", err)

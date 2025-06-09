@@ -19,7 +19,7 @@ func GetVMRecords(
 	db *sql.DB,
 	namespace string,
 ) ([]VirtualMachineRecord, error) {
-	query := fmt.Sprintf("SELECT %s FROM %s", vmColumns, VMsTable)
+	query := fmt.Sprintf("SELECT %s FROM %s", vmColumns, vmsTable)
 	args := []any{}
 	if namespace != "" {
 		query += " WHERE namespace = ?"
@@ -69,7 +69,7 @@ func GetNetworkRecords(
 	db *sql.DB,
 	namespace string,
 ) ([]VirtualNetworkRecord, error) {
-	query := fmt.Sprintf("SELECT %s FROM %s", networkColumns, NetworksTable)
+	query := fmt.Sprintf("SELECT %s FROM %s", networkColumns, networksTable)
 	args := []any{}
 	if namespace != "" {
 		query += " WHERE namespace = ?"
