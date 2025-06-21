@@ -12,19 +12,19 @@ import (
 // Create defines a VirtualNetwork in libvirt and inserts its database record.
 func (vnet *VirtualNetwork) Create() error {
 	// Ensure Libvirt connection is initialized
-	if vnet.Conn == nil {
+	if vnet.conn == nil {
 		return vms.ErrNilLibvirtConn
 	}
 
 	// Validate that we have a network name
-	name := vnet.Metadata.Name
+	name := vnet.Config.Metadata.Name
 	if name == "" {
-		return VirtualNetworkNameEmpty
+		return ErrVirtualNetworkNameEmpty
 	}
 
 	// Prepare the database record
 	record := NewVirtualNetworkRecord(vnet)
-	if err := record.Insert(vnet.Context, vnet.DB); err != nil {
+	if err := record.Insert(vnet.ctx, vnet.db); err != nil {
 		return fmt.Errorf("failed to insert database record for network %q: %w", name, err)
 	}
 

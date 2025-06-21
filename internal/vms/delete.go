@@ -19,29 +19,29 @@ func (vm *VirtualMachine) Delete() error {
 	var err error
 	// Check connection
 	// if connectionIsValide(vm.Conn), then (this logic)
-	if vm.Conn == nil {
+	if vm.conn == nil {
 		return fmt.Errorf("libvirt connection is nil")
 	}
 
-	vmName := vm.Metadata.Name
-	domain, err := vm.Conn.DomainLookupByName(vmName)
+	vmName := vm.Config.Metadata.Name
+	domain, err := vm.conn.DomainLookupByName(vmName)
 	if err != nil {
 		// return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
 		return err
 	}
 
 	// Attempt to destroy the domain.
-	if err := vm.Conn.DomainDestroy(domain); err != nil {
+	if err := vm.conn.DomainDestroy(domain); err != nil {
 		return err
 	}
 
 	// Undefine the domain
-	if err := vm.Conn.DomainUndefine(domain); err != nil {
+	if err := vm.conn.DomainUndefine(domain); err != nil {
 		return fmt.Errorf("failed to undefine VM %q: %w", vmName, err)
 	}
 
 	// Remove the disk associated with the VM.
-	if err := vm.DeleteOverlay(vmName); err != nil {
+	if err := vm.CleanupDisk(); err != nil {
 		return err
 	}
 
@@ -49,8 +49,7 @@ func (vm *VirtualMachine) Delete() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("database @ from vm deletion : %p\n", vm.DB)
-	err = record.Delete(vm.Context, vm.DB)
+	err = record.Delete(vm.ctx, vm.db)
 	if err != nil {
 		return err
 	}

@@ -39,6 +39,5 @@ func DeleteFromManifest(manifestPath string) error {
 
 // Delete removes the given Resource.
 func (o *Operator) Delete(r resources.Resource) error {
-	o.SetConnection(r)
 	return r.Delete()
 }

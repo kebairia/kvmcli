@@ -2,48 +2,70 @@ package vms
 
 import (
 	"fmt"
+	"path/filepath"
 )
 
 // Create Virtual Machine
 func (vm *VirtualMachine) Create() error {
-	// Check connection
-	if vm.Conn == nil {
-		return ErrNilLibvirtConn
-	}
 	// Initiliaze a new vm record
-
 	record, err := NewVirtualMachineRecord(vm)
 	if err != nil {
 		return fmt.Errorf("can't Initiliaze a new vm: %w", err)
 	}
 
-	// Step 1: Create the overlay disk image
-	if err := vm.CreateOverlay(vm.Spec.Image); err != nil {
-		return fmt.Errorf("failed to create overlay for VM %q: %w", vm.Metadata.Name, err)
+	store, img, err := vm.fetchStoreAndImage(vm.Config.Spec.Image)
+	if err != nil {
+		return fmt.Errorf("fetch store and image: %w", err)
 	}
 
-	// Step 2: Generate the libvirt XML configuration
-	xmlConfig, err := vm.prepareDomain(vm.Spec.Image)
+	src := filepath.Join(store.ArtifactsPath, img.File)
+	dest := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+
+	// this is a slice that collection all the cleanup functions
+	// so that when an error happens in each step, a proper rollback
+	// will be executed
+	var cleanups []func() error
+
+	// artifactsPath, imagesPath := vm.disk.Paths()
+	// src := fmt.Sprintf("%s/%s", artifactsPath, vm.Config.Spec.Image)
+	// dest := fmt.Sprintf("%s/%s.qcow2", imagesPath, vm.Config.Metadata.Name)
+	if err := vm.disk.CreateOverlay(vm.ctx, src, dest); err != nil {
+		return fmt.Errorf("create disk overlay: %w", err)
+	}
+	//
+	cleanups = append(cleanups, func() error {
+		return vm.disk.DeleteOverlay(vm.ctx, dest)
+	})
+
+	// Generate the libvirt XML configuration
+	xmlConfig, err := vm.domain.BuildXML(vm.ctx, vm.db, vm.Config)
 	if err != nil {
-		_ = vm.DeleteOverlay(vm.Metadata.Name) // rollback overlay image
-		return fmt.Errorf("failed to prepare domain for VM %q: %w", vm.Metadata.Name, err)
+		return vm.rollback(cleanups, "build XML", err)
 	}
 
 	// Step 3: Define and start the VM
-	if err := vm.defineAndStartDomain(xmlConfig); err != nil {
-		_ = vm.DeleteOverlay(
-			vm.Metadata.Name,
-		) // rollback, delete overlay if the domain preparation failed
-		return fmt.Errorf("failed to define/start VM %q: %w", vm.Metadata.Name, err)
+	if err := vm.domain.Define(vm.ctx, xmlConfig); err != nil {
+		return vm.rollback(cleanups, "define domain", err)
 	}
 
-	fmt.Printf("database @ from vm creation : %p\n", vm.DB)
-	// Step 4: Insert the vm record
-	if err = record.Insert(vm.Context, vm.DB); err != nil {
-		_ = vm.Delete() // rollback libvirt domain and disk
-		return fmt.Errorf("failed to create database record for VM %q: %w", vm.Metadata.Name, err)
+	cleanups = append(cleanups, func() error {
+		return vm.domain.Undefine(vm.ctx, vm.Config.Metadata.Name)
+	})
+
+	if err := vm.domain.Start(vm.ctx, vm.Config.Metadata.Name); err != nil {
+		return vm.rollback(cleanups, "start domain", err)
 	}
 
-	fmt.Printf("vm/%s created\n", vm.Metadata.Name)
+	// cleanups = append(cleanups, vm.domain.)
+	cleanups = append(cleanups, func() error {
+		return vm.domain.Stop(vm.ctx, vm.Config.Metadata.Name)
+	})
+
+	// Insert the vm record
+	if err = record.Insert(vm.ctx, vm.db); err != nil {
+		return vm.rollback(cleanups, "insert record", err)
+	}
+
+	fmt.Printf("vm/%s created\n", vm.Config.Metadata.Name)
 	return nil
 }

@@ -4,61 +4,28 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+	"time"
 
 	"github.com/digitalocean/go-libvirt"
-	"gopkg.in/yaml.v3"
 )
 
-// ErrNilLibvirtConn is returned when the Libvirt connection is missing.
-var ErrNilLibvirtConn = errors.New("libvirt connection is nil")
+// Error definitions
+var (
+	ErrNilLibvirtConn   = errors.New("libvirt connection is nil")
+	ErrNilDBConn        = errors.New("database connection is nil")
+	ErrNilDiskManager   = errors.New("disk manager is nil")
+	ErrNilDomainManager = errors.New("domain manager is nil")
+)
 
-// ErrNilDBConn is returned when the database connection is missing.
-var ErrNilDBConn = errors.New("database connection is nil")
-
-// VirtualMachine represents a VM specification (loaded from YAML) and its runtime dependencies.
+// VirtualMachine represents a VM with injected dependencies.
 type VirtualMachine struct {
-	// runtime-only dependencies (never part of YAML)
-	Conn    *libvirt.Libvirt `yaml:"-"`
-	DB      *sql.DB          `yaml:"-"`
-	Context context.Context  `yaml:"-"`
-
-	// manifest fields (populated by YAML unmarshal)
-	APIVersion string   `yaml:"apiVersion"`
-	Kind       string   `yaml:"kind"`
-	Metadata   Metadata `yaml:"metadata"`
-	Spec       Spec     `yaml:"spec"`
-}
-
-// Metadata contains identifying information for the VM.
-type Metadata struct {
-	Name      string            `yaml:"name"`
-	Namespace string            `yaml:"namespace"`
-	Labels    map[string]string `yaml:"labels"`
-	Store     string            `yaml:"store"`
-}
-
-// Spec holds the VM’s desired configuration.
-type Spec struct {
-	Image     string  `yaml:"image"`
-	CPU       int     `yaml:"cpu"`
-	Memory    int     `yaml:"memory"`
-	Disk      Disk    `yaml:"disk"`
-	Network   Network `yaml:"network"`
-	Autostart bool    `yaml:"autostart"`
-}
-
-// Disk describes the VM’s disk configuration.
-type Disk struct {
-	Size string `yaml:"size"`
-	Path string `yaml:"path"`
-}
-
-// Network describes the VM’s network configuration.
-type Network struct {
-	Name       string `yaml:"name"`
-	IP         string `yaml:"ip"`
-	MacAddress string `yaml:"mac"`
+	ctx    context.Context
+	conn   *libvirt.Libvirt
+	db     *sql.DB
+	Config VirtualMachineConfig
+	disk   DiskManager
+	domain DomainManager
+	// network NetworkManager
 }
 
 // VirtualMachineOption is a functional option for configuring a VirtualMachine.
@@ -67,14 +34,14 @@ type VirtualMachineOption func(*VirtualMachine)
 // WithLibvirtConnection injects a non-nil Libvirt connection.
 func WithLibvirtConnection(conn *libvirt.Libvirt) VirtualMachineOption {
 	return func(vm *VirtualMachine) {
-		vm.Conn = conn
+		vm.conn = conn
 	}
 }
 
 // WithDatabaseConnection injects a non-nil *sql.DB.
 func WithDatabaseConnection(db *sql.DB) VirtualMachineOption {
 	return func(vm *VirtualMachine) {
-		vm.DB = db
+		vm.db = db
 	}
 }
 
@@ -82,42 +49,68 @@ func WithDatabaseConnection(db *sql.DB) VirtualMachineOption {
 func WithContext(ctx context.Context) VirtualMachineOption {
 	return func(vm *VirtualMachine) {
 		if ctx == nil {
-			vm.Context = context.Background()
+			vm.ctx = context.Background()
 		} else {
-			vm.Context = ctx
+			vm.ctx = ctx
 		}
 	}
 }
 
-func (vm *VirtualMachine) SetConnection(ctx context.Context, db *sql.DB, conn *libvirt.Libvirt) {
-	vm.Conn = conn
-	vm.DB = db
-	vm.Context = ctx
+// New option to inject a DiskManager:
+func WithDiskManager(d DiskManager) VirtualMachineOption {
+	return func(vm *VirtualMachine) {
+		vm.disk = d
+	}
 }
 
-// NewVirtualMachine parses the YAML manifest into a VirtualMachine struct,
-// applies any options, and validates required dependencies.
-func NewVirtualMachine(manifest []byte, opts ...VirtualMachineOption) (*VirtualMachine, error) {
-	var vm VirtualMachine
+// New option to inject a DomainManager:
+func WithDomainManager(d DomainManager) VirtualMachineOption {
+	return func(vm *VirtualMachine) {
+		vm.domain = d
+	}
+}
 
-	if err := yaml.Unmarshal(manifest, &vm); err != nil {
-		return nil, fmt.Errorf("failed to parse VM manifest: %w", err)
+// NewVirtualMachine constructs a VM, applies options, and validates dependencies.
+func NewVirtualMachine(
+	cfg VirtualMachineConfig,
+	opts ...VirtualMachineOption,
+) (*VirtualMachine, error) {
+	vm := &VirtualMachine{
+		Config: cfg,
+		ctx:    context.Background(),
 	}
 
-	// Apply all options (some of them might set vm.DB, vm.Conn, vm.Context, etc.)
+	// apply options
 	for _, opt := range opts {
-		opt(&vm)
+		opt(vm)
 	}
 
-	// Ensure required dependencies are present
-	if vm.Conn == nil {
+	// wire defaults if not provided
+	// if vm.disk == nil {
+	// 	// user must provide via option; no hard-coded defaults here
+	// 	return nil, ErrNilDiskManager
+	// }
+	// if vm.domain == nil {
+	// 	return nil, ErrNilDomainManager
+	// }
+
+	if vm.disk == nil {
+		vm.disk = &QemuDiskManager{
+			QemuImgPath:    "/usr/bin/qemu-img",
+			BaseImagesPath: "/home/zakaria/dox/homelab/artifacts/rocky",
+			DestImagesPath: "/home/zakaria/dox/homelab/images/",
+			Timeout:        10 * time.Second,
+		}
+	}
+	vm.domain = NewLibvirtDomainManager(vm.conn)
+
+	// validate core dependencies
+	if vm.conn == nil {
 		return nil, ErrNilLibvirtConn
 	}
-	if vm.DB == nil {
+	if vm.db == nil {
 		return nil, ErrNilDBConn
 	}
-	if vm.Context == nil {
-		vm.Context = context.Background()
-	}
-	return &vm, nil
+
+	return vm, nil
 }

@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -18,72 +17,51 @@ import (
 
 const (
 	deviceName = "vda"
-
-	// Domain state constants.
-	domainStateRunning = 1
-	domainStatePaused  = 3
-	domainStateStopped = 5
+	// qemu
+	defaultQemuTimeout = 30 * time.Second
+	qemuImgCmd         = "qemu-img"
 )
 
-// CreateOverlay creates a qcow2 overlay image using a backing file obtained from the store record.
-// It invokes the 'qemu-img' utility with a timeout context.
-func (vm *VirtualMachine) CreateOverlay(imageName string) error {
-	store, img, err := vm.getStoreAndImage(imageName)
+// SetupDisk creates a QCOW2 overlay image for the VM's disk.
+func (vm *VirtualMachine) SetupDisk() error {
+	store, img, err := vm.fetchStoreAndImage(vm.Config.Spec.Image)
 	if err != nil {
-		return fmt.Errorf("failed to get store and image: %w", err)
-	}
-	// Build the path to the base image (from where we will create the overlay)
-	baseImagePath := filepath.Join(store.ArtifactsPath, img.File)
-	// build the path for the overlay image (destination image)
-	// Construct target overlay image file name.
-	overlayPath := vm.buildOverlayPath(store)
-
-	// Define the qemu-img command arguments.
-	args := []string{
-		"create",
-		"-o", fmt.Sprintf("backing_file=%s,backing_fmt=qcow2", baseImagePath),
-		"-f", "qcow2",
-		overlayPath,
+		return fmt.Errorf("fetch store and image: %w", err)
 	}
 
-	// Set a timeout context for running the external command.
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	src := filepath.Join(store.ArtifactsPath, img.File)
+	dest := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
 
-	// Execute the command.
-	cmd := exec.CommandContext(ctx, "qemu-img", args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Errorf("qemu-img output: %s", output)
-		return fmt.Errorf("failed to execute qemu-img command: %w", err)
+	if err := vm.disk.CreateOverlay(vm.ctx, src, dest); err != nil {
+		return fmt.Errorf("create overlay image: %w", err)
 	}
 
-	log.Debug("Overlay image created successfully")
 	return nil
 }
 
-// DeleteOverlay deletes the qcow2 overlay image file from the file system.
-// It gets the target disk image path based on the store configuration and VM metadata.
-func (vm *VirtualMachine) DeleteOverlay(imageName string) error {
-	store, err := vm.getStore()
+// CleanupDisk removes the VM's QCOW2 overlay file from disk.
+func (vm *VirtualMachine) CleanupDisk() error {
+	store, err := vm.fetchStore()
 	if err != nil {
-		return fmt.Errorf("failed to get store: %w", err)
+		return fmt.Errorf("fetch store: %w", err)
 	}
 
-	// _, err = st.GetImageRecord(db.Ctx, db.DB, vm.Spec.Image)
-	// if err != nil {
-	// 	return fmt.Errorf("can't get store %q: %w", vm.Metadata.Store, err)
+	// Ensure the image exists in the store
+	if _, err := store.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image); err != nil {
+		return fmt.Errorf("image %q not found in store: %w", vm.Config.Spec.Image, err)
+	}
+
+	diskPath := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+	if err := os.Remove(diskPath); err != nil {
+		return fmt.Errorf("remove disk %q: %w", diskPath, err)
+	}
+
+	// dest := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+	//
+	// if err := vm.disk.DeleteOverlay(vm.ctx, dest); err != nil {
+	// 	return err
 	// }
 
-	if _, err := store.GetImageRecord(vm.Context, vm.DB, vm.Spec.Image); err != nil {
-		return fmt.Errorf("image not found in store %q: %w", vm.Metadata.Store, err)
-	}
-	// Construct the disk image path.
-	diskPath := filepath.Join(store.ImagesPath, vm.Metadata.Name+".qcow2")
-	// overlayPath := vm.buildOverlayPath(store)
-	if err := os.Remove(diskPath); err != nil {
-		return fmt.Errorf("failed to delete disk for VM %q: %w", vm.Metadata.Name, err)
-	}
 	return nil
 }
 
@@ -107,42 +85,43 @@ func getNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (in
 func NewVirtualMachineRecord(
 	vm *VirtualMachine,
 ) (*db.VirtualMachineRecord, error) {
-	store, err := vm.getStore()
+	store, err := vm.fetchStore()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get store: %w", err)
 	}
 
 	// Verify image exists in store
-	if _, err := store.GetImageRecord(vm.Context, vm.DB, vm.Spec.Image); err != nil {
+	if _, err := store.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image); err != nil {
 		return nil, fmt.Errorf(
 			"image %q not found in store %q: %w",
-			vm.Spec.Image,
-			vm.Metadata.Store,
+			vm.Config.Spec.Image,
+			vm.Config.Metadata.Store,
 			err,
 		)
 	}
 
-	networkID, err := getNetworkIDByName(vm.Context, vm.DB, vm.Spec.Network.Name)
+	networkID, err := getNetworkIDByName(vm.ctx, vm.db, vm.Config.Spec.Network.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
 
-	storeID, err := db.GetStoreIDByName(vm.Context, vm.DB, vm.Metadata.Store)
+	storeID, err := db.GetStoreIDByName(vm.ctx, vm.db, vm.Config.Metadata.Store)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
+	diskPath := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
 
 	return &db.VirtualMachineRecord{
-		Name:       vm.Metadata.Name,
-		Namespace:  vm.Metadata.Namespace,
-		Labels:     vm.Metadata.Labels,
-		CPU:        vm.Spec.CPU,
-		RAM:        vm.Spec.Memory,
-		DiskSize:   vm.Spec.Disk.Size,
-		DiskPath:   vm.buildOverlayPath(store),
-		Image:      vm.Spec.Image,
-		MacAddress: vm.Spec.Network.MacAddress,
-		IP:         vm.Spec.Network.IP,
+		Name:       vm.Config.Metadata.Name,
+		Namespace:  vm.Config.Metadata.Namespace,
+		Labels:     vm.Config.Metadata.Labels,
+		CPU:        vm.Config.Spec.CPU,
+		RAM:        vm.Config.Spec.Memory,
+		DiskSize:   vm.Config.Spec.Disk.Size,
+		DiskPath:   diskPath,
+		Image:      vm.Config.Spec.Image,
+		MacAddress: vm.Config.Spec.Network.MacAddress,
+		IP:         vm.Config.Spec.Network.IP,
 		NetworkID:  networkID,
 		StoreID:    storeID,
 		CreatedAt:  time.Now(),
@@ -151,57 +130,70 @@ func NewVirtualMachineRecord(
 
 // prepareDomain generates the XML configuration for the virtual machine domain.
 // It uses the store record to determine the disk image location and creates the domain configuration.
-func (vm *VirtualMachine) prepareDomain(image string) (string, error) {
+func (vm *VirtualMachine) buildDomainXML() (string, error) {
 	// Build the full path to the disk image with the .qcow2 extension.
 	var st db.StoreRecord
 	var err error
-	st.ID, err = db.GetStoreIDByName(vm.Context, vm.DB, vm.Metadata.Store)
-	img, err := st.GetImageRecord(vm.Context, vm.DB, image)
+	st.ID, err = db.GetStoreIDByName(vm.ctx, vm.db, vm.Config.Metadata.Store)
+	img, err := st.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image)
 	if err != nil {
-		return "", fmt.Errorf("can't get store %q: %w", vm.Metadata.Store, err)
+		return "", fmt.Errorf("can't get store %q: %w", vm.Config.Metadata.Store, err)
 	}
-	// Pull the image entry the VM asked for (imageKey could be vm.Spec.Image)
-	// img, ok := st.Images[image]
-	// if !ok {
-	// 	return "", fmt.Errorf("image %q not found in store", image)
-	// }
 	// Build the disk image path for the domain configuration.
 	diskImagePath := fmt.Sprintf(
 		"%s.qcow2",
-		filepath.Join(st.ImagesPath, vm.Metadata.Name),
+		filepath.Join(st.ImagesPath, vm.Config.Metadata.Name),
 	)
 
 	// Create a new domain configuration using utility functions.
 	domain := utils.NewDomain(
-		vm.Metadata.Name,
-		vm.Spec.Memory,
-		vm.Spec.CPU,
+		vm.Config.Metadata.Name,
+		vm.Config.Spec.Memory,
+		vm.Config.Spec.CPU,
 		diskImagePath,
-		vm.Spec.Network.Name,
-		vm.Spec.Network.MacAddress,
+		vm.Config.Spec.Network.Name,
+		vm.Config.Spec.Network.MacAddress,
 		img.OsProfile,
 	)
 
 	xmlConfig, err := domain.GenerateXML()
 	if err != nil {
-		return "", fmt.Errorf("failed to generate XML for VM %s: %v", vm.Metadata.Name, err)
+		return "", fmt.Errorf("failed to generate XML for VM %s: %v", vm.Config.Metadata.Name, err)
 	}
 
-	// Prepend the XML header and return.
 	return xml.Header + string(xmlConfig), nil
 }
 
 // defineAndStartDomain defines the domain using the provided XML configuration and starts the VM.
 func (vm *VirtualMachine) defineAndStartDomain(xmlConfig string) error {
-	vmInstance, err := vm.Conn.DomainDefineXML(xmlConfig)
+	vmInstance, err := vm.conn.DomainDefineXML(xmlConfig)
 	if err != nil {
-		return fmt.Errorf("failed to define domain for VM %s: %v", vm.Metadata.Name, err)
+		return fmt.Errorf("failed to define domain for VM %s: %v", vm.Config.Metadata.Name, err)
 	}
 
-	if err := vm.Conn.DomainCreate(vmInstance); err != nil {
-		return fmt.Errorf("failed to start VM %s: %w", vm.Metadata.Name, err)
+	if err := vm.conn.DomainCreate(vmInstance); err != nil {
+		return fmt.Errorf("failed to start VM %s: %w", vm.Config.Metadata.Name, err)
 	}
 
+	return nil
+}
+
+func (vm *VirtualMachine) undefineAndDestoryDomain() error {
+	domain, err := vm.conn.DomainLookupByName(vm.Config.Metadata.Name)
+	if err != nil {
+		// return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
+		return err
+	}
+
+	// Attempt to destroy the domain.
+	if err := vm.conn.DomainDestroy(domain); err != nil {
+		return err
+	}
+
+	// Undefine the domain
+	if err := vm.conn.DomainUndefine(domain); err != nil {
+		return fmt.Errorf("failed to undefine VM %q: %w", vm.Config.Metadata.Name, err)
+	}
 	return nil
 }
 
@@ -254,33 +246,33 @@ func formatAge(t time.Time) string {
 }
 
 // getStore retrieves the store record for the VM.
-func (vm *VirtualMachine) getStore() (*db.StoreRecord, error) {
+func (vm *VirtualMachine) fetchStore() (*db.StoreRecord, error) {
 	var store db.StoreRecord
 	var err error
 
-	store.ID, err = db.GetStoreIDByName(vm.Context, vm.DB, vm.Metadata.Store)
+	store.ID, err = db.GetStoreIDByName(vm.ctx, vm.db, vm.Config.Metadata.Store)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Metadata.Store, err)
+		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Config.Metadata.Store, err)
 	}
 
 	return &store, nil
 }
 
 // getStoreAndImage retrieves both store and image records.
-func (vm *VirtualMachine) getStoreAndImage(
+func (vm *VirtualMachine) fetchStoreAndImage(
 	imageName string,
 ) (*db.StoreRecord, *db.ImageRecord, error) {
-	store, err := vm.getStore()
+	store, err := vm.fetchStore()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	img, err := store.GetImageRecord(vm.Context, vm.DB, imageName)
+	img, err := store.GetImageRecord(vm.ctx, vm.db, imageName)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"failed to get image %q from store %q: %w",
 			imageName,
-			vm.Metadata.Store,
+			vm.Config.Metadata.Store,
 			err,
 		)
 	}
@@ -288,7 +280,17 @@ func (vm *VirtualMachine) getStoreAndImage(
 	return store, img, nil
 }
 
-// buildOverlayPath constructs the full path for the overlay image.
-func (vm *VirtualMachine) buildOverlayPath(store *db.StoreRecord) string {
-	return filepath.Join(store.ImagesPath, vm.Metadata.Name+".qcow2")
+// // buildOverlayPath constructs the full path for the overlay image.
+// func (vm *VirtualMachine) buildOverlayPath(store *db.StoreRecord) string {
+// 	return filepath.Join(store.ImagesPath, vm.Metadata.Name+".qcow2")
+// }
+
+func (vm *VirtualMachine) rollback(cleanups []func() error, step string, originError error) error {
+	for _, fn := range cleanups {
+		if err := fn(); err != nil {
+			log.Warnf("rollback failed, step %s, err %s", step, err)
+		}
+	}
+
+	return fmt.Errorf("failed at %s: %w", step, originError)
 }
