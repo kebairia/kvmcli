@@ -4,11 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"os"
-	"text/tabwriter"
-
-	"github.com/digitalocean/go-libvirt"
 )
 
 // TODO: 1. Delete function for store
@@ -16,73 +11,90 @@ import (
 //       3. Print function for store (kvmcli get sotre)
 // 			 4. Connect stores with other instances using labels
 
-var ErrStoreExist = errors.New("failed to insert new store record, store exist")
+// Errors returned by this package.
+var (
+	// ErrStoreNameEmpty is returned when the store name is not set.
+	ErrStoreNameEmpty = errors.New("store: name is empty")
+	// ErrStoreExist is returned when attempting to insert a store that already exists.
+	ErrStoreExist = errors.New("store: store already exists")
+	// ErrNilDBConn is returned when the database connection is missing.
+	ErrNilDBConn = errors.New("store: database connection is nil")
+)
 
+// Store manages store records in a SQL database.
 type Store struct {
-	DB      *sql.DB         `yaml:"-"`
-	Context context.Context `yaml:"_"`
-
-	APIVersion string   `yaml:"apiVersion"`
-	Kind       string   `yaml:"kind"`
-	Metadata   Metadata `yaml:"metadata"`
-	Spec       Spec     `yaml:"spec"`
+	Config StoreConfig
+	ctx    context.Context
+	db     *sql.DB
 }
 
-type Metadata struct {
-	Name      string            `yaml:"name"`
-	Namespace string            `yaml:"namespace"`
-	Labels    map[string]string `yaml:"labels"`
+// StoreOption configures a Store.
+type StoreOption func(*Store)
+
+// WithDatabaseConnection injects a *sql.DB (required).
+func WithDatabaseConnection(db *sql.DB) StoreOption {
+	return func(s *Store) {
+		s.db = db
+	}
 }
 
-type Spec struct {
-	Backend string  `yaml:"backend"`
-	Paths   Paths   `yaml:"paths"`
-	Images  []Image `yaml:"images"`
+// WithContext injects a context.Context; if nil, uses context.Background().
+func WithContext(ctx context.Context) StoreOption {
+	return func(s *Store) {
+		if ctx == nil {
+			s.ctx = context.Background()
+		} else {
+			s.ctx = ctx
+		}
+	}
 }
 
-type Paths struct {
-	ArtifactsPath string `yaml:"artifacts"`
-	ImagesPath    string `yaml:"images"`
+// NewStore constructs a Store, applies options, and validates dependencies.
+func NewStore(cfg StoreConfig, opts ...StoreOption) (*Store, error) {
+	if cfg.Metadata.Name == "" {
+		return nil, ErrStoreNameEmpty
+	}
+
+	s := &Store{
+		Config: cfg,
+		// default context
+		ctx: context.Background(),
+	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	if s.db == nil {
+		return nil, ErrNilDBConn
+	}
+
+	return s, nil
 }
 
-type Image struct {
-	Name      string `yaml:"name"`
-	Version   string `yaml:"version"`
-	OsProfile string `yaml:"osProfile"`
-	File      string `yaml:"file"`
-	Size      string `yaml:"size"`
-	Checksum  string `yaml:"checksum"`
-}
-
-func (store *Store) SetConnection(ctx context.Context, db *sql.DB, conn *libvirt.Libvirt) {
-	_ = conn
-	store.DB = db
-	store.Context = ctx
-}
-
-func (st *Store) Header() *tabwriter.Writer {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	// Columns: store name, namespace, backend, artifacts path,
-	// images path, and how many images are defined
-	fmt.Fprintln(w, "NAME\tNAMESPACE\tBACKEND\tARTIFACTS_PATH\tIMAGES_PATH\tIMAGE_COUNT")
-	return w
-}
-
-func (st *Store) PrintRow(w *tabwriter.Writer) {
-	imageCount := len(st.Spec.Images)
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%d\n",
-		st.Metadata.Name,
-		st.Metadata.Namespace,
-		st.Spec.Backend,
-		st.Spec.Paths.ArtifactsPath,
-		st.Spec.Paths.ImagesPath,
-		imageCount,
-	)
-}
-
-// func (st *Store) GetBaseImagePath(name string) (string, error) {
-// 	return filepath.Join(st.Spec.Paths.ArtifactsPath, st.Spec.Images[name].File)
+// func (st *Store) Header() *tabwriter.Writer {
+// 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+// 	// Columns: store name, namespace, backend, artifacts path,
+// 	// images path, and how many images are defined
+// 	fmt.Fprintln(w, "NAME\tNAMESPACE\tBACKEND\tARTIFACTS_PATH\tIMAGES_PATH\tIMAGE_COUNT")
+// 	return w
 // }
-
-// NOTE: I can create Getters here for images, directories .. versions ..etc
-// this will faciliate my operations
+//
+// func (st *Store) PrintInfo(w *tabwriter.Writer) {
+// 	imageCount := len(st.Spec.Images)
+// 	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%d\n",
+// 		st.Metadata.Name,
+// 		st.Metadata.Namespace,
+// 		st.Spec.Backend,
+// 		st.Spec.Paths.ArtifactsPath,
+// 		st.Spec.Paths.ImagesPath,
+// 		imageCount,
+// 	)
+// }
+//
+// // func (st *Store) GetBaseImagePath(name string) (string, error) {
+// // 	return filepath.Join(st.Spec.Paths.ArtifactsPath, st.Spec.Images[name].File)
+// // }
+//
+// // NOTE: I can create Getters here for images, directories .. versions ..etc
+// // this will faciliate my operations
