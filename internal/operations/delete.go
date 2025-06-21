@@ -21,7 +21,7 @@ func DeleteFromManifest(manifestPath string) error {
 	}
 	defer operator.Close()
 
-	resources, err := manifest.Load(manifestPath)
+	resources, err := manifest.Load(manifestPath, operator.ctx, operator.db, operator.conn)
 	if err != nil {
 		return fmt.Errorf("failed to load manifest %q: %w", manifestPath, err)
 	}

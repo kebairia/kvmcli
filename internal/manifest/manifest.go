@@ -1,11 +1,14 @@
 package manifest
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal/network"
 	"github.com/kebairia/kvmcli/internal/resources"
 	"github.com/kebairia/kvmcli/internal/store"
@@ -22,8 +25,14 @@ const (
 type kindOnly struct {
 	Kind string `yaml:"kind"`
 }
+type Manifest interface{}
 
-func Load(manifestPath string) ([]resources.Resource, error) {
+func Load(
+	manifestPath string,
+	ctx context.Context,
+	db *sql.DB,
+	conn *libvirt.Libvirt,
+) ([]resources.Resource, error) {
 	f, err := os.Open(manifestPath)
 	if err != nil {
 		return nil, fmt.Errorf("open manifest: %w", err)
@@ -52,23 +61,53 @@ func Load(manifestPath string) ([]resources.Resource, error) {
 
 		switch meta.Kind {
 		case KindStore:
-			var st store.Store
-			if err := doc.Decode(&st); err != nil {
+			var cfg store.StoreConfig
+			if err := doc.Decode(&cfg); err != nil {
 				return nil, fmt.Errorf("unmarshal Store: %w", err)
 			}
-			stores = append(stores, &st)
+			stRes, err := store.NewStore(cfg,
+				store.WithContext(ctx),
+				store.WithDatabaseConnection(db),
+			)
+			if err != nil {
+				return nil, err
+			}
+			stores = append(stores, stRes)
 		case KindNetwork:
-			var net network.VirtualNetwork
-			if err := doc.Decode(&net); err != nil {
-				return nil, fmt.Errorf("unmarshal Network: %w", err)
+			// var net network.VirtualNetwork
+			// if err := doc.Decode(&net); err != nil {
+			// 	return nil, fmt.Errorf("unmarshal Network: %w", err)
+			// }
+			var cfg network.VirtualNetworkConfig
+			if err := doc.Decode(&cfg); err != nil {
+				return nil, fmt.Errorf("unmarshal NetworkConfig: %w", err)
 			}
-			networks = append(networks, &net)
+			netRes, err := network.NewVirtualNetwork(cfg,
+				network.WithContext(ctx),
+				network.WithDatabaseConnection(db),
+				network.WithLibvirtConnection(conn),
+			)
+			if err != nil {
+				return nil, err
+			}
+			networks = append(networks, netRes)
+
+			// networks = append(networks, &net)
 		case KindVirtualMachine:
-			var vm vms.VirtualMachine
-			if err := doc.Decode(&vm); err != nil {
-				return nil, fmt.Errorf("unmarshal VirtualMachine: %w", err)
+			var cfg vms.VirtualMachineConfig
+			if err := doc.Decode(&cfg); err != nil {
+				return nil, fmt.Errorf("unmarshal VMConfig: %w", err)
 			}
-			vmsList = append(vmsList, &vm)
+			vmRes, err := vms.NewVirtualMachine(
+				cfg,
+				vms.WithContext(ctx),
+				vms.WithDatabaseConnection(db),
+				vms.WithLibvirtConnection(conn),
+			)
+			if err != nil {
+				return nil, err
+			}
+			vmsList = append(vmsList, vmRes)
 		default:
 			return nil, fmt.Errorf("unknown kind %q", meta.Kind)
 
@@ -85,3 +124,44 @@ func Load(manifestPath string) ([]resources.Resource, error) {
 
 	return sorted, nil
 }
+
+// func InitResources(configs []ResourceConfig) ([]resources.Resource, error) {
+//     var (
+//         stores   []resources.Resource
+//         nets     []resources.Resource
+//         vmsList  []resources.Resource
+//     )
+//
+//     for _, rc := range configs {
+//         switch rc.Kind {
+//         case KindStore:
+//             st, err := store.NewStore(*rc.Store, db)
+//             if err != nil { return nil, err }
+//             stores = append(stores, st)
+//
+//         case KindNetwork:
+//             netRes, err := network.NewVirtualNetwork(*rc.Network, db, conn)
+//             if err != nil { return nil, err }
+//             nets = append(nets, netRes)
+//
+//         case KindVirtualMachine:
+//             vmRes, err := vms.NewVirtualMachine(
+//                 *rc.VM,
+//                 vms.WithContext(ctx),
+//                 vms.WithDatabaseConnection(db),
+//                 vms.WithLibvirtConnection(conn),
+//             )
+//             if err != nil { return nil, err }
+//             vmsList = append(vmsList, vmRes)
+//         }
+//     }
+//
+//     // “Flatten” them in the exact order you want
+//     out := make([]resources.Resource, 0,
+//         len(stores)+len(nets)+len(vmsList),
+//     )
+//     out = append(out, stores...)
+//     out = append(out, nets...)
+//     out = append(out, vmsList...)
+//     return out, nil
+// }
