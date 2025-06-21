@@ -15,32 +15,36 @@ func (net *VirtualNetwork) prepareNetwork() (string, error) {
 	var opts []utils.NetworkOption
 
 	// Append DHCP config if defined in the YAML
-	if net.Spec.DHCP != nil {
-		start, startOk := net.Spec.DHCP["start"]
-		end, endOk := net.Spec.DHCP["end"]
+	if net.Config.Spec.DHCP != nil {
+		start, startOk := net.Config.Spec.DHCP["start"]
+		end, endOk := net.Config.Spec.DHCP["end"]
 		if startOk && endOk {
 			opts = append(opts, utils.WithDHCP(start, end))
 		}
 	}
 
 	// Append bridge name if provided
-	if net.Spec.Bridge != "" {
-		opts = append(opts, utils.WithBridge(net.Spec.Bridge))
+	if net.Config.Spec.Bridge != "" {
+		opts = append(opts, utils.WithBridge(net.Config.Spec.Bridge))
 	}
 
 	// Create the network definition with all options
 	network := utils.NewNetwork(
-		net.Metadata.Name,
-		net.Spec.Mode,
-		net.Spec.Network.Address,
-		net.Spec.Network.Netmask,
-		net.Spec.Autostart,
+		net.Config.Metadata.Name,
+		net.Config.Spec.Mode,
+		net.Config.Spec.Network.Address,
+		net.Config.Spec.Network.Netmask,
+		net.Config.Spec.Autostart,
 		opts...,
 	)
 
 	xmlConfig, err := network.GenerateXML()
 	if err != nil {
-		return "", fmt.Errorf("failed to generate XML for network %s: %v", net.Metadata.Name, err)
+		return "", fmt.Errorf(
+			"failed to generate XML for network %s: %v",
+			net.Config.Metadata.Name,
+			err,
+		)
 	}
 
 	return xml.Header + string(xmlConfig), nil
@@ -49,18 +53,18 @@ func (net *VirtualNetwork) prepareNetwork() (string, error) {
 // defineAndStartNetwork defines and starts the virtual network using libvirt.
 func (net *VirtualNetwork) defineAndStartNetwork(xmlConfig string) error {
 	// Define the network from the generated XML
-	netInstance, err := net.Conn.NetworkDefineXML(xmlConfig)
+	netInstance, err := net.conn.NetworkDefineXML(xmlConfig)
 	if err != nil {
-		return fmt.Errorf("failed to define network %s: %v", net.Metadata.Name, err)
+		return fmt.Errorf("failed to define network %s: %v", net.Config.Metadata.Name, err)
 	}
 
 	// Start (create) the defined network
-	if err := net.Conn.NetworkCreate(netInstance); err != nil {
-		return fmt.Errorf("failed to start network %s: %w", net.Metadata.Name, err)
+	if err := net.conn.NetworkCreate(netInstance); err != nil {
+		return fmt.Errorf("failed to start network %s: %w", net.Config.Metadata.Name, err)
 	}
 	// Set our network to be autostarted
-	if net.Spec.Autostart {
-		net.Conn.NetworkSetAutostart(netInstance, 1)
+	if net.Config.Spec.Autostart {
+		net.conn.NetworkSetAutostart(netInstance, 1)
 	}
 
 	return nil
@@ -69,16 +73,16 @@ func (net *VirtualNetwork) defineAndStartNetwork(xmlConfig string) error {
 func NewVirtualNetworkRecord(net *VirtualNetwork) *db.VirtualNetworkRecord {
 	// Create network record out of infos
 	return &db.VirtualNetworkRecord{
-		Name:       net.Metadata.Name,
-		Namespace:  net.Metadata.Namespace,
-		Labels:     net.Metadata.Labels,
-		MacAddress: net.Spec.MacAddress,
-		Bridge:     net.Spec.Bridge,
-		Mode:       net.Spec.Mode,
-		NetAddress: net.Spec.Network.Address,
-		Netmask:    net.Spec.Network.Netmask,
-		DHCP:       net.Spec.DHCP,
-		Autostart:  net.Spec.Autostart,
+		Name:       net.Config.Metadata.Name,
+		Namespace:  net.Config.Metadata.Namespace,
+		Labels:     net.Config.Metadata.Labels,
+		MacAddress: net.Config.Spec.MacAddress,
+		Bridge:     net.Config.Spec.Bridge,
+		Mode:       net.Config.Spec.Mode,
+		NetAddress: net.Config.Spec.Network.Address,
+		Netmask:    net.Config.Spec.Network.Netmask,
+		DHCP:       net.Config.Spec.DHCP,
+		Autostart:  net.Config.Spec.Autostart,
 		CreatedAt:  time.Now(),
 	}
 }

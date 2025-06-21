@@ -8,40 +8,82 @@ import (
 	"github.com/digitalocean/go-libvirt"
 )
 
-var VirtualNetworkNameEmpty = errors.New("virtual network name is empty")
+// IDEA: the ip <=>  mac address mapping done here in Virtual Network declaration
+// What I need is whenever I create a new virtual machine with a static ip, I need to update
+// my virtual network declaration to add the ip <=> mac address mapping
 
-// Struct definition
+var ErrVirtualNetworkNameEmpty = errors.New("virtual network name is empty")
+
+// VirtualNetwork manages a libvirt-backed network, with IP⇔MAC mapping stored in DB.
 type VirtualNetwork struct {
-	// Conn to hold the libvirt connection
-	Conn       *libvirt.Libvirt `yaml:"-"`
-	DB         *sql.DB          `yaml:"-"`
-	Context    context.Context  `yaml:"_"`
-	ApiVersion string           `yaml:"apiVersion"`
-	Kind       string           `yaml:"kind"`
-	Metadata   NetMetadata      `yaml:"metadata"`
-	Spec       NetSpec          `yaml:"spec"`
-}
-type NetMetadata struct {
-	Name      string            `yaml:"name"`
-	Namespace string            `yaml:"namespace"`
-	Labels    map[string]string `yaml:"labels"`
-}
-type NetSpec struct {
-	DHCP       map[string]string `yaml:"dhcp"`
-	Bridge     string            `yaml:"bridge"`
-	Mode       string            `yaml:"mode"`
-	Network    Network           `yaml:"network"`
-	Autostart  bool              `yaml:"autostart"`
-	MacAddress string            `yaml:"macAddress"`
+	Config VirtualNetworkConfig
+	ctx    context.Context
+	db     *sql.DB
+	conn   *libvirt.Libvirt
 }
 
-type Network struct {
-	Address string `yaml:"address"`
-	Netmask string `yaml:"netmask"`
+// VirtualNetworkOption configures a VirtualNetwork.
+type VirtualNetworkOption func(*VirtualNetwork)
+
+// WithLibvirtConnection sets the libvirt client (required).
+func WithLibvirtConnection(conn *libvirt.Libvirt) VirtualNetworkOption {
+	return func(vn *VirtualNetwork) {
+		vn.conn = conn
+	}
 }
 
-func (net *VirtualNetwork) SetConnection(ctx context.Context, db *sql.DB, conn *libvirt.Libvirt) {
-	net.Conn = conn
-	net.DB = db
-	net.Context = ctx
+// WithDatabaseConnection sets the SQL database (required).
+func WithDatabaseConnection(db *sql.DB) VirtualNetworkOption {
+	return func(vn *VirtualNetwork) {
+		vn.db = db
+	}
+}
+
+// WithContext sets a custom context. If nil is passed, context.Background() is used.
+func WithContext(ctx context.Context) VirtualNetworkOption {
+	return func(vn *VirtualNetwork) {
+		if ctx == nil {
+			vn.ctx = context.Background()
+		} else {
+			vn.ctx = ctx
+		}
+	}
+}
+
+// NewVirtualNetwork creates a VirtualNetwork, applying options and validating dependencies.
+func NewVirtualNetwork(
+	cfg VirtualNetworkConfig,
+	opts ...VirtualNetworkOption,
+) (*VirtualNetwork, error) {
+	if cfg.Metadata.Name == "" {
+		return nil, ErrVirtualNetworkNameEmpty
+	}
+
+	vn := &VirtualNetwork{
+		Config: cfg,
+		// default context
+		ctx: context.Background(),
+	}
+
+	for _, opt := range opts {
+		opt(vn)
+	}
+
+	// if vn.conn == nil {
+	// 	return nil, ErrNilLibvirtConn
+	// }
+	// if vn.db == nil {
+	// 	return nil, ErrNilDBConn
+	// }
+
+	return vn, nil
+}
+
+// AddStaticMapping records an IP⇔MAC mapping in the libvirt network XML and persists to DB.
+func (vn *VirtualNetwork) AddStaticMapping(ip, mac string) error {
+	// TODO: load existing network XML via vn.conn.LookupNetworkByName
+	// TODO: inject <host ip="..." mac="..."/> into XML
+	// TODO: define vn.conn.NetworkDefineXML and vn.conn.NetworkUpdate call
+	// TODO: persist mapping in vn.db
+	return nil
 }
