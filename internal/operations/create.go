@@ -32,7 +32,7 @@ func CreateFromManifest(manifestPath string) error {
 	}
 	defer operator.Close()
 
-	resources, err := manifest.Load(manifestPath)
+	resources, err := manifest.Load(manifestPath, operator.ctx, operator.db, operator.conn)
 	if err != nil {
 		return fmt.Errorf("failed to load manifest %q: %w", manifestPath, err)
 	}
@@ -49,6 +49,5 @@ func CreateFromManifest(manifestPath string) error {
 
 // Create provisions the given Resource.
 func (o *Operator) Create(r resources.Resource) error {
-	o.SetConnection(r)
 	return r.Create()
 }
