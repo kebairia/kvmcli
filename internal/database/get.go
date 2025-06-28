@@ -64,6 +64,61 @@ func GetVMRecords(
 	return vms, nil
 }
 
+// GetRecords retrieves all documents of type T from the specified collection
+// that match the given namespace.
+// GetVMByName fetches a single VirtualMachineRecord by name.
+// If namespace is non-empty, it will be included in the WHERE clause.
+func GetVMByName(
+	ctx context.Context,
+	db *sql.DB,
+	name, namespace string,
+) (VirtualMachineRecord, error) {
+	// Build the base query
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE name = ?", vmColumns, vmsTable)
+	args := []any{name}
+
+	// Optionally filter by namespace
+	if namespace != "" {
+		query += " AND namespace = ?"
+		args = append(args, namespace)
+	}
+
+	// Prepare a holder for the single record
+	var (
+		vm        VirtualMachineRecord
+		rawLabels string
+	)
+
+	// Execute the query
+	row := db.QueryRowContext(ctx, query, args...)
+	if err := row.Scan(
+		&vm.ID,
+		&vm.Name,
+		&vm.Namespace,
+		&vm.CPU,
+		&vm.RAM,
+		&vm.MacAddress,
+		&vm.NetworkID,
+		&vm.Image,
+		&vm.DiskSize,
+		&vm.DiskPath,
+		&vm.CreatedAt,
+		&rawLabels,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return vm, fmt.Errorf("no VM found with name %q", name)
+		}
+		return vm, fmt.Errorf("failed to scan VM row: %w", err)
+	}
+
+	// Parse JSON labels
+	if err := json.Unmarshal([]byte(rawLabels), &vm.Labels); err != nil {
+		return vm, fmt.Errorf("invalid labels JSON for VM %q: %w", name, err)
+	}
+
+	return vm, nil
+}
+
 func GetNetworkRecords(
 	ctx context.Context,
 	db *sql.DB,
