@@ -26,7 +26,6 @@ type ImageRecord struct {
 	Name      string
 	Version   string
 	OsProfile string
-	Directory string
 	File      string
 	Checksum  string
 	Size      string
@@ -72,7 +71,6 @@ func EnsureStoreTable(ctx context.Context, db *sql.DB) error {
 			name 			 TEXT,
 		  version    TEXT,
 		  os_profile TEXT,
-		  directory  TEXT,
 		  file       TEXT,
 		  checksum   TEXT,
 		  size       TEXT,
@@ -148,45 +146,27 @@ func (store *StoreRecord) GetRecordByNamespace(
 	return nil
 }
 
-// func getImageRecord(
-func (store *StoreRecord) GetImageRecord(
-	ctx context.Context,
-	db *sql.DB,
-	imageName string,
-) (*ImageRecord, error) {
+func GetImageRecord(ctx context.Context, db *sql.DB, imgName string) (*VMImageInfo, error) {
+	rec := &VMImageInfo{}
 	const query = `
-		SELECT
-      image.id, image.store_id, image.name, image.version, image.os_profile,
-      image.directory, image.file, image.checksum, image.size, image.created_at,
-      store.id, store.name, store.namespace, store.backend,
-      store.artifacts_path, store.images_path, store.created_at
-    FROM ` + imagesTable + ` AS image
-    JOIN ` + storesTable + ` AS store ON image.store_id = store.id
-    WHERE image.store_id = ? AND image.name = ?;
+		SELECT 
+		store.id, store.name, store.namespace,
+		image.id, image.store_id, image.name, image.version, image.os_profile,
+		store.artifacts_path, store.images_path, image.file, image.checksum, image.size
+		FROM ` + imagesTable + ` AS image
+		JOIN ` + storesTable + ` AS store ON image.store_id = store.id
+		WHERE image.name = ?;
 		`
-	rec := &ImageRecord{}
-	row := db.QueryRowContext(ctx, query, store.ID, imageName)
+
+	row := db.QueryRowContext(ctx, query, imgName)
 	if err := row.Scan(
-		&rec.ID,
-		&rec.StoreID,
-		&rec.Name,
-		&rec.Version,
-		&rec.OsProfile,
-		&rec.Directory,
-		&rec.File,
-		&rec.Checksum,
-		&rec.Size,
-		&rec.CreatedAt,
-		&store.ID,
-		&store.Name,
-		&store.Namespace,
-		&store.Backend,
-		&store.ArtifactsPath,
-		&store.ImagesPath,
-		&store.CreatedAt,
+		&rec.StoreID, &rec.StoreName, &rec.StoreNamespace,
+		&rec.ImageID, &rec.ImageStoreID, &rec.ImageName, &rec.ImageVersion,
+		&rec.OsProfile, &rec.ArtifactsPath, &rec.ImagesPath,
+		&rec.ImageFile, &rec.Checksum, &rec.Size,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no image %q in store %d", imageName, store.ID)
+			return nil, fmt.Errorf("no image %q in store", imgName)
 		}
 
 		return nil, fmt.Errorf("scan image: %w", err)
@@ -267,8 +247,8 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 	const imgInsert = `
 		INSERT INTO ` + imagesTable + ` (
 			store_id, name, version, os_profile,
-			directory, file, checksum, size
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+			file, checksum, size
+		) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 	for _, img := range store.Images {
 		_, err = tx.ExecContext(ctx, imgInsert,
@@ -276,7 +256,6 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 			img.Name,
 			img.Version,
 			img.OsProfile,
-			img.Directory,
 			img.File,
 			img.Checksum,
 			img.Size,
