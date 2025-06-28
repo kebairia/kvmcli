@@ -42,8 +42,6 @@ func ListAll() error {
 	w := info.Header()
 
 	for _, virtualMachine := range virtualMachines {
-		fmt.Printf("database ==> %p\t", &operator.db)
-		fmt.Printf("connection ==> %p\n", &operator.conn)
 		virtualMachine.PrintInfo(w)
 	}
 	w.Flush()
@@ -69,8 +67,6 @@ func ListAllNetworks() error {
 	w := info.Header()
 
 	for _, virtualNetwork := range virtualNetworks {
-		fmt.Printf("database ==> %p\t", &operator.db)
-		fmt.Printf("connection ==> %p\n", &operator.conn)
 		virtualNetwork.PrintInfo(w)
 	}
 	w.Flush()

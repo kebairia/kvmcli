@@ -103,7 +103,6 @@ func GetNetworkRecords(
 		); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
 		}
-		fmt.Println(network)
 		networks = append(networks, network)
 	}
 	if err := rows.Err(); err != nil {
