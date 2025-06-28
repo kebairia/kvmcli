@@ -54,13 +54,7 @@ func (d *LibvirtDomainManager) BuildXML(
 	db *sql.DB,
 	config VirtualMachineConfig,
 ) (string, error) {
-	var st database.StoreRecord
-	var err error
-	st.ID, err = database.GetStoreIDByName(ctx, db, config.Metadata.Store)
-	if err != nil {
-		return "", nil
-	}
-	img, err := st.GetImageRecord(ctx, db, config.Spec.Image)
+	img, err := database.GetImageRecord(ctx, db, config.Spec.Image)
 	if err != nil {
 		return "", nil
 	}
@@ -68,7 +62,7 @@ func (d *LibvirtDomainManager) BuildXML(
 	// Build the disk image path for the domain configuration.
 	diskImagePath := fmt.Sprintf(
 		"%s.qcow2",
-		filepath.Join(st.ImagesPath, config.Metadata.Name),
+		filepath.Join(img.ImagesPath, config.Metadata.Name),
 	)
 	domain := utils.NewDomain(
 		config.Metadata.Name,

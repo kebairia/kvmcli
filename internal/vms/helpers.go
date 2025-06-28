@@ -47,7 +47,7 @@ func NewVirtualMachineRecord(
 	}
 
 	// Verify image exists in store
-	if _, err := store.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image); err != nil {
+	if _, err := database.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image); err != nil {
 		return nil, fmt.Errorf(
 			"image %q not found in store %q: %w",
 			vm.Config.Spec.Image,
@@ -144,33 +144,6 @@ func (vm *VirtualMachine) fetchStore() (*db.StoreRecord, error) {
 
 	return &store, nil
 }
-
-// getStoreAndImage retrieves both store and image records.
-func (vm *VirtualMachine) fetchStoreAndImage(
-	imageName string,
-) (*db.StoreRecord, *db.ImageRecord, error) {
-	store, err := vm.fetchStore()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	img, err := store.GetImageRecord(vm.ctx, vm.db, imageName)
-	if err != nil {
-		return nil, nil, fmt.Errorf(
-			"failed to get image %q from store %q: %w",
-			imageName,
-			vm.Config.Metadata.Store,
-			err,
-		)
-	}
-
-	return store, img, nil
-}
-
-// // buildOverlayPath constructs the full path for the overlay image.
-// func (vm *VirtualMachine) buildOverlayPath(store *db.StoreRecord) string {
-// 	return filepath.Join(store.ImagesPath, vm.Metadata.Name+".qcow2")
-// }
 
 func (vm *VirtualMachine) rollback(cleanups []func() error, step string, originError error) error {
 	for _, fn := range cleanups {

@@ -3,6 +3,8 @@ package vms
 import (
 	"fmt"
 	"path/filepath"
+
+	"github.com/kebairia/kvmcli/internal/database"
 )
 
 // Create Virtual Machine
@@ -13,13 +15,17 @@ func (vm *VirtualMachine) Create() error {
 		return fmt.Errorf("can't Initiliaze a new vm: %w", err)
 	}
 
-	store, img, err := vm.fetchStoreAndImage(vm.Config.Spec.Image)
+	// store, img, err := vm.fetchStoreAndImage(vm.Config.Spec.Image)
+	// if err != nil {
+	// 	return fmt.Errorf("fetch store and image: %w", err)
+	// }
+	img, err := database.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image)
 	if err != nil {
 		return fmt.Errorf("fetch store and image: %w", err)
 	}
 
-	src := filepath.Join(store.ArtifactsPath, img.File)
-	dest := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+	src := filepath.Join(img.ArtifactsPath, img.ImageFile)
+	dest := filepath.Join(img.ImagesPath, vm.Config.Metadata.Name+".qcow2")
 
 	// this is a slice that collection all the cleanup functions
 	// so that when an error happens in each step, a proper rollback

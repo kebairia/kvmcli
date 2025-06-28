@@ -2,7 +2,9 @@ package vms
 
 import (
 	"fmt"
-	// db "github.com/kebairia/kvmcli/internal/database"
+	"path/filepath"
+
+	"github.com/kebairia/kvmcli/internal/database"
 )
 
 // OPTIMIZE:
