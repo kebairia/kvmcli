@@ -31,6 +31,9 @@ type DomainManager interface {
 	// Stop gracefully shuts down the domain.
 	Stop(ctx context.Context, name string) error
 
+	// Stop (kills) shuts down the domain immediately.
+	Destroy(ctx context.Context, name string) error
+
 	// Undefine removes the domain metadata.
 	Undefine(ctx context.Context, name string) error
 

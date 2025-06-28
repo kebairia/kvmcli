@@ -17,31 +17,28 @@ import (
 // Delete Function
 func (vm *VirtualMachine) Delete() error {
 	var err error
-	// Check connection
-	// if connectionIsValide(vm.Conn), then (this logic)
-	if vm.conn == nil {
-		return fmt.Errorf("libvirt connection is nil")
-	}
 
 	vmName := vm.Config.Metadata.Name
-	domain, err := vm.conn.DomainLookupByName(vmName)
+
+	img, err := database.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image)
 	if err != nil {
-		// return fmt.Errorf("Failed to find VM %s: %w", vmName, err)
-		return err
+		return fmt.Errorf("fetch store and image: %w", err)
 	}
 
+	dest := filepath.Join(img.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+
 	// Attempt to destroy the domain.
-	if err := vm.conn.DomainDestroy(domain); err != nil {
+	if err := vm.domain.Destroy(vm.ctx, vm.Config.Metadata.Name); err != nil {
 		return err
 	}
 
 	// Undefine the domain
-	if err := vm.conn.DomainUndefine(domain); err != nil {
+	if err := vm.domain.Undefine(vm.ctx, vm.Config.Metadata.Name); err != nil {
 		return fmt.Errorf("failed to undefine VM %q: %w", vmName, err)
 	}
 
 	// Remove the disk associated with the VM.
-	if err := vm.CleanupDisk(); err != nil {
+	if err := vm.disk.DeleteOverlay(vm.ctx, dest); err != nil {
 		return err
 	}
 
