@@ -3,16 +3,15 @@ package vms
 import (
 	"context"
 	"database/sql"
-	"encoding/xml"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/kebairia/kvmcli/internal/database"
 	db "github.com/kebairia/kvmcli/internal/database"
 	log "github.com/kebairia/kvmcli/internal/logger"
-	"github.com/kebairia/kvmcli/internal/utils"
 )
 
 const (
@@ -21,49 +20,6 @@ const (
 	defaultQemuTimeout = 30 * time.Second
 	qemuImgCmd         = "qemu-img"
 )
-
-// SetupDisk creates a QCOW2 overlay image for the VM's disk.
-func (vm *VirtualMachine) SetupDisk() error {
-	store, img, err := vm.fetchStoreAndImage(vm.Config.Spec.Image)
-	if err != nil {
-		return fmt.Errorf("fetch store and image: %w", err)
-	}
-
-	src := filepath.Join(store.ArtifactsPath, img.File)
-	dest := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
-
-	if err := vm.disk.CreateOverlay(vm.ctx, src, dest); err != nil {
-		return fmt.Errorf("create overlay image: %w", err)
-	}
-
-	return nil
-}
-
-// CleanupDisk removes the VM's QCOW2 overlay file from disk.
-func (vm *VirtualMachine) CleanupDisk() error {
-	store, err := vm.fetchStore()
-	if err != nil {
-		return fmt.Errorf("fetch store: %w", err)
-	}
-
-	// Ensure the image exists in the store
-	if _, err := store.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image); err != nil {
-		return fmt.Errorf("image %q not found in store: %w", vm.Config.Spec.Image, err)
-	}
-
-	diskPath := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
-	if err := os.Remove(diskPath); err != nil {
-		return fmt.Errorf("remove disk %q: %w", diskPath, err)
-	}
-
-	// dest := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
-	//
-	// if err := vm.disk.DeleteOverlay(vm.ctx, dest); err != nil {
-	// 	return err
-	// }
-
-	return nil
-}
 
 func getNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (int, error) {
 	const query = `
