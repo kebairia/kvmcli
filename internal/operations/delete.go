@@ -37,6 +37,21 @@ func DeleteFromManifest(manifestPath string) error {
 	return nil
 }
 
+// func DeleteByName(name string) error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+// 	defer cancel()
+// 	vm, err := database.GetVMByName(name); err != nil {
+// 		return err
+// 	}
+//
+//
+// 	operator, err := NewOperator(ctx)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to create operator: %w", err)
+// 	}
+// 	defer operator.Close()
+// }
+
 // Delete removes the given Resource.
 func (o *Operator) Delete(r resources.Resource) error {
 	return r.Delete()
