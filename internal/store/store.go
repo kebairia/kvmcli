@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 // TODO: 1. Delete function for store
@@ -70,6 +71,12 @@ func NewStore(cfg StoreConfig, opts ...StoreOption) (*Store, error) {
 	}
 
 	return s, nil
+}
+
+// NOTE: this is just to change later
+func (st *Store) Start() error {
+	fmt.Println("Start store")
+	return nil
 }
 
 // func (st *Store) Header() *tabwriter.Writer {
