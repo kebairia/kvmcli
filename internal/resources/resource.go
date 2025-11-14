@@ -15,6 +15,7 @@ type Resource interface {
 	Create() error
 	// Delete removes the resource from libvirt.
 	Delete() error
+	Start() error
 }
 
 // Record encapsulates database persistence operations for a resource.

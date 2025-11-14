@@ -51,3 +51,7 @@ func CreateFromManifest(manifestPath string) error {
 func (o *Operator) Create(r resources.Resource) error {
 	return r.Create()
 }
+
+// func (o *Operator) Start(r resources.Resource) error {
+// 	return r.Start()
+// }
