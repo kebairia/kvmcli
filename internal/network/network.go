@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/digitalocean/go-libvirt"
 )
@@ -85,5 +86,11 @@ func (vn *VirtualNetwork) AddStaticMapping(ip, mac string) error {
 	// TODO: inject <host ip="..." mac="..."/> into XML
 	// TODO: define vn.conn.NetworkDefineXML and vn.conn.NetworkUpdate call
 	// TODO: persist mapping in vn.db
+	return nil
+}
+
+// NOTE: this is just to change later
+func (vn *VirtualNetwork) Start() error {
+	fmt.Println("Start virtual network")
 	return nil
 }
