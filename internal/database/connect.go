@@ -9,6 +9,9 @@ import (
 )
 
 // Constants
+// IDEA: the path of the db file muust be declared in a config file
+//			 in /etc/kvmcli/kvmcli.conf for example
+
 const (
 	DBFilePath     = "/home/zakaria/dox/homelab/kvmcli/kvmcli.db"
 	databaseName   = "kvmcli"
