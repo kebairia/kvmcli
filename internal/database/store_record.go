@@ -32,6 +32,22 @@ type ImageRecord struct {
 	CreatedAt time.Time
 }
 
+type VMImageInfo struct {
+	StoreID        int
+	StoreName      string
+	StoreNamespace string
+	ImageID        int64
+	ImageStoreID   int64
+	ImageName      string
+	ImageVersion   string
+	OsProfile      string
+	ArtifactsPath  string
+	ImagesPath     string
+	ImageFile      string
+	Checksum       string
+	Size           string
+}
+
 // NewStoreRecord creates a new store record from the provided store configuration.
 // func NewStoreRecord(s *store.Store) *StoreRecord {
 // 	images := make(map[string]ImageRecord, len(s.Spec.Images))
