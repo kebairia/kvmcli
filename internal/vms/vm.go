@@ -18,6 +18,9 @@ var (
 )
 
 // VirtualMachine represents a VM with injected dependencies.
+// I need to remove the config, I need to make it as independent as possible
+// and use the config as extra
+// We need config only in creation, and nothing beyound that
 type VirtualMachine struct {
 	ctx    context.Context
 	conn   *libvirt.Libvirt

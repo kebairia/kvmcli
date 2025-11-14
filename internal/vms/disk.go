@@ -14,6 +14,7 @@ type DiskManager interface {
 	CreateOverlay(ctx context.Context, src, dest string) error
 	DeleteOverlay(ctx context.Context, dest string) error
 	Paths() (baseImagesPath, destImagesPath string)
+	// Size()
 }
 
 type QemuDiskManager struct {

@@ -80,6 +80,13 @@ func NewVirtualMachineInfo(
 	if err != nil {
 		log.Errorf("cannot get network name for %q: %v", rec.Name, err)
 	}
+	// vm.domain.State()
+	// vm.Network.Name()
+	// vm.disk.Size()
+	// vm.Config.Metadata.Name
+	// vm.Config.Spec.CPU
+	// vm.Config.Spec.Memory
+	// vm.Config.Spec.Image
 
 	return &VirtualMachineInfo{
 		Name:     rec.Name,
