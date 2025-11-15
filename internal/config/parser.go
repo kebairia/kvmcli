@@ -2,98 +2,137 @@ package config
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
+	"github.com/zclconf/go-cty/cty"
 )
 
-// ==================================================
-// 1. BASIC: Reference existing networks
-// ==================================================
-
-// Config represents the entire HCL file
+// Config represents a complete kvmcli configuration file.
 type Config struct {
-	Networks     []*Network     `hcl:"network,block"`
-	DataNetworks []*DataNetwork `hcl:"data,block"`
-	VMs          []*VM          `hcl:"vm,block"`
-	Clusters     []*Cluster     `hcl:"cluster,block"`
-	Remain       hcl.Body       `hcl:",remain"`
+	Networks []Network `hcl:"network,block"`
+	VMs      []VM      `hcl:"vm,block"`
 }
 
-// DataNetwork represents a reference to existing network
-type DataNetwork struct {
-	Type   string   `hcl:"type,label"` // "network"
-	Name   string   `hcl:"name,label"` // network name
-	Remain hcl.Body `hcl:",remain"`
-}
-
-// Network represents a new network definition
+// Network describes a virtual network definition.
 type Network struct {
-	Name   string   `hcl:"name,label"`
-	CIDR   string   `hcl:"cidr"`
-	Mode   string   `hcl:"mode,optional"`
-	Bridge string   `hcl:"bridge,optional"`
-	Remain hcl.Body `hcl:",remain"`
+	Name   string `hcl:"name,label"`
+	CIDR   string `hcl:"cidr"`
+	Bridge string `hcl:"bridge"`
+	Mode   string `hcl:"mode"`
+
+	DHCP   *DHCP             `hcl:"dhcp,block"`
+	Labels map[string]string `hcl:"labels,attr"`
 }
 
-// VM represents a virtual machine
+// DHCP describes the dhcp block inside a network.
+type DHCP struct {
+	Range string `hcl:"range"`
+}
+
+// VM describes a virtual machine definition.
 type VM struct {
-	Name       string         `hcl:"name,label"`
-	Image      string         `hcl:"image"`
-	CPU        int            `hcl:"cpu"`
-	Memory     string         `hcl:"memory"`
-	Disk       string         `hcl:"disk"`
-	NetRef     hcl.Expression `hcl:"net"` // This can be a reference!
-	MAC        string         `hcl:"mac,optional"`
-	IP         string         `hcl:"ip,optional"`
-	ClusterTag string         `hcl:"cluster,optional"`
-	Role       string         `hcl:"role,optional"`
-	Remain     hcl.Body       `hcl:",remain"`
+	Name    string            `hcl:"name,label"`
+	Image   string            `hcl:"image"`
+	CPU     int               `hcl:"cpu"`
+	Memory  string            `hcl:"memory"`
+	Disk    string            `hcl:"disk"`
+	NetExpr hcl.Expression    `hcl:"net,attr"` // raw HCL expression, e.g. network.homelab
+	NetName string            // resolved network name; filled by ResolveReferences
+	MAC     string            `hcl:"mac"`
+	IP      string            `hcl:"ip"`
+	Labels  map[string]string `hcl:"labels,attr"`
 }
 
-// Cluster represents a logical grouping
-type Cluster struct {
-	Name   string            `hcl:"name,label"`
-	VMs    []hcl.Expression  `hcl:"vms"` // References to VMs
-	Labels map[string]string `hcl:"labels,optional"`
-	Remain hcl.Body          `hcl:",remain"`
-}
-
-// Load parses an HCL configuration file and returns a Config struct
+// Load parses and decodes the configuration file at the given path.
 func Load(path string) (*Config, error) {
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read config %q: %w", path, err)
+	}
+
 	parser := hclparse.NewParser()
-
-	// Parse the HCL file
-	file, diags := parser.ParseHCLFile(path)
+	file, diags := parser.ParseHCL(src, path)
 	if diags.HasErrors() {
-		return nil, fmt.Errorf("failed to parse HCL file: %w", diags)
+		return nil, fmt.Errorf("parse hcl %q: %w", path, diags)
 	}
 
-	var config Config
-
-	// First pass: Decode basic structure without evaluation context
-	// This collects all blocks (networks, VMs, clusters, etc.)
-	confDiags := gohcl.DecodeBody(file.Body, nil, &config)
-	if confDiags.HasErrors() {
-		// Log warnings but continue - some errors are expected (unresolved references)
-		log.Printf("First pass diagnostics: %s", confDiags)
+	var cfg Config
+	if diags := gohcl.DecodeBody(file.Body, nil, &cfg); diags.HasErrors() {
+		return nil, fmt.Errorf("decode hcl %q: %w", path, diags)
 	}
 
-	// Second pass: Build evaluation context with all resources
-	// ctx := buildEvalContext(&config)
+	return &cfg, nil
+}
 
-	// Re-decode with evaluation context to resolve references
-	confDiags = gohcl.DecodeBody(file.Body, nil, &config)
-	if confDiags.HasErrors() {
-		return nil, fmt.Errorf("failed to decode HCL config: %w", confDiags)
+// ResolveReferences evaluates cross-resource references in the config
+// (currently only VM.net) and performs basic validation. On success,
+// the resolved network name is stored in VM.NetName.
+func (cfg *Config) ResolveReferences() error {
+	if cfg == nil {
+		return fmt.Errorf("nil config")
 	}
 
-	// Validate the configuration
-	// if err := config.Validate(); err != nil {
-	// 	return nil, fmt.Errorf("invalid configuration: %w", err)
-	// }
+	// 1. Index networks by name and validate.
+	networksByName := make(map[string]struct{}, len(cfg.Networks))
+	for _, n := range cfg.Networks {
+		if n.Name == "" {
+			return fmt.Errorf("network with empty name defined")
+		}
+		if _, exists := networksByName[n.Name]; exists {
+			return fmt.Errorf("duplicate network %q", n.Name)
+		}
+		networksByName[n.Name] = struct{}{}
+	}
 
-	return &config, nil
+	// 2. Build evaluation context for HCL expressions.
+	evalCtx := cfg.evalContextForNetworks()
+
+	// 3. Resolve VM.net expressions.
+	for i := range cfg.VMs {
+		vm := &cfg.VMs[i]
+
+		if vm.NetExpr == nil {
+			return fmt.Errorf("vm %q: missing required attribute \"net\"", vm.Name)
+		}
+
+		val, diags := vm.NetExpr.Value(evalCtx)
+		if diags.HasErrors() {
+			return fmt.Errorf("vm %q: evaluating net: %w", vm.Name, diags)
+		}
+
+		if !val.Type().Equals(cty.String) {
+			return fmt.Errorf("vm %q: net must evaluate to string, got %s",
+				vm.Name, val.Type().FriendlyName())
+		}
+
+		netName := val.AsString()
+		if _, ok := networksByName[netName]; !ok {
+			return fmt.Errorf("vm %q: references unknown network %q", vm.Name, netName)
+		}
+
+		vm.NetName = netName
+	}
+
+	return nil
+}
+
+// evalContextForNetworks builds an evaluation context exposing networks for
+// expressions like `net = network.homelab`.
+func (cfg *Config) evalContextForNetworks() *hcl.EvalContext {
+	networkAttrs := make(map[string]cty.Value, len(cfg.Networks))
+
+	for _, n := range cfg.Networks {
+		// For now the attribute value is just the network name.
+		// Later you could expose more info (cidr, bridge, ...).
+		networkAttrs[n.Name] = cty.StringVal(n.Name)
+	}
+
+	return &hcl.EvalContext{
+		Variables: map[string]cty.Value{
+			"network": cty.ObjectVal(networkAttrs),
+		},
+	}
 }
