@@ -2,6 +2,7 @@ tmp
 *.xml
 kvmcli
 *.yaml
+./configs/yamls
 *.yml
 /README.org
 /TODO.org
