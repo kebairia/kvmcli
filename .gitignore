@@ -7,3 +7,4 @@ kvmcli
 /README.org
 /TODO.org
 /kvmcli.db
+verify_datasource.hcl

@@ -38,7 +38,7 @@ store "default" {
 
   # Images managed by this store
   image "ubuntu-22.04" {
-    url = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.disk1.img"
+    file = "/var/lib/libvirt/images/ubuntu-22.04.qcow2"
   }
 }
 
