@@ -1,4 +1,4 @@
-package utils
+package templates
 
 func GenerateYAMLTemplate() {
 	// sampleConfig := config.VMConfig{

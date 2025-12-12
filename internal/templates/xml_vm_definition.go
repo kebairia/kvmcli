@@ -1,4 +1,4 @@
-package utils
+package templates
 
 import (
 	"encoding/xml"
