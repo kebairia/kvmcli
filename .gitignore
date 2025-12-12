@@ -3,6 +3,7 @@ tmp
 kvmcli
 *.yaml
 ./configs/yamls
+configs/admins.hcl
 *.yml
 /README.org
 /TODO.org
