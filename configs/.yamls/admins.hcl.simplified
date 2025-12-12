@@ -1,0 +1,49 @@
+// ==================================================
+// NETWORKS - Simplified
+// ==================================================
+
+// Reference existing network - empty block is enough
+data "network" "homelab" {}
+
+// Create network - CIDR is the only required field
+network "management" {
+  cidr = "10.20.0.0/24"
+  // mode = "nat" (default)
+  // bridge auto-generated from name: virbr-management
+}
+
+network "monitoring" {
+  cidr = "10.30.0.0/24"
+  mode = "isolated"
+}
+
+// ==================================================
+// DNS INFRASTRUCTURE - Cleaner attribute style
+// ==================================================
+
+vm "admin1" {
+  image  = "rocky-9.5"
+  cpu    = 2
+  memory = "4G"
+  disk   = "40G"
+  net    = data.network.homelab
+  mac    = "02:A3:10:00:10:01"
+  ip     = "10.10.0.10"
+
+  // Flat attributes instead of nested blocks
+  role    = "dns-primary"
+  service = "dns"
+}
+
+vm "admin2" {
+  image  = "rocky-9.5"
+  cpu    = 2
+  memory = "4G"
+  disk   = "40G"
+  net    = data.network.homelab
+  mac    = "02:A3:10:00:10:02"
+  ip     = "10.10.0.11"
+
+  role    = "dns-secondary"
+  service = "dns"
+}
