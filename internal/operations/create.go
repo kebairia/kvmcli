@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/kebairia/kvmcli/internal/config"
-	log "github.com/kebairia/kvmcli/internal/logger"
 	// "github.com/kebairia/kvmcli/internal/manifest"
 	"github.com/kebairia/kvmcli/internal/resources"
 )
@@ -41,8 +40,7 @@ func CreateFromManifest(manifestPath string) error {
 
 	for _, resource := range resources {
 		if err := operator.Create(resource); err != nil {
-			log.Errorf("failed to create resource: %v", err)
-			continue
+			return err
 		}
 	}
 

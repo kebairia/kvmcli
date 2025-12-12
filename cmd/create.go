@@ -17,7 +17,7 @@ var CreateCmd = &cobra.Command{
 
 		// Use the provided configuration file to create resources.
 		if err := operations.CreateFromManifest(ManifestPath); err != nil {
-			log.Errorf("failed to create resource(s): %v", err)
+			log.Errorf("%v", err)
 		}
 	},
 }
