@@ -14,12 +14,12 @@ package store
 // STORE
 // --------------------------------------------------
 
-type StoreConfig struct {
+type Config struct {
 	Name      string            `hcl:"name,label"`
 	Namespace string            `hcl:"namespace"`
-	Labels    map[string]string `hcl:"labels"`
+	Labels    map[string]string `hcl:"labels,optional"`
 
-	Backend string `hcl:"backend"`
+	Backend string `hcl:"backend,optional"`
 
 	Paths Paths `hcl:"paths,block"`
 
@@ -31,8 +31,8 @@ type StoreConfig struct {
 // --------------------------------------------------
 
 type Paths struct {
-	Artifacts string `hcl:"artifacts"`
-	Images    string `hcl:"images"`
+	Artifacts string `hcl:"artifacts,optional"`
+	Images    string `hcl:"images,optional"`
 }
 
 // --------------------------------------------------
@@ -41,43 +41,10 @@ type Paths struct {
 
 type Image struct {
 	Name      string `hcl:"name,label"`
-	Display   string `hcl:"display"`
-	Version   string `hcl:"version"`
-	OSProfile string `hcl:"os_profile"`
-	File      string `hcl:"file"`
-	Size      string `hcl:"size"`
-	Checksum  string `hcl:"checksum"`
+	Display   string `hcl:"display,optional"`
+	Version   string `hcl:"version,optional"`
+	OSProfile string `hcl:"os_profile,optional"`
+	File      string `hcl:"file,optional"`
+	Size      string `hcl:"size,optional"`
+	Checksum  string `hcl:"checksum,optional"`
 }
-
-// type StoreConfig struct {
-// 	APIVersion string   `yaml:"apiVersion"`
-// 	Kind       string   `yaml:"kind"`
-// 	Metadata   Metadata `yaml:"metadata"`
-// 	Spec       Spec     `yaml:"spec"`
-// }
-//
-// type Metadata struct {
-// 	Name      string            `yaml:"name"`
-// 	Namespace string            `yaml:"namespace"`
-// 	Labels    map[string]string `yaml:"labels"`
-// }
-//
-// type Spec struct {
-// 	Backend string  `yaml:"backend"`
-// 	Paths   Paths   `yaml:"paths"`
-// 	Images  []Image `yaml:"images"`
-// }
-//
-// type Paths struct {
-// 	ArtifactsPath string `yaml:"artifacts"`
-// 	ImagesPath    string `yaml:"images"`
-// }
-//
-// type Image struct {
-// 	Name      string `yaml:"name"`
-// 	Version   string `yaml:"version"`
-// 	OsProfile string `yaml:"osProfile"`
-// 	File      string `yaml:"file"`
-// 	Size      string `yaml:"size"`
-// 	Checksum  string `yaml:"checksum"`
-// }

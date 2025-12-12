@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
+	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // TODO: 1. Delete function for store
@@ -24,7 +27,7 @@ var (
 
 // Store manages store records in a SQL database.
 type Store struct {
-	Spec StoreConfig
+	Spec Config
 	ctx  context.Context
 	db   *sql.DB
 }
@@ -51,7 +54,7 @@ func WithContext(ctx context.Context) StoreOption {
 }
 
 // NewStore constructs a Store, applies options, and validates dependencies.
-func NewStore(cfg StoreConfig, opts ...StoreOption) (*Store, error) {
+func NewStore(cfg Config, opts ...StoreOption) (*Store, error) {
 	if cfg.Name == "" {
 		return nil, ErrStoreNameEmpty
 	}
@@ -103,5 +106,30 @@ func (st *Store) Start() error {
 // // 	return filepath.Join(st.Spec.Paths.ArtifactsPath, st.Spec.Images[name].File)
 // // }
 //
-// // NOTE: I can create Getters here for images, directories .. versions ..etc
-// // this will faciliate my operations
+
+// NewStoreRecord creates a new store record from the provided store configuration.
+func NewStoreRecord(s *Store) *db.Store {
+	images := make([]db.Image, len(s.Spec.Images))
+
+	for index, img := range s.Spec.Images {
+		images[index] = db.Image{
+			Name:      img.Name,
+			Version:   img.Version,
+			OsProfile: img.OSProfile,
+			File:      img.File,
+			Checksum:  img.Checksum,
+			Size:      img.Size,
+		}
+	}
+
+	return &db.Store{
+		Name:          s.Spec.Name,
+		Namespace:     s.Spec.Namespace,
+		Labels:        s.Spec.Labels,
+		Backend:       s.Spec.Backend,
+		ArtifactsPath: s.Spec.Paths.Artifacts,
+		ImagesPath:    s.Spec.Paths.Images,
+		Images:        images,
+		CreatedAt:     time.Now(),
+	}
+}
