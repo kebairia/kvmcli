@@ -9,8 +9,8 @@ import (
 
 const (
 	vmColumns = `id, name, namespace, cpu, ram, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
-	// networkColumns = `id, name, namespace, mac_address, bridge, mode, net_address, netmask, dhcp, autostart, created_at, labels`
-	networkColumns = `id, name, namespace, mac_address, bridge, mode, net_address, netmask, autostart, created_at, labels`
+	// networkColumns must match the actual table schema order
+	networkColumns = `id, name, namespace, labels, mac_address, bridge, mode, net_address, netmask, dhcp, autostart, created_at`
 )
 
 // GetRecords retrieves all documents of type T from the specified collection
@@ -132,21 +132,22 @@ func GetNetworks(
 		args = append(args, namespace)
 	}
 	var (
-		networks           []VirtualNetwork
-		rawLabels, rawDHCP string
+		networks []VirtualNetwork
 	)
 
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var network VirtualNetwork
+		var rawLabels, rawDHCP string
 		if err := rows.Scan(
 			&network.ID,
 			&network.Name,
 			&network.Namespace,
+			&rawLabels,
 			&network.MacAddress,
 			&network.Bridge,
 			&network.Mode,
@@ -155,9 +156,20 @@ func GetNetworks(
 			&rawDHCP,
 			&network.Autostart,
 			&network.CreatedAt,
-			&rawLabels,
 		); err != nil {
 			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+		// Parse JSON labels if present
+		if rawLabels != "" {
+			if err := json.Unmarshal([]byte(rawLabels), &network.Labels); err != nil {
+				return nil, fmt.Errorf("invalid labels JSON: %w", err)
+			}
+		}
+		// Parse JSON DHCP if present
+		if rawDHCP != "" {
+			if err := json.Unmarshal([]byte(rawDHCP), &network.DHCP); err != nil {
+				return nil, fmt.Errorf("invalid DHCP JSON: %w", err)
+			}
 		}
 		networks = append(networks, network)
 	}

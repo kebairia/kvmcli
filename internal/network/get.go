@@ -69,16 +69,19 @@ func NewVirtualNetworkInfo(
 	}
 
 	// Format the DHCP range.
-	// dhcpRange := record.DHCP["start"] + " → " + record.DHCP["end"]
+	var dhcpRange string
+	if record.DHCP != nil {
+		dhcpRange = record.DHCP["start"] + " -> " + record.DHCP["end"]
+	}
 
 	return &VirtualNetworkInfo{
-		Name:    record.Name,
-		State:   state,
-		Bridge:  record.Bridge,
-		Subnet:  record.Netmask,
-		Gateway: record.NetAddress,
-		// DHCPRange: dhcpRange,
-		Age: common.FormatAge(record.CreatedAt),
+		Name:      record.Name,
+		State:     state,
+		Bridge:    record.Bridge,
+		Subnet:    record.Netmask,
+		Gateway:   record.NetAddress,
+		DHCPRange: dhcpRange,
+		Age:       common.FormatAge(record.CreatedAt),
 	}, nil
 }
 
