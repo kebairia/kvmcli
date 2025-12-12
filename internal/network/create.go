@@ -9,8 +9,8 @@ import (
 	"github.com/kebairia/kvmcli/internal/vms"
 )
 
-// Create defines a VirtualNetwork in libvirt and inserts its database record.
-func (vnet *VirtualNetwork) Create() error {
+// Create defines a Network in libvirt and inserts its database record.
+func (vnet *Network) Create() error {
 	// Ensure Libvirt connection is initialized
 	if vnet.conn == nil {
 		return vms.ErrNilLibvirtConn
@@ -20,11 +20,11 @@ func (vnet *VirtualNetwork) Create() error {
 	// name := vnet.Config.Metadata.Name
 	name := vnet.Spec.Name
 	if name == "" {
-		return ErrVirtualNetworkNameEmpty
+		return ErrNetworkNameEmpty
 	}
 
 	// Prepare the database record
-	record := NewVirtualNetworkRecord(vnet)
+	record := NewNetworkRecord(vnet)
 	if err := record.Insert(vnet.ctx, vnet.db); err != nil {
 		return fmt.Errorf("failed to insert database record for network %q: %w", name, err)
 	}

@@ -14,37 +14,37 @@ import (
 // What I need is whenever I create a new virtual machine with a static ip, I need to update
 // my virtual network declaration to add the ip <=> mac address mapping
 
-var ErrVirtualNetworkNameEmpty = errors.New("virtual network name is empty")
+var ErrNetworkNameEmpty = errors.New("virtual network name is empty")
 
-// VirtualNetwork manages a libvirt-backed network, with IP⇔MAC mapping stored in DB.
-type VirtualNetwork struct {
-	Spec Network
-	// Config VirtualNetworkConfig
+// Network manages a libvirt-backed network, with IP⇔MAC mapping stored in DB.
+type Network struct {
+	Spec Config
+	// Config NetworkConfig
 	ctx  context.Context
 	db   *sql.DB
 	conn *libvirt.Libvirt
 }
 
-// VirtualNetworkOption configures a VirtualNetwork.
-type VirtualNetworkOption func(*VirtualNetwork)
+// NetworkOption configures a Network.
+type NetworkOption func(*Network)
 
 // WithLibvirtConnection sets the libvirt client (required).
-func WithLibvirtConnection(conn *libvirt.Libvirt) VirtualNetworkOption {
-	return func(vn *VirtualNetwork) {
+func WithLibvirtConnection(conn *libvirt.Libvirt) NetworkOption {
+	return func(vn *Network) {
 		vn.conn = conn
 	}
 }
 
 // WithDatabaseConnection sets the SQL database (required).
-func WithDatabaseConnection(db *sql.DB) VirtualNetworkOption {
-	return func(vn *VirtualNetwork) {
+func WithDatabaseConnection(db *sql.DB) NetworkOption {
+	return func(vn *Network) {
 		vn.db = db
 	}
 }
 
 // WithContext sets a custom context. If nil is passed, context.Background() is used.
-func WithContext(ctx context.Context) VirtualNetworkOption {
-	return func(vn *VirtualNetwork) {
+func WithContext(ctx context.Context) NetworkOption {
+	return func(vn *Network) {
 		if ctx == nil {
 			vn.ctx = context.Background()
 		} else {
@@ -53,20 +53,20 @@ func WithContext(ctx context.Context) VirtualNetworkOption {
 	}
 }
 
-// NewVirtualNetwork creates a VirtualNetwork, applying options and validating dependencies.
-func NewVirtualNetwork(
-	// cfg VirtualNetworkConfig,
-	spec Network,
-	opts ...VirtualNetworkOption,
-) (*VirtualNetwork, error) {
+// NewNetwork creates a Network, applying options and validating dependencies.
+func NewNetwork(
+	// cfg NetworkConfig,
+	spec Config,
+	opts ...NetworkOption,
+) (*Network, error) {
 	// if cfg.Metadata.Name == "" {
-	// 	return nil, ErrVirtualNetworkNameEmpty
+	// 	return nil, ErrNetworkNameEmpty
 	// }
 	if spec.Name == "" {
-		return nil, ErrVirtualNetworkNameEmpty
+		return nil, ErrNetworkNameEmpty
 	}
 
-	vn := &VirtualNetwork{
+	vn := &Network{
 		// Config: cfg,
 		Spec: spec,
 		// default context
@@ -88,7 +88,7 @@ func NewVirtualNetwork(
 }
 
 // AddStaticMapping records an IP⇔MAC mapping in the libvirt network XML and persists to DB.
-func (vn *VirtualNetwork) AddStaticMapping(ip, mac string) error {
+func (vn *Network) AddStaticMapping(ip, mac string) error {
 	// TODO: load existing network XML via vn.conn.LookupNetworkByName
 	// TODO: inject <host ip="..." mac="..."/> into XML
 	// TODO: define vn.conn.NetworkDefineXML and vn.conn.NetworkUpdate call
@@ -97,7 +97,7 @@ func (vn *VirtualNetwork) AddStaticMapping(ip, mac string) error {
 }
 
 // NOTE: this is just to change later
-func (vn *VirtualNetwork) Start() error {
+func (vn *Network) Start() error {
 	fmt.Println("Start virtual network")
 	return nil
 }

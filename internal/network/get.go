@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 	"text/tabwriter"
-	"time"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/kebairia/kvmcli/internal/common"
 	db "github.com/kebairia/kvmcli/internal/database"
 	log "github.com/kebairia/kvmcli/internal/logger"
 )
@@ -53,7 +53,7 @@ func NewVirtualNetworkInfo(
 	ctx context.Context,
 	database *sql.DB,
 	conn *libvirt.Libvirt,
-	record db.VirtualNetworkRecord,
+	record db.VirtualNetwork,
 ) (*VirtualNetworkInfo, error) {
 	// Domain lookup
 	net, err := conn.NetworkLookupByName(record.Name)
@@ -78,7 +78,7 @@ func NewVirtualNetworkInfo(
 		Subnet:  record.Netmask,
 		Gateway: record.NetAddress,
 		// DHCPRange: dhcpRange,
-		Age: formatAge(record.CreatedAt),
+		Age: common.FormatAge(record.CreatedAt),
 	}, nil
 }
 
@@ -87,7 +87,7 @@ func GetVirtualNetworks(
 	database *sql.DB,
 	conn *libvirt.Libvirt,
 ) ([]VirtualNetworkInfo, error) {
-	records, err := db.GetNetworkRecords(ctx, database, "")
+	records, err := db.GetNetworks(ctx, database, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network records  %w", err)
 	}
@@ -120,24 +120,5 @@ func getState(conn *libvirt.Libvirt, network libvirt.Network) (string, error) {
 		return "Inactive", nil
 	default:
 		return "Unknown", nil
-	}
-}
-
-// formatAge returns a human-friendly string for the time elapsed since t.
-func formatAge(t time.Time) string {
-	duration := time.Since(t)
-	if duration < 0 {
-		duration = -duration
-	}
-
-	switch {
-	case duration.Hours() >= 24:
-		return fmt.Sprintf("%dd", int(duration.Hours()/24))
-	case duration.Hours() >= 1:
-		return fmt.Sprintf("%dh", int(duration.Hours()))
-	case duration.Minutes() >= 1:
-		return fmt.Sprintf("%dm", int(duration.Minutes()))
-	default:
-		return fmt.Sprintf("%ds", int(duration.Seconds()))
 	}
 }

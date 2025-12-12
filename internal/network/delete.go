@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// Delete removes a VirtualNetwork from libvirt and deletes its database record.
-func (vnet *VirtualNetwork) Delete() error {
+// Delete removes a Network from libvirt and deletes its database record.
+func (vnet *Network) Delete() error {
 	// Ensure we have a Libvirt connection
 	if vnet.conn == nil {
 		return errors.New("libvirt connection is not initialized")
@@ -31,7 +31,7 @@ func (vnet *VirtualNetwork) Delete() error {
 	}
 
 	// Remove the record from the database
-	record := NewVirtualNetworkRecord(vnet)
+	record := NewNetworkRecord(vnet)
 	if err := record.Delete(vnet.ctx, vnet.db); err != nil {
 		return fmt.Errorf("failed to delete database record for network %q: %w", name, err)
 	}

@@ -6,30 +6,27 @@ import (
 	"time"
 
 	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/utils"
+	templates "github.com/kebairia/kvmcli/internal/templates"
 )
 
 // prepareNetwork generates the libvirt-compatible XML configuration
 // for a virtual network, using optional parameters like DHCP and bridge.
-func (net *VirtualNetwork) prepareNetwork() (string, error) {
-	var opts []utils.NetworkOption
+func (net *Network) prepareNetwork() (string, error) {
+	var opts []templates.NetworkOption
 
 	// Append DHCP config if defined in the YAML
-	// if net.Spec.DHCP != nil {
-	// 	start, startOk := net.Spec.DHCP["start"]
-	// 	end, endOk := net.Spec.DHCP["end"]
-	// 	if startOk && endOk {
-	// 		opts = append(opts, utils.WithDHCP(start, end))
-	// 	}
-	// }
+	// Append DHCP config if defined in the YAML
+	if net.Spec.DHCP != nil {
+		opts = append(opts, templates.WithDHCP(net.Spec.DHCP.Start, net.Spec.DHCP.End))
+	}
 
 	// Append bridge name if provided
 	if net.Spec.Bridge != "" {
-		opts = append(opts, utils.WithBridge(net.Spec.Bridge))
+		opts = append(opts, templates.WithBridge(net.Spec.Bridge))
 	}
 
 	// Create the network definition with all options
-	network := utils.NewNetwork(
+	netXML := templates.NewNetwork(
 		net.Spec.Name,
 		net.Spec.Mode,
 		net.Spec.NetAddress,
@@ -38,7 +35,7 @@ func (net *VirtualNetwork) prepareNetwork() (string, error) {
 		opts...,
 	)
 
-	xmlConfig, err := network.GenerateXML()
+	xmlConfig, err := netXML.GenerateXML()
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to generate XML for network %s: %v",
@@ -51,7 +48,7 @@ func (net *VirtualNetwork) prepareNetwork() (string, error) {
 }
 
 // defineAndStartNetwork defines and starts the virtual network using libvirt.
-func (net *VirtualNetwork) defineAndStartNetwork(xmlConfig string) error {
+func (net *Network) defineAndStartNetwork(xmlConfig string) error {
 	// Define the network from the generated XML
 	netInstance, err := net.conn.NetworkDefineXML(xmlConfig)
 	if err != nil {
@@ -70,9 +67,18 @@ func (net *VirtualNetwork) defineAndStartNetwork(xmlConfig string) error {
 	return nil
 }
 
-func NewVirtualNetworkRecord(net *VirtualNetwork) *db.VirtualNetworkRecord {
+func NewNetworkRecord(net *Network) *db.VirtualNetwork {
+	// Create a map[string]string for the DB record if DHCP is present
+	var dhcpMap map[string]string
+	if net.Spec.DHCP != nil {
+		dhcpMap = map[string]string{
+			"start": net.Spec.DHCP.Start,
+			"end":   net.Spec.DHCP.End,
+		}
+	}
+
 	// Create network record out of infos
-	return &db.VirtualNetworkRecord{
+	return &db.VirtualNetwork{
 		Name:      net.Spec.Name,
 		Namespace: net.Spec.Namespace,
 		Labels:    net.Spec.Labels,
@@ -81,8 +87,8 @@ func NewVirtualNetworkRecord(net *VirtualNetwork) *db.VirtualNetworkRecord {
 		Mode:       net.Spec.Mode,
 		NetAddress: net.Spec.NetAddress,
 		Netmask:    net.Spec.NetMask,
-		// DHCP:      net.Spec.DHCP,
-		Autostart: net.Spec.Autostart,
-		CreatedAt: time.Now(),
+		DHCP:       dhcpMap,
+		Autostart:  net.Spec.Autostart,
+		CreatedAt:  time.Now(),
 	}
 }
