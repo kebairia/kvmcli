@@ -1,13 +1,10 @@
 package vms
 
 import (
-	"context"
-	"database/sql"
 	"fmt"
 	"path/filepath"
 	"time"
 
-	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal/database"
 	db "github.com/kebairia/kvmcli/internal/database"
 	log "github.com/kebairia/kvmcli/internal/logger"
@@ -20,33 +17,18 @@ const (
 	qemuImgCmd         = "qemu-img"
 )
 
-func getNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (int, error) {
-	const query = `
-		SELECT id FROM networks
-		WHERE name = ? 
-	`
-
-	var networkID int
-	err := db.QueryRowContext(ctx, query, networkName).Scan(&networkID)
-	if err != nil {
-		return 0, fmt.Errorf("failed to retrieve network ID for Network %q: %w", networkName, err)
-	}
-
-	return networkID, nil
-}
-
 // NewVMRecord constructs a new VM record from the provided VM configuration.
 // then creates a database record for the virtual machine.
 func NewVirtualMachineRecord(
 	vm *VirtualMachine,
-) (*db.VirtualMachineRecord, error) {
+) (*db.VirtualMachine, error) {
 	store, err := vm.fetchStore()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get store: %w", err)
 	}
 
 	// Verify image exists in store
-	if _, err := database.GetImageRecord(vm.ctx, vm.db, vm.Spec.Image); err != nil {
+	if _, err := database.GetImage(vm.ctx, vm.db, vm.Spec.Image); err != nil {
 		return nil, fmt.Errorf(
 			"image %q not found in store %q: %w",
 			vm.Spec.Image,
@@ -55,7 +37,7 @@ func NewVirtualMachineRecord(
 		)
 	}
 
-	networkID, err := getNetworkIDByName(vm.ctx, vm.db, vm.Spec.NetName)
+	networkID, err := db.GetNetworkIDByName(vm.ctx, vm.db, vm.Spec.NetName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
@@ -66,7 +48,7 @@ func NewVirtualMachineRecord(
 	}
 	diskPath := filepath.Join(store.ImagesPath, vm.Spec.Name+".qcow2")
 
-	return &db.VirtualMachineRecord{
+	return &db.VirtualMachine{
 		Name:      vm.Spec.Name,
 		Namespace: vm.Spec.Namespace,
 		Labels:    vm.Spec.Labels,
@@ -82,67 +64,6 @@ func NewVirtualMachineRecord(
 		StoreID:    storeID,
 		CreatedAt:  time.Now(),
 	}, nil
-}
-
-// getState returns a string representation of the VM state based on its domain info.
-func getState(conn *libvirt.Libvirt, domain libvirt.Domain) (string, error) {
-	state, _, _, _, _, err := conn.DomainGetInfo(domain)
-	if err != nil {
-		return "", fmt.Errorf("failed to get info for domain %s: %w", domain.Name, err)
-	}
-
-	switch int(state) {
-	case domainStateRunning:
-		return "Running", nil
-	case domainStatePaused:
-		return "Paused", nil
-	case domainStateStopped:
-		return "Stopped", nil
-	default:
-		return "Unknown", nil
-	}
-}
-
-// getDiskSize returns the disk size (in gigabytes) for the specified VM domain.
-func getDiskSize(conn *libvirt.Libvirt, domain libvirt.Domain) (float64, error) {
-	_, _, diskPhysSize, err := conn.DomainGetBlockInfo(domain, deviceName, 0)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get block info for domain %s: %w", domain.Name, err)
-	}
-
-	return float64(diskPhysSize) / (1024 * 1024 * 1024), nil
-}
-
-// formatAge returns a human-friendly string for the time elapsed since t.
-func formatAge(t time.Time) string {
-	duration := time.Since(t)
-	if duration < 0 {
-		duration = -duration
-	}
-
-	if days := int(duration.Hours() / 24); days >= 1 {
-		return fmt.Sprintf("%dd", days)
-	}
-	if hours := int(duration.Hours()); hours >= 1 {
-		return fmt.Sprintf("%dh", hours)
-	}
-	if minutes := int(duration.Minutes()); minutes >= 1 {
-		return fmt.Sprintf("%dm", minutes)
-	}
-	return fmt.Sprintf("%ds", int(duration.Seconds()))
-}
-
-// getStore retrieves the store record for the VM.
-func (vm *VirtualMachine) fetchStore() (*db.StoreRecord, error) {
-	var store db.StoreRecord
-	var err error
-
-	store.ID, err = db.GetStoreIDByName(vm.ctx, vm.db, vm.Spec.Store)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Spec.Store, err)
-	}
-
-	return &store, nil
 }
 
 func (vm *VirtualMachine) rollback(cleanups []func() error, step string, originError error) error {

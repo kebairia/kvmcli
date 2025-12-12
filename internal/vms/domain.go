@@ -9,7 +9,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/utils"
+	"github.com/kebairia/kvmcli/internal/templates"
 )
 
 const (
@@ -19,8 +19,8 @@ const (
 )
 
 type DomainManager interface {
-	// BuildXML returns the full libvirt XML for this VM.
-	BuildXML(ctx context.Context, db *sql.DB, cfg VM) (string, error)
+	// BuildXML returns the full libvirt XML for this Config.
+	BuildXML(ctx context.Context, db *sql.DB, cfg Config) (string, error)
 
 	// Define registers the domain but doesn’t start it.
 	Define(ctx context.Context, xmlConfig string) error
@@ -52,9 +52,9 @@ func NewLibvirtDomainManager(conn *libvirt.Libvirt) *LibvirtDomainManager {
 func (d *LibvirtDomainManager) BuildXML(
 	ctx context.Context,
 	db *sql.DB,
-	spec VM,
+	spec Config,
 ) (string, error) {
-	img, err := database.GetImageRecord(ctx, db, spec.Image)
+	img, err := database.GetImage(ctx, db, spec.Image)
 	if err != nil {
 		return "", nil
 	}
@@ -64,7 +64,7 @@ func (d *LibvirtDomainManager) BuildXML(
 		"%s.qcow2",
 		filepath.Join(img.ImagesPath, spec.Name),
 	)
-	domain := utils.NewDomain(
+	domain := templates.NewDomain(
 		spec.Name,
 		spec.Memory,
 		spec.CPU,
@@ -75,7 +75,7 @@ func (d *LibvirtDomainManager) BuildXML(
 	)
 	xmlConfig, err := domain.GenerateXML()
 	if err != nil {
-		return "", fmt.Errorf("failed to generate XML for VM %s: %v", spec.Name, err)
+		return "", fmt.Errorf("failed to generate XML for Config %s: %v", spec.Name, err)
 	}
 	return xml.Header + string(xmlConfig), nil
 }
@@ -158,4 +158,34 @@ func (m *LibvirtDomainManager) State(ctx context.Context, name string) (string, 
 	default:
 		return "Unknown", nil
 	}
+}
+
+// GetDomainState returns a string representation of the VM state based on its domain info.
+func GetDomainState(conn *libvirt.Libvirt, domain libvirt.Domain) (string, error) {
+	state, _, _, _, _, err := conn.DomainGetInfo(domain)
+	if err != nil {
+		return "", fmt.Errorf("failed to get info for domain %s: %w", domain.Name, err)
+	}
+
+	switch int(state) {
+	case domainStateRunning:
+		return "Running", nil
+	case domainStatePaused:
+		return "Paused", nil
+	case domainStateStopped:
+		return "Stopped", nil
+	default:
+		return "Unknown", nil
+	}
+}
+
+// GetDiskSize returns the disk size (in gigabytes) for the specified VM domain.
+func GetDiskSize(conn *libvirt.Libvirt, domain libvirt.Domain) (float64, error) {
+	const deviceName = "vda"
+	_, _, diskPhysSize, err := conn.DomainGetBlockInfo(domain, deviceName, 0)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get block info for domain %s: %w", domain.Name, err)
+	}
+
+	return float64(diskPhysSize) / (1024 * 1024 * 1024), nil
 }

@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/kebairia/kvmcli/internal/common"
 	db "github.com/kebairia/kvmcli/internal/database"
 	log "github.com/kebairia/kvmcli/internal/logger"
 )
@@ -54,7 +55,7 @@ func NewVirtualMachineInfo(
 	ctx context.Context,
 	database *sql.DB,
 	conn *libvirt.Libvirt,
-	rec db.VirtualMachineRecord,
+	rec db.VirtualMachine,
 ) (*VirtualMachineInfo, error) {
 	// Domain lookup
 	dom, err := conn.DomainLookupByName(rec.Name)
@@ -63,14 +64,14 @@ func NewVirtualMachineInfo(
 	}
 
 	// State
-	state, err := getState(conn, dom)
+	state, err := GetDomainState(conn, dom)
 	if err != nil {
 		log.Errorf("cannot get state for %q: %v", rec.Name, err)
 		state = "unknown"
 	}
 
 	// Disk size
-	disk, err := getDiskSize(conn, dom)
+	disk, err := GetDiskSize(conn, dom)
 	if err != nil {
 		log.Errorf("cannot get disk size for %q: %v", rec.Name, err)
 	}
@@ -96,7 +97,7 @@ func NewVirtualMachineInfo(
 		DiskSize: disk,
 		Network:  network,
 		OS:       rec.Image,
-		Age:      formatAge(rec.CreatedAt),
+		Age:      common.FormatAge(rec.CreatedAt),
 	}, nil
 }
 

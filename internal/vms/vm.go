@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
-	// "github.com/kebairia/kvmcli/internal/config"
+	db "github.com/kebairia/kvmcli/internal/database"
 )
 
 // Error definitions
@@ -18,7 +19,7 @@ var (
 	ErrNilDomainManager = errors.New("domain manager is nil")
 )
 
-// VirtualMachine represents a VM with injected dependencies.
+// VirtualMachine represents a Config with injected dependencies.
 // I need to remove the config, I need to make it as independent as possible
 // and use the config as extra
 // We need config only in creation, and nothing beyound that
@@ -26,10 +27,23 @@ type VirtualMachine struct {
 	ctx    context.Context
 	conn   *libvirt.Libvirt
 	db     *sql.DB
-	Spec   VM
+	Spec   Config
 	disk   DiskManager
 	domain DomainManager
 	// network NetworkManager
+}
+
+// getStore retrieves the store record for the Config.
+func (vm *VirtualMachine) fetchStore() (*db.Store, error) {
+	var store db.Store
+	var err error
+
+	store.ID, err = db.GetStoreIDByName(vm.ctx, vm.db, vm.Spec.Store)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Spec.Store, err)
+	}
+
+	return &store, nil
 }
 
 // VirtualMachineOption is a functional option for configuring a VirtualMachine.
@@ -74,9 +88,9 @@ func WithDomainManager(d DomainManager) VirtualMachineOption {
 	}
 }
 
-// NewVirtualMachine constructs a VM, applies options, and validates dependencies.
+// NewVirtualMachine constructs a Config, applies options, and validates dependencies.
 func NewVirtualMachine(
-	cfg VM,
+	cfg Config,
 	opts ...VirtualMachineOption,
 ) (*VirtualMachine, error) {
 	vm := &VirtualMachine{

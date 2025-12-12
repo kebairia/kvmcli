@@ -22,7 +22,7 @@ func (vm *VirtualMachine) Delete() error {
 
 	vmName := vm.Spec.Name
 
-	img, err := database.GetImageRecord(vm.ctx, vm.db, vm.Spec.Image)
+	img, err := database.GetImage(vm.ctx, vm.db, vm.Spec.Image)
 	if err != nil {
 		return fmt.Errorf("fetch store and image: %w", err)
 	}
