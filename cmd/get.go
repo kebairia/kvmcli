@@ -65,12 +65,11 @@ var GetStoreCmd = &cobra.Command{
 	Short:   "Display stores details",
 	Run: func(cmd *cobra.Command, args []string) {
 		if Namespace != "" {
-			// network.ListByNamespace(Namespace)
+			// TODO: implement ListStoresByNamespace
 			fmt.Println("List by namespace here for stores")
 			return
 		}
-		// network.ListAll()
-		fmt.Println("List all here for stores")
+		operations.ListAllStores()
 	},
 }
 

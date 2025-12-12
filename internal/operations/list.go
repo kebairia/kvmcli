@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kebairia/kvmcli/internal/network"
+	"github.com/kebairia/kvmcli/internal/store"
 	"github.com/kebairia/kvmcli/internal/vms"
 )
 
@@ -73,25 +74,28 @@ func ListAllNetworks() error {
 	return nil
 }
 
-// func List(namespace, table string) error {
-// 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-// 	defer cancel()
-// 	operator, err := NewOperator(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to initialize operator: %w", err)
-// 	}
-// 	defer operator.Close()
-// 	if namespace == "" {
-// 		return nil
-// 	}
-//
-// 	resourcesInfo, err := GetResourcesInfo(operator.ctx, operator.db, table)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to retreive resources information: %w", err)
-// 	}
-// 	w := *&tabwriter.Writer{}
-// 	for _, info := range resourcesInfo {
-// 		info.PrintInfo(w)
-// 	}
-// 	return nil
-// }
+// ListAllStores lists all stores in the database.
+func ListAllStores() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	operator, err := NewOperator(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize operator: %w", err)
+	}
+	defer operator.Close()
+
+	stores, err := store.GetStores(operator.ctx, operator.db)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve stores: %w", err)
+	}
+
+	info := &store.StoreInfo{}
+	w := info.Header()
+
+	for _, st := range stores {
+		st.PrintInfo(w)
+	}
+	w.Flush()
+	return nil
+}

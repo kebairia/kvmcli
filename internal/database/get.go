@@ -166,3 +166,82 @@ func GetNetworks(
 	}
 	return networks, nil
 }
+
+const storeColumns = `id, name, namespace, labels, backend, artifacts_path, images_path, created_at`
+
+// GetStores retrieves all store records from the database,
+// optionally filtered by namespace.
+func GetStores(
+	ctx context.Context,
+	db *sql.DB,
+	namespace string,
+) ([]Store, error) {
+	query := fmt.Sprintf("SELECT %s FROM %s", storeColumns, storesTable)
+	args := []any{}
+	if namespace != "" {
+		query += " WHERE namespace = ?"
+		args = append(args, namespace)
+	}
+
+	var stores []Store
+	rows, err := db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			store     Store
+			rawLabels string
+		)
+		if err := rows.Scan(
+			&store.ID,
+			&store.Name,
+			&store.Namespace,
+			&rawLabels,
+			&store.Backend,
+			&store.ArtifactsPath,
+			&store.ImagesPath,
+			&store.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+		// Parse JSON labels
+		if rawLabels != "" {
+			if err := json.Unmarshal([]byte(rawLabels), &store.Labels); err != nil {
+				return nil, fmt.Errorf("invalid labels JSON: %w", err)
+			}
+		}
+
+		// Fetch images for this store
+		// TODO: optimize this to avoid N+1 query
+		imgQuery := `SELECT id, name, version, os_profile, file, checksum, size, created_at FROM ` + imagesTable + ` WHERE store_id = ?`
+		imgRows, err := db.QueryContext(ctx, imgQuery, store.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch images for store %s: %w", store.Name, err)
+		}
+
+		var images []Image
+		for imgRows.Next() {
+			var img Image
+			img.StoreID = int64(store.ID)
+			if err := imgRows.Scan(
+				&img.ID, &img.Name, &img.Version, &img.OsProfile,
+				&img.File, &img.Checksum, &img.Size, &img.CreatedAt,
+			); err != nil {
+				imgRows.Close()
+				return nil, fmt.Errorf("scan image failed: %w", err)
+			}
+			images = append(images, img)
+		}
+		imgRows.Close()
+		store.Images = images
+
+		stores = append(stores, store)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+	return stores, nil
+}
