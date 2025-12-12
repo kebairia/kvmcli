@@ -1,9 +1,12 @@
 package vms
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (vm *VirtualMachine) Start() error {
-	vm.domain.Start(vm.ctx, vm.Config.Metadata.Name)
-	fmt.Printf("vm/%s started\n", vm.Config.Metadata.Name)
+	vm.domain.Start(vm.ctx, vm.Spec.Name)
+	fmt.Printf("vm/%s started\n", vm.Spec.Name)
+	// cfg.NetworksByName, cfg.VMsByName, cfg.ClustersByName are now available
 	return nil
 }

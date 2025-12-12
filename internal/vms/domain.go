@@ -20,7 +20,7 @@ const (
 
 type DomainManager interface {
 	// BuildXML returns the full libvirt XML for this VM.
-	BuildXML(ctx context.Context, db *sql.DB, cfg VirtualMachineConfig) (string, error)
+	BuildXML(ctx context.Context, db *sql.DB, cfg VM) (string, error)
 
 	// Define registers the domain but doesn’t start it.
 	Define(ctx context.Context, xmlConfig string) error
@@ -52,9 +52,9 @@ func NewLibvirtDomainManager(conn *libvirt.Libvirt) *LibvirtDomainManager {
 func (d *LibvirtDomainManager) BuildXML(
 	ctx context.Context,
 	db *sql.DB,
-	config VirtualMachineConfig,
+	spec VM,
 ) (string, error) {
-	img, err := database.GetImageRecord(ctx, db, config.Spec.Image)
+	img, err := database.GetImageRecord(ctx, db, spec.Image)
 	if err != nil {
 		return "", nil
 	}
@@ -62,20 +62,20 @@ func (d *LibvirtDomainManager) BuildXML(
 	// Build the disk image path for the domain configuration.
 	diskImagePath := fmt.Sprintf(
 		"%s.qcow2",
-		filepath.Join(img.ImagesPath, config.Metadata.Name),
+		filepath.Join(img.ImagesPath, spec.Name),
 	)
 	domain := utils.NewDomain(
-		config.Metadata.Name,
-		config.Spec.Memory,
-		config.Spec.CPU,
+		spec.Name,
+		spec.Memory,
+		spec.CPU,
 		diskImagePath,
-		config.Spec.Network.Name,
-		config.Spec.Network.MacAddress,
+		spec.NetName,
+		spec.MAC,
 		img.OsProfile,
 	)
 	xmlConfig, err := domain.GenerateXML()
 	if err != nil {
-		return "", fmt.Errorf("failed to generate XML for VM %s: %v", config.Metadata.Name, err)
+		return "", fmt.Errorf("failed to generate XML for VM %s: %v", spec.Name, err)
 	}
 	return xml.Header + string(xmlConfig), nil
 }

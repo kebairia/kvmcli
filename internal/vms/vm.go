@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/digitalocean/go-libvirt"
+	// "github.com/kebairia/kvmcli/internal/config"
 )
 
 // Error definitions
@@ -25,7 +26,7 @@ type VirtualMachine struct {
 	ctx    context.Context
 	conn   *libvirt.Libvirt
 	db     *sql.DB
-	Config VirtualMachineConfig
+	Spec   VM
 	disk   DiskManager
 	domain DomainManager
 	// network NetworkManager
@@ -75,12 +76,12 @@ func WithDomainManager(d DomainManager) VirtualMachineOption {
 
 // NewVirtualMachine constructs a VM, applies options, and validates dependencies.
 func NewVirtualMachine(
-	cfg VirtualMachineConfig,
+	cfg VM,
 	opts ...VirtualMachineOption,
 ) (*VirtualMachine, error) {
 	vm := &VirtualMachine{
-		Config: cfg,
-		ctx:    context.Background(),
+		Spec: cfg,
+		ctx:  context.Background(),
 	}
 
 	// apply options

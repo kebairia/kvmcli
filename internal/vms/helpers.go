@@ -46,37 +46,38 @@ func NewVirtualMachineRecord(
 	}
 
 	// Verify image exists in store
-	if _, err := database.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image); err != nil {
+	if _, err := database.GetImageRecord(vm.ctx, vm.db, vm.Spec.Image); err != nil {
 		return nil, fmt.Errorf(
 			"image %q not found in store %q: %w",
-			vm.Config.Spec.Image,
-			vm.Config.Metadata.Store,
+			vm.Spec.Image,
+			vm.Spec.Store,
 			err,
 		)
 	}
 
-	networkID, err := getNetworkIDByName(vm.ctx, vm.db, vm.Config.Spec.Network.Name)
+	networkID, err := getNetworkIDByName(vm.ctx, vm.db, vm.Spec.NetName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
 
-	storeID, err := db.GetStoreIDByName(vm.ctx, vm.db, vm.Config.Metadata.Store)
+	storeID, err := db.GetStoreIDByName(vm.ctx, vm.db, vm.Spec.Store)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network ID: %w", err)
 	}
-	diskPath := filepath.Join(store.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+	diskPath := filepath.Join(store.ImagesPath, vm.Spec.Name+".qcow2")
 
 	return &db.VirtualMachineRecord{
-		Name:       vm.Config.Metadata.Name,
-		Namespace:  vm.Config.Metadata.Namespace,
-		Labels:     vm.Config.Metadata.Labels,
-		CPU:        vm.Config.Spec.CPU,
-		RAM:        vm.Config.Spec.Memory,
-		DiskSize:   vm.Config.Spec.Disk.Size,
+		Name:      vm.Spec.Name,
+		Namespace: vm.Spec.Namespace,
+		Labels:    vm.Spec.Labels,
+		CPU:       vm.Spec.CPU,
+		RAM:       vm.Spec.Memory,
+		// DiskSize:   vm.Spec.Disk.Size,
+		DiskSize:   vm.Spec.Disk,
 		DiskPath:   diskPath,
-		Image:      vm.Config.Spec.Image,
-		MacAddress: vm.Config.Spec.Network.MacAddress,
-		IP:         vm.Config.Spec.Network.IP,
+		Image:      vm.Spec.Image,
+		MacAddress: vm.Spec.MAC,
+		IP:         vm.Spec.IP,
 		NetworkID:  networkID,
 		StoreID:    storeID,
 		CreatedAt:  time.Now(),
@@ -136,9 +137,9 @@ func (vm *VirtualMachine) fetchStore() (*db.StoreRecord, error) {
 	var store db.StoreRecord
 	var err error
 
-	store.ID, err = db.GetStoreIDByName(vm.ctx, vm.db, vm.Config.Metadata.Store)
+	store.ID, err = db.GetStoreIDByName(vm.ctx, vm.db, vm.Spec.Store)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Config.Metadata.Store, err)
+		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Spec.Store, err)
 	}
 
 	return &store, nil

@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/digitalocean/go-libvirt"
+	// "github.com/kebairia/kvmcli/internal/config"
 )
 
 // IDEA: the ip <=>  mac address mapping done here in Virtual Network declaration
@@ -17,10 +18,11 @@ var ErrVirtualNetworkNameEmpty = errors.New("virtual network name is empty")
 
 // VirtualNetwork manages a libvirt-backed network, with IP⇔MAC mapping stored in DB.
 type VirtualNetwork struct {
-	Config VirtualNetworkConfig
-	ctx    context.Context
-	db     *sql.DB
-	conn   *libvirt.Libvirt
+	Spec Network
+	// Config VirtualNetworkConfig
+	ctx  context.Context
+	db   *sql.DB
+	conn *libvirt.Libvirt
 }
 
 // VirtualNetworkOption configures a VirtualNetwork.
@@ -53,15 +55,20 @@ func WithContext(ctx context.Context) VirtualNetworkOption {
 
 // NewVirtualNetwork creates a VirtualNetwork, applying options and validating dependencies.
 func NewVirtualNetwork(
-	cfg VirtualNetworkConfig,
+	// cfg VirtualNetworkConfig,
+	spec Network,
 	opts ...VirtualNetworkOption,
 ) (*VirtualNetwork, error) {
-	if cfg.Metadata.Name == "" {
+	// if cfg.Metadata.Name == "" {
+	// 	return nil, ErrVirtualNetworkNameEmpty
+	// }
+	if spec.Name == "" {
 		return nil, ErrVirtualNetworkNameEmpty
 	}
 
 	vn := &VirtualNetwork{
-		Config: cfg,
+		// Config: cfg,
+		Spec: spec,
 		// default context
 		ctx: context.Background(),
 	}

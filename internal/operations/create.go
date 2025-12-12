@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kebairia/kvmcli/internal/config"
 	log "github.com/kebairia/kvmcli/internal/logger"
-	"github.com/kebairia/kvmcli/internal/manifest"
+	// "github.com/kebairia/kvmcli/internal/manifest"
 	"github.com/kebairia/kvmcli/internal/resources"
 )
 
@@ -32,7 +33,8 @@ func CreateFromManifest(manifestPath string) error {
 	}
 	defer operator.Close()
 
-	resources, err := manifest.Load(manifestPath, operator.ctx, operator.db, operator.conn)
+	// resources, err := manifest.Load(manifestPath, operator.ctx, operator.db, operator.conn)
+	resources, err := config.Load(manifestPath, operator.ctx, operator.db, operator.conn)
 	if err != nil {
 		return fmt.Errorf("failed to load manifest %q: %w", manifestPath, err)
 	}

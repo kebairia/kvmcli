@@ -20,22 +20,22 @@ import (
 func (vm *VirtualMachine) Delete() error {
 	var err error
 
-	vmName := vm.Config.Metadata.Name
+	vmName := vm.Spec.Name
 
-	img, err := database.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image)
+	img, err := database.GetImageRecord(vm.ctx, vm.db, vm.Spec.Image)
 	if err != nil {
 		return fmt.Errorf("fetch store and image: %w", err)
 	}
 
-	dest := filepath.Join(img.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+	dest := filepath.Join(img.ImagesPath, vm.Spec.Name+".qcow2")
 
 	// Attempt to destroy the domain.
-	if err := vm.domain.Destroy(vm.ctx, vm.Config.Metadata.Name); err != nil {
+	if err := vm.domain.Destroy(vm.ctx, vm.Spec.Name); err != nil {
 		return err
 	}
 
 	// Undefine the domain
-	if err := vm.domain.Undefine(vm.ctx, vm.Config.Metadata.Name); err != nil {
+	if err := vm.domain.Undefine(vm.ctx, vm.Spec.Name); err != nil {
 		return fmt.Errorf("failed to undefine VM %q: %w", vmName, err)
 	}
 

@@ -17,7 +17,8 @@ func (vnet *VirtualNetwork) Create() error {
 	}
 
 	// Validate that we have a network name
-	name := vnet.Config.Metadata.Name
+	// name := vnet.Config.Metadata.Name
+	name := vnet.Spec.Name
 	if name == "" {
 		return ErrVirtualNetworkNameEmpty
 	}

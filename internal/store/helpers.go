@@ -15,13 +15,13 @@ import (
 
 // NewStoreRecord creates a new store record from the provided store configuration.
 func NewStoreRecord(s *Store) *db.StoreRecord {
-	images := make([]db.ImageRecord, len(s.Config.Spec.Images))
+	images := make([]db.ImageRecord, len(s.Spec.Images))
 
-	for index, img := range s.Config.Spec.Images {
+	for index, img := range s.Spec.Images {
 		images[index] = db.ImageRecord{
 			Name:      img.Name,
 			Version:   img.Version,
-			OsProfile: img.OsProfile,
+			OsProfile: img.OSProfile,
 			File:      img.File,
 			Checksum:  img.Checksum,
 			Size:      img.Size,
@@ -29,12 +29,12 @@ func NewStoreRecord(s *Store) *db.StoreRecord {
 	}
 
 	return &db.StoreRecord{
-		Name:          s.Config.Metadata.Name,
-		Namespace:     s.Config.Metadata.Namespace,
-		Labels:        s.Config.Metadata.Labels,
-		Backend:       s.Config.Spec.Backend,
-		ArtifactsPath: s.Config.Spec.Paths.ArtifactsPath,
-		ImagesPath:    s.Config.Spec.Paths.ImagesPath,
+		Name:          s.Spec.Name,
+		Namespace:     s.Spec.Namespace,
+		Labels:        s.Spec.Labels,
+		Backend:       s.Spec.Backend,
+		ArtifactsPath: s.Spec.Paths.Artifacts,
+		ImagesPath:    s.Spec.Paths.Images,
 		Images:        images,
 		CreatedAt:     time.Now(),
 	}

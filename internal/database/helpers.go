@@ -56,9 +56,9 @@ func (net *VirtualNetworkRecord) ScanRows(rows *sql.Rows) error {
 	}
 
 	// Decode DHCP
-	if err := json.Unmarshal([]byte(DHCPJSON), &net.DHCP); err != nil {
-		return fmt.Errorf("failed to unmarshal DHCP: %w", err)
-	}
+	// if err := json.Unmarshal([]byte(DHCPJSON), &net.DHCP); err != nil {
+	// 	return fmt.Errorf("failed to unmarshal DHCP: %w", err)
+	// }
 
 	return nil
 }
@@ -81,9 +81,9 @@ func (net *VirtualNetworkRecord) ScanRow(row *sql.Row) error {
 	}
 
 	// Decode DHCP
-	if err := json.Unmarshal([]byte(DHCPJSON), &net.DHCP); err != nil {
-		return fmt.Errorf("failed to unmarshal DHCP: %w", err)
-	}
+	// if err := json.Unmarshal([]byte(DHCPJSON), &net.DHCP); err != nil {
+	// 	return fmt.Errorf("failed to unmarshal DHCP: %w", err)
+	// }
 
 	return nil
 }

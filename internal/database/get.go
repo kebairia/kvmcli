@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	vmColumns      = `id, name, namespace, cpu, ram, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
-	networkColumns = `id, name, namespace, mac_address, bridge, mode, net_address, netmask, dhcp, autostart, created_at, labels`
+	vmColumns = `id, name, namespace, cpu, ram, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
+	// networkColumns = `id, name, namespace, mac_address, bridge, mode, net_address, netmask, dhcp, autostart, created_at, labels`
+	networkColumns = `id, name, namespace, mac_address, bridge, mode, net_address, netmask, autostart, created_at, labels`
 )
 
 // GetRecords retrieves all documents of type T from the specified collection

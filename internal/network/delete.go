@@ -12,7 +12,7 @@ func (vnet *VirtualNetwork) Delete() error {
 		return errors.New("libvirt connection is not initialized")
 	}
 
-	name := vnet.Config.Metadata.Name
+	name := vnet.Spec.Name
 
 	// Lookup the network by name
 	virNet, err := vnet.conn.NetworkLookupByName(name)

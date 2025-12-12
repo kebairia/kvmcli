@@ -19,13 +19,13 @@ func (vm *VirtualMachine) Create() error {
 	// if err != nil {
 	// 	return fmt.Errorf("fetch store and image: %w", err)
 	// }
-	img, err := database.GetImageRecord(vm.ctx, vm.db, vm.Config.Spec.Image)
+	img, err := database.GetImageRecord(vm.ctx, vm.db, vm.Spec.Image)
 	if err != nil {
 		return fmt.Errorf("fetch store and image: %w", err)
 	}
 
 	src := filepath.Join(img.ArtifactsPath, img.ImageFile)
-	dest := filepath.Join(img.ImagesPath, vm.Config.Metadata.Name+".qcow2")
+	dest := filepath.Join(img.ImagesPath, vm.Spec.Name+".qcow2")
 
 	// this is a slice that collection all the cleanup functions
 	// so that when an error happens in each step, a proper rollback
@@ -44,7 +44,7 @@ func (vm *VirtualMachine) Create() error {
 	})
 
 	// Generate the libvirt XML configuration
-	xmlConfig, err := vm.domain.BuildXML(vm.ctx, vm.db, vm.Config)
+	xmlConfig, err := vm.domain.BuildXML(vm.ctx, vm.db, vm.Spec)
 	if err != nil {
 		return vm.rollback(cleanups, "build XML", err)
 	}
@@ -55,16 +55,16 @@ func (vm *VirtualMachine) Create() error {
 	}
 
 	cleanups = append(cleanups, func() error {
-		return vm.domain.Undefine(vm.ctx, vm.Config.Metadata.Name)
+		return vm.domain.Undefine(vm.ctx, vm.Spec.Name)
 	})
 
-	if err := vm.domain.Start(vm.ctx, vm.Config.Metadata.Name); err != nil {
+	if err := vm.domain.Start(vm.ctx, vm.Spec.Name); err != nil {
 		return vm.rollback(cleanups, "start domain", err)
 	}
 
 	// cleanups = append(cleanups, vm.domain.)
 	cleanups = append(cleanups, func() error {
-		return vm.domain.Stop(vm.ctx, vm.Config.Metadata.Name)
+		return vm.domain.Stop(vm.ctx, vm.Spec.Name)
 	})
 
 	// Insert the vm record
@@ -72,6 +72,6 @@ func (vm *VirtualMachine) Create() error {
 		return vm.rollback(cleanups, "insert record", err)
 	}
 
-	fmt.Printf("vm/%s created\n", vm.Config.Metadata.Name)
+	fmt.Printf("vm/%s created\n", vm.Spec.Name)
 	return nil
 }

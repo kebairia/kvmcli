@@ -24,9 +24,9 @@ var (
 
 // Store manages store records in a SQL database.
 type Store struct {
-	Config StoreConfig
-	ctx    context.Context
-	db     *sql.DB
+	Spec StoreConfig
+	ctx  context.Context
+	db   *sql.DB
 }
 
 // StoreOption configures a Store.
@@ -52,12 +52,12 @@ func WithContext(ctx context.Context) StoreOption {
 
 // NewStore constructs a Store, applies options, and validates dependencies.
 func NewStore(cfg StoreConfig, opts ...StoreOption) (*Store, error) {
-	if cfg.Metadata.Name == "" {
+	if cfg.Name == "" {
 		return nil, ErrStoreNameEmpty
 	}
 
 	s := &Store{
-		Config: cfg,
+		Spec: cfg,
 		// default context
 		ctx: context.Background(),
 	}
