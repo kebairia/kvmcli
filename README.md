@@ -4,17 +4,17 @@
 
 ## Key Features
 
-*   **Infrastructure as Code**: Define VMs, Networks, and Storage Pools using simple, readable HCL files.
-*   **State Management**: Tracks resource state in a local SQLite database to prevent drift and manage lifecycle.
-*   **Declarative Networking**: Configure bridge networks and DHCP ranges easily.
-*   **Data Sources**: Reference existing resources (like pre-existing networks or storage pools) using `data` blocks.
-*   **Cluster Management**: Group VMs into clusters with defined start/stop orders.
+- **Infrastructure as Code**: Define VMs, Networks, and Storage Pools using simple, readable HCL files.
+- **State Management**: Tracks resource state in a local SQLite database to prevent drift and manage lifecycle.
+- **Declarative Networking**: Configure bridge networks and DHCP ranges easily.
+- **Data Sources**: Reference existing resources (like pre-existing networks or storage pools) using `data` blocks.
+- **Cluster Management**: Group VMs into clusters with defined start/stop orders.
 
 ## Prerequisites
 
-*   **Linux** with KVM/QEMU enabled.
-*   **libvirt** daemon running.
-*   **Go** 1.22+ (to build from source).
+- **Linux** with KVM/QEMU enabled.
+- **libvirt** daemon running.
+- **Go** 1.22+ (to build from source).
 
 ## Installation
 
@@ -34,9 +34,8 @@ Create a `main.hcl` file:
 ```hcl
 # Define a Storage Pool
 store "default" {
-  name      = "default"
-  namespace = "homelab" 
-  
+  namespace = "homelab"
+
   # Images managed by this store
   image "ubuntu-22.04" {
     url = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.disk1.img"
@@ -45,11 +44,10 @@ store "default" {
 
 # Define a Network with DHCP
 network "services" {
-  name      = "services"
   namespace = "homelab"
   mode      = "nat"
   cidr      = "192.168.100.0/24"
-  
+
   dhcp {
     start = "192.168.100.10"
     end   = "192.168.100.200"
@@ -57,16 +55,17 @@ network "services" {
 }
 
 # Define a Virtual Machine
-vm "web-server" {
-  name      = "web-server-01"
+vm "web-server-01" {
   namespace = "homelab"
   cpu       = 2
   memory    = 4096 # MB
-  
+
   # Reference the store and network defined above
   image     = "ubuntu-22.04"
-  store     = store.default.name 
-  network   = network.services.name
+  # store     = store.default.name
+  # network   = network.services.name
+  store     = store.default
+  network   = network.services
 }
 ```
 
@@ -85,6 +84,8 @@ List created resources:
 ```bash
 kvmcli get vm
 kvmcli get network
+# or
+kvmcli get net
 ```
 
 Delete resources:
@@ -98,27 +99,25 @@ kvmcli delete --all
 ## Advanced Usage
 
 ### Data Sources
+
 Reference resources that already exist in the database but are not defined in the current file. This is useful for sharing resources across multiple HCL files.
 
 ```hcl
 # Look up an existing network named "default"
-data "network" "existing_net" {
-  name = "default"
-}
+data "network" "default" {}
 
-vm "worker" {
-  name    = "worker-01"
+vm "worker-01" {
   # Use the looked-up network name
-  network = data.network.existing_net.name
+  network = data.network.default
   # ...
 }
 ```
 
 ## Project Structure
 
-*   `cmd/`: Entry points and CLI command definitions (Cobra).
-*   `internal/config/`: HCL parser and configuration structs (`vms.Config`, `network.Config`, etc.).
-*   `internal/database/`: SQLite state management (`database.VirtualMachine`, `database.Network`).
-*   `internal/network/`: Libvirt network management logic.
-*   `internal/vms/`: VM lifecycle management.
-*   `internal/store/`: Storage pool and image management.
+- `cmd/`: Entry points and CLI command definitions (Cobra).
+- `internal/config/`: HCL parser and configuration structs (`vms.Config`, `network.Config`, etc.).
+- `internal/database/`: SQLite state management (`database.VirtualMachine`, `database.Network`).
+- `internal/network/`: Libvirt network management logic.
+- `internal/vms/`: VM lifecycle management.
+- `internal/store/`: Storage pool and image management.
