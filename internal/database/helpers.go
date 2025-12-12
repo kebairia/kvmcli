@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-func (vm *VirtualMachineRecord) ScanRows(rows *sql.Rows) error {
+func (vm *VirtualMachine) ScanRows(rows *sql.Rows) error {
 	var labelJSON string
 	if err := rows.Scan(
 		&vm.ID, &vm.Name, &vm.Namespace,
@@ -22,7 +22,7 @@ func (vm *VirtualMachineRecord) ScanRows(rows *sql.Rows) error {
 	return json.Unmarshal([]byte(labelJSON), &vm.Labels)
 }
 
-func (vm *VirtualMachineRecord) ScanRow(row *sql.Row) error {
+func (vm *VirtualMachine) ScanRow(row *sql.Row) error {
 	var labelJSON string
 	if err := row.Scan(
 		&vm.ID, &vm.Name, &vm.Namespace,
@@ -38,7 +38,7 @@ func (vm *VirtualMachineRecord) ScanRow(row *sql.Row) error {
 
 // Network records
 
-func (net *VirtualNetworkRecord) ScanRows(rows *sql.Rows) error {
+func (net *VirtualNetwork) ScanRows(rows *sql.Rows) error {
 	var labelJSON string
 	var DHCPJSON string
 	if err := rows.Scan(
@@ -63,7 +63,7 @@ func (net *VirtualNetworkRecord) ScanRows(rows *sql.Rows) error {
 	return nil
 }
 
-func (net *VirtualNetworkRecord) ScanRow(row *sql.Row) error {
+func (net *VirtualNetwork) ScanRow(row *sql.Row) error {
 	var labelJSON string
 	var DHCPJSON string
 	if err := row.Scan(
@@ -101,4 +101,19 @@ func GetNetworkNameByID(ctx context.Context, db *sql.DB, id int) (string, error)
 		return "", fmt.Errorf("faild to fetch network name for ID %d: %w", id, err)
 	}
 	return name, nil
+}
+
+func GetNetworkIDByName(ctx context.Context, db *sql.DB, networkName string) (int, error) {
+	const query = `
+		SELECT id FROM networks
+		WHERE name = ? 
+	`
+
+	var networkID int
+	err := db.QueryRowContext(ctx, query, networkName).Scan(&networkID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to retrieve network ID for Network %q: %w", networkName, err)
+	}
+
+	return networkID, nil
 }

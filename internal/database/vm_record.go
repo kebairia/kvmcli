@@ -10,7 +10,7 @@ import (
 )
 
 // VMRecord represents a VM stored in the SQLite database.
-type VirtualMachineRecord struct {
+type VirtualMachine struct {
 	ID         int
 	Name       string
 	Namespace  string
@@ -59,7 +59,7 @@ func EnsureVMTable(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (vmr *VirtualMachineRecord) GetRecord(
+func (vmr *VirtualMachine) GetRecord(
 	ctx context.Context,
 	db *sql.DB,
 	name string,
@@ -73,7 +73,7 @@ func (vmr *VirtualMachineRecord) GetRecord(
 		FROM %s
 		WHERE name = ?`, vmsTable)
 
-	// record    VirtualMachineRecord
+	// record    VirtualMachine
 	var labelText string
 
 	err := db.QueryRowContext(ctx, query, name).Scan(
@@ -105,7 +105,7 @@ func (vmr *VirtualMachineRecord) GetRecord(
 	return nil
 }
 
-func (vmr *VirtualMachineRecord) GetRecordByNamespace(
+func (vmr *VirtualMachine) GetRecordByNamespace(
 	ctx context.Context,
 	db *sql.DB,
 	name string,
@@ -153,10 +153,10 @@ func (vmr *VirtualMachineRecord) GetRecordByNamespace(
 	return nil
 }
 
-// Insert inserts a VirtualMachineRecord into the vms table.
+// Insert inserts a VirtualMachine into the vms table.
 // It ensures that the table exists, marshals the Labels field to JSON,
 // and then executes the insert statement.
-func (vmr *VirtualMachineRecord) Insert(ctx context.Context, db *sql.DB) error {
+func (vmr *VirtualMachine) Insert(ctx context.Context, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("DB is nil")
 	}
@@ -221,7 +221,7 @@ func (vmr *VirtualMachineRecord) Insert(ctx context.Context, db *sql.DB) error {
 }
 
 // Delete removes a network row by name+namespace.
-func (v *VirtualMachineRecord) Delete(ctx context.Context, db *sql.DB) error {
+func (v *VirtualMachine) Delete(ctx context.Context, db *sql.DB) error {
 	const stmt = `
 	DELETE FROM ` + vmsTable + `
 	WHERE name = ? AND namespace = ?

@@ -19,7 +19,7 @@ func GetVMRecords(
 	ctx context.Context,
 	db *sql.DB,
 	namespace string,
-) ([]VirtualMachineRecord, error) {
+) ([]VirtualMachine, error) {
 	query := fmt.Sprintf("SELECT %s FROM %s", vmColumns, vmsTable)
 	args := []any{}
 	if namespace != "" {
@@ -27,7 +27,7 @@ func GetVMRecords(
 		args = append(args, namespace)
 	}
 	var (
-		vms       []VirtualMachineRecord
+		vms       []VirtualMachine
 		rawLabels string
 	)
 	rows, err := db.QueryContext(ctx, query, args...)
@@ -36,7 +36,7 @@ func GetVMRecords(
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var vm VirtualMachineRecord
+		var vm VirtualMachine
 		if err := rows.Scan(
 			&vm.ID,
 			&vm.Name,
@@ -67,13 +67,13 @@ func GetVMRecords(
 
 // GetRecords retrieves all documents of type T from the specified collection
 // that match the given namespace.
-// GetVMByName fetches a single VirtualMachineRecord by name.
+// GetVMByName fetches a single VirtualMachine by name.
 // If namespace is non-empty, it will be included in the WHERE clause.
 func GetVMByName(
 	ctx context.Context,
 	db *sql.DB,
 	name, namespace string,
-) (VirtualMachineRecord, error) {
+) (VirtualMachine, error) {
 	// Build the base query
 	query := fmt.Sprintf("SELECT %s FROM %s WHERE name = ?", vmColumns, vmsTable)
 	args := []any{name}
@@ -86,7 +86,7 @@ func GetVMByName(
 
 	// Prepare a holder for the single record
 	var (
-		vm        VirtualMachineRecord
+		vm        VirtualMachine
 		rawLabels string
 	)
 
@@ -120,11 +120,11 @@ func GetVMByName(
 	return vm, nil
 }
 
-func GetNetworkRecords(
+func GetNetworks(
 	ctx context.Context,
 	db *sql.DB,
 	namespace string,
-) ([]VirtualNetworkRecord, error) {
+) ([]VirtualNetwork, error) {
 	query := fmt.Sprintf("SELECT %s FROM %s", networkColumns, networksTable)
 	args := []any{}
 	if namespace != "" {
@@ -132,7 +132,7 @@ func GetNetworkRecords(
 		args = append(args, namespace)
 	}
 	var (
-		networks           []VirtualNetworkRecord
+		networks           []VirtualNetwork
 		rawLabels, rawDHCP string
 	)
 
@@ -142,7 +142,7 @@ func GetNetworkRecords(
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var network VirtualNetworkRecord
+		var network VirtualNetwork
 		if err := rows.Scan(
 			&network.ID,
 			&network.Name,

@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
-type StoreRecord struct {
+type Store struct {
 	ID            int
 	Name          string
 	Namespace     string
@@ -16,11 +17,11 @@ type StoreRecord struct {
 	Backend       string
 	ArtifactsPath string
 	ImagesPath    string
-	Images        []ImageRecord
+	Images        []Image
 	CreatedAt     time.Time
 }
 
-type ImageRecord struct {
+type Image struct {
 	ID        int64
 	StoreID   int64
 	Name      string
@@ -48,12 +49,12 @@ type VMImageInfo struct {
 	Size           string
 }
 
-// NewStoreRecord creates a new store record from the provided store configuration.
-// func NewStoreRecord(s *store.Store) *StoreRecord {
-// 	images := make(map[string]ImageRecord, len(s.Spec.Images))
+// NewStore creates a new store record from the provided store configuration.
+// func NewStore(s *store.Store) *Store {
+// 	images := make(map[string]Image, len(s.Spec.Images))
 // 	maps.Copy(images, s.Spec.Images)
 //
-// 	return &StoreRecord{
+// 	return &Store{
 // 		Name:          s.Metadata.Name,
 // 		Namespace:     s.Metadata.Namespace,
 // 		Labels:        s.Metadata.Labels,
@@ -102,8 +103,8 @@ func EnsureStoreTable(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-// func getImageRecord(
-func (store *StoreRecord) GetRecord(
+// func getImage(
+func (store *Store) GetRecord(
 	ctx context.Context,
 	db *sql.DB,
 	name string,
@@ -133,7 +134,7 @@ func (store *StoreRecord) GetRecord(
 }
 
 // NOTE: I need to add checker for the namespace if exist no before doing the query
-func (store *StoreRecord) GetRecordByNamespace(
+func (store *Store) GetRecordByNamespace(
 	ctx context.Context,
 	db *sql.DB,
 	name, namespace string,
@@ -162,7 +163,7 @@ func (store *StoreRecord) GetRecordByNamespace(
 	return nil
 }
 
-func GetImageRecord(ctx context.Context, db *sql.DB, imgName string) (*VMImageInfo, error) {
+func GetImage(ctx context.Context, db *sql.DB, imgName string) (*VMImageInfo, error) {
 	rec := &VMImageInfo{}
 	const query = `
 		SELECT 
@@ -210,7 +211,7 @@ func GetStoreIDByName(ctx context.Context, db *sql.DB, name string) (int, error)
 	return id, nil
 }
 
-func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
+func (store *Store) Insert(ctx context.Context, db *sql.DB) error {
 	// 1. Ensure tables exist (including the images table!)
 	if err := EnsureStoreTable(ctx, db); err != nil {
 		return fmt.Errorf("failed to ensure schema: %w", err)
@@ -250,6 +251,9 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 		store.ImagesPath,
 	)
 	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return fmt.Errorf("store %q already exists in namespace %q", store.Name, store.Namespace)
+		}
 		return fmt.Errorf("insert store: %w", err)
 	}
 
@@ -288,7 +292,7 @@ func (store *StoreRecord) Insert(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (store *StoreRecord) Delete(ctx context.Context, db *sql.DB) error {
+func (store *Store) Delete(ctx context.Context, db *sql.DB) error {
 	// Create a filter matching the record with the specified name
 	const query = `
 		DELETE FROM ` + storesTable + `

@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
-type VirtualNetworkRecord struct {
+type VirtualNetwork struct {
 	ID         int
 	Name       string
 	Namespace  string
@@ -19,9 +20,9 @@ type VirtualNetworkRecord struct {
 	Mode       string
 	NetAddress string
 	Netmask    string
-	// DHCP       map[string]string
-	Autostart bool
-	CreatedAt time.Time
+	DHCP       map[string]string
+	Autostart  bool
+	CreatedAt  time.Time
 }
 
 // EnsureVMTable creates the vms table if it doesn't exist.
@@ -52,7 +53,7 @@ func EnsureNetworkTable(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
+func (net *VirtualNetwork) Insert(ctx context.Context, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("DB is nil")
 	}
@@ -70,28 +71,11 @@ func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
 		return fmt.Errorf("failed to marshal labels: %w", err)
 	}
 
-	// DHCPJSON, err := json.Marshal(net.DHCP)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to marshal DHCP: %w", err)
-	// }
+	DHCPJSON, err := json.Marshal(net.DHCP)
+	if err != nil {
+		return fmt.Errorf("failed to marshal DHCP: %w", err)
+	}
 
-	// Define the INSERT query.
-
-	// const query = `
-	// 	INSERT INTO networks (
-	// 		name,
-	// 		namespace,
-	// 		labels,
-	// 		mac_address,
-	// 		bridge,
-	// 		mode,
-	// 	  net_address,
-	// 	  netmask,
-	// 	  dhcp,
-	// 		autostart,
-	// 		created_at
-	// 	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	// `
 	const query = `
 		INSERT INTO networks (
 			name,
@@ -102,9 +86,10 @@ func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
 			mode,
 		  net_address,
 		  netmask,
+		  dhcp,
 			autostart,
 			created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	// Execute the query using record values.
@@ -117,17 +102,20 @@ func (net *VirtualNetworkRecord) Insert(ctx context.Context, db *sql.DB) error {
 		net.Mode,
 		net.NetAddress,
 		net.Netmask,
-		// string(DHCPJSON),
+		string(DHCPJSON),
 		net.Autostart,
 		net.CreatedAt,
 	); err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return fmt.Errorf("network %q already exists in namespace %q", net.Name, net.Namespace)
+		}
 		return fmt.Errorf("failed to insert Network record: %w", err)
 	}
 
 	return nil
 }
 
-func (net *VirtualNetworkRecord) Delete(ctx context.Context, db *sql.DB) error {
+func (net *VirtualNetwork) Delete(ctx context.Context, db *sql.DB) error {
 	// Create a filter matching the record with the specified name
 	query := fmt.Sprintf("DELETE FROM %s WHERE name = ?", networksTable)
 
@@ -142,7 +130,7 @@ func (net *VirtualNetworkRecord) Delete(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func (net *VirtualNetworkRecord) GetRecord(
+func (net *VirtualNetwork) GetRecord(
 	ctx context.Context,
 	db *sql.DB,
 	name string,
@@ -180,16 +168,16 @@ func (net *VirtualNetworkRecord) GetRecord(
 
 		return fmt.Errorf("failed to fetch VM record: %w", err)
 	}
-	// if err := json.Unmarshal([]byte(rawDHCP), &net.DHCP); err != nil {
-	// 	return fmt.Errorf("failed to parse labels JSON: %w", err)
-	// }
+	if err := json.Unmarshal([]byte(rawDHCP), &net.DHCP); err != nil {
+		return fmt.Errorf("failed to parse labels JSON: %w", err)
+	}
 	if err := json.Unmarshal([]byte(rawLabels), &net.Labels); err != nil {
 		return fmt.Errorf("failed to parse labels JSON: %w", err)
 	}
 	return nil
 }
 
-func (net *VirtualNetworkRecord) GetRecordByNamespace(
+func (net *VirtualNetwork) GetRecordByNamespace(
 	ctx context.Context,
 	db *sql.DB,
 	name string,
@@ -235,9 +223,9 @@ func (net *VirtualNetworkRecord) GetRecordByNamespace(
 
 		return fmt.Errorf("failed to fetch VM record: %w", err)
 	}
-	// if err := json.Unmarshal([]byte(DHCPText), &net.DHCP); err != nil {
-	// 	return fmt.Errorf("failed to parse labels JSON: %w", err)
-	// }
+	if err := json.Unmarshal([]byte(DHCPText), &net.DHCP); err != nil {
+		return fmt.Errorf("failed to parse labels JSON: %w", err)
+	}
 	if err := json.Unmarshal([]byte(labelText), &net.Labels); err != nil {
 		return fmt.Errorf("failed to parse labels JSON: %w", err)
 	}
