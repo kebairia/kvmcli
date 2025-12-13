@@ -255,7 +255,11 @@ func (store *Store) Insert(ctx context.Context, db *sql.DB) error {
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			return fmt.Errorf("store %q already exists in namespace %q", store.Name, store.Namespace)
+			return fmt.Errorf(
+				"store %q already exists in namespace %q",
+				store.Name,
+				store.Namespace,
+			)
 		}
 		return fmt.Errorf("insert store: %w", err)
 	}

@@ -1,20 +1,15 @@
 package network
 
 import (
-	// "context"
-	// "database/sql"
 	"context"
 	"fmt"
-
-	// db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/vms"
 )
 
 // Create defines a Network in libvirt and inserts its database record.
 func (m *LibvirtNetworkManager) Create(ctx context.Context, spec Config) error {
 	// Ensure Libvirt connection is initialized
 	if m.conn == nil {
-		return vms.ErrNilLibvirtConn
+		return ErrNilLibvirtConn
 	}
 
 	// Validate that we have a network name
