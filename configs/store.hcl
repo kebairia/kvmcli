@@ -2,7 +2,7 @@
 // Store Definition
 // ==================================================
 
-store "homelab-store" {
+store "homelab" {
   namespace = "homelab"
 
   labels = {
