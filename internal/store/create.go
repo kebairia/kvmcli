@@ -3,17 +3,19 @@ package store
 import (
 	// "context"
 	// "database/sql"
+	"context"
 	"fmt"
 	// db "github.com/kebairia/kvmcli/internal/database"
 )
 
-func (s *Store) Create() error {
-	fmt.Printf("store/%s creating\n", s.Spec.Name)
-	record := NewStoreRecord(s)
-	err := record.Insert(s.ctx, s.db)
+// Create persists the store to the database.
+func (m *DBStoreManager) Create(ctx context.Context, spec Config) error {
+	fmt.Printf("store/%s creating\n", spec.Name)
+	record := NewStoreRecord(spec)
+	err := record.Insert(ctx, m.db)
 	if err != nil {
 		return fmt.Errorf("failed to insert new store record: %w", err)
 	}
-	fmt.Printf("store/%s created\n", s.Spec.Name)
+	fmt.Printf("store/%s created\n", spec.Name)
 	return nil
 }

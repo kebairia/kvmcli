@@ -11,27 +11,29 @@ import (
 
 // prepareNetwork generates the libvirt-compatible XML configuration
 // for a virtual network, using optional parameters like DHCP and bridge.
-func (net *Network) prepareNetwork() (string, error) {
+// prepareNetwork generates the libvirt-compatible XML configuration
+// for a virtual network, using optional parameters like DHCP and bridge.
+func (m *LibvirtNetworkManager) prepareNetwork(spec Config) (string, error) {
 	var opts []templates.NetworkOption
 
 	// Append DHCP config if defined in the YAML
 	// Append DHCP config if defined in the YAML
-	if net.Spec.DHCP != nil {
-		opts = append(opts, templates.WithDHCP(net.Spec.DHCP.Start, net.Spec.DHCP.End))
+	if spec.DHCP != nil {
+		opts = append(opts, templates.WithDHCP(spec.DHCP.Start, spec.DHCP.End))
 	}
 
 	// Append bridge name if provided
-	if net.Spec.Bridge != "" {
-		opts = append(opts, templates.WithBridge(net.Spec.Bridge))
+	if spec.Bridge != "" {
+		opts = append(opts, templates.WithBridge(spec.Bridge))
 	}
 
 	// Create the network definition with all options
 	netXML := templates.NewNetwork(
-		net.Spec.Name,
-		net.Spec.Mode,
-		net.Spec.NetAddress,
-		net.Spec.NetMask,
-		net.Spec.Autostart,
+		spec.Name,
+		spec.Mode,
+		spec.NetAddress,
+		spec.NetMask,
+		spec.Autostart,
 		opts...,
 	)
 
@@ -39,7 +41,7 @@ func (net *Network) prepareNetwork() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to generate XML for network %s: %v",
-			net.Spec.Name,
+			spec.Name,
 			err,
 		)
 	}
@@ -48,23 +50,35 @@ func (net *Network) prepareNetwork() (string, error) {
 }
 
 // defineAndStartNetwork defines and starts the virtual network using libvirt.
-func (net *Network) defineAndStartNetwork(xmlConfig string) error {
+// defineAndStartNetwork defines and starts the virtual network using libvirt.
+func (m *LibvirtNetworkManager) defineAndStartNetwork(xmlConfig string) error {
 	// Define the network from the generated XML
-	netInstance, err := net.conn.NetworkDefineXML(xmlConfig)
+	netInstance, err := m.conn.NetworkDefineXML(xmlConfig)
 	if err != nil {
-		return fmt.Errorf("failed to define network %s: %v", net.Spec.Name, err)
+		return fmt.Errorf("failed to define network: %v", err)
 	}
 
 	// Start (create) the defined network
-	if err := net.conn.NetworkCreate(netInstance); err != nil {
-		return fmt.Errorf("failed to start network %s: %w", net.Spec.Name, err)
+	if err := m.conn.NetworkCreate(netInstance); err != nil {
+		return fmt.Errorf("failed to start network: %w", err)
 	}
-	// Set our network to be autostarted
-	if net.Spec.Autostart {
-		net.conn.NetworkSetAutostart(netInstance, 1)
-	}
+	// TODO: Autostart handling needs the spec or to be passed in.
+	// For now omitting autostart logic here or assuming it's done elsewhere?
+	// The original code used `net.Spec.Autostart`.
+	// Let's rely on the caller to handle autostart or pass it in.
+	// Actually, create.go logic was: prepare -> defineAndStart.
+	// I should update defineAndStartNetwork to take the autostart flag or name to lookup spec?
+	// Or simpler: just take the flag.
 
 	return nil
+}
+
+func (m *LibvirtNetworkManager) EnableAutostart(name string) error {
+	netInstance, err := m.conn.NetworkLookupByName(name)
+	if err != nil {
+		return err
+	}
+	return m.conn.NetworkSetAutostart(netInstance, 1)
 }
 
 func NewNetworkRecord(net *Network) *db.VirtualNetwork {

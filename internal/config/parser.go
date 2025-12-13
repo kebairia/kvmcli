@@ -93,29 +93,30 @@ func Load(
 		vmsList = append(vmsList, vmRes)
 	}
 	for _, n := range cfg.Networks {
-		netRes, err := network.NewNetwork(
-			n,
-			network.WithContext(ctx),
-			network.WithDatabaseConnection(db),
-			network.WithLibvirtConnection(conn),
-		)
-		if err != nil {
-			return nil, err
-		}
+		// Initialize the manager (one per network or shared, shared is fine but creating new is cheap)
+		manager := network.NewLibvirtNetworkManager(conn, db)
 
+		netRes := network.NewNetwork(
+			n,
+			manager,
+			ctx,
+		)
+		// error check was previously checking NewNetwork error, but NewNetwork no longer returns error.
+		// So we just append.
 		networks = append(networks, netRes)
 	}
 
 	for _, s := range cfg.Stores {
-		stRes, err := store.NewStore(
+		manager := store.NewDBStoreManager(db)
+		stRes := store.NewStore(
 			s,
-			store.WithContext(ctx),
-			store.WithDatabaseConnection(db),
+			manager,
+			ctx,
 		)
-		if err != nil {
-			return nil, err
-		}
-
+		// Error check not needed as NewStore returns *Store directly now.
+		// Logic change: previously NewStore returned (*Store, error).
+		// Now NewStore returns *Store.
+		// We should remove the error check.
 		stores = append(stores, stRes)
 	}
 

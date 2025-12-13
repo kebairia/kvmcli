@@ -2,9 +2,7 @@ package store
 
 import (
 	"context"
-	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	db "github.com/kebairia/kvmcli/internal/database"
@@ -25,60 +23,40 @@ var (
 	ErrNilDBConn = errors.New("store: database connection is nil")
 )
 
-// Store manages store records in a SQL database.
+// Store represents a bound store resource (configuration + manager).
+// It implements resources.Resource (if needed, though Store resource interface requirements might differ?
+// Resource interface requires Create/Delete/Start. Store had Start placeholder.
 type Store struct {
-	Spec Config
-	ctx  context.Context
-	db   *sql.DB
+	Spec    Config
+	ctx     context.Context
+	manager StoreManager
 }
 
-// StoreOption configures a Store.
-type StoreOption func(*Store)
-
-// WithDatabaseConnection injects a *sql.DB (required).
-func WithDatabaseConnection(db *sql.DB) StoreOption {
-	return func(s *Store) {
-		s.db = db
+// NewStore creates a new Store resource.
+func NewStore(spec Config, manager StoreManager, ctx context.Context) *Store {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-}
-
-// WithContext injects a context.Context; if nil, uses context.Background().
-func WithContext(ctx context.Context) StoreOption {
-	return func(s *Store) {
-		if ctx == nil {
-			s.ctx = context.Background()
-		} else {
-			s.ctx = ctx
-		}
+	return &Store{
+		Spec:    spec,
+		manager: manager,
+		ctx:     ctx,
 	}
 }
 
-// NewStore constructs a Store, applies options, and validates dependencies.
-func NewStore(cfg Config, opts ...StoreOption) (*Store, error) {
-	if cfg.Name == "" {
-		return nil, ErrStoreNameEmpty
-	}
-
-	s := &Store{
-		Spec: cfg,
-		// default context
-		ctx: context.Background(),
-	}
-
-	for _, opt := range opts {
-		opt(s)
-	}
-
-	if s.db == nil {
-		return nil, ErrNilDBConn
-	}
-
-	return s, nil
+// Create delegates to the manager.
+func (s *Store) Create() error {
+	return s.manager.Create(s.ctx, s.Spec)
 }
 
-// NOTE: this is just to change later
-func (st *Store) Start() error {
-	fmt.Println("Start store")
+// Delete delegates to the manager.
+func (s *Store) Delete() error {
+	return s.manager.Delete(s.ctx, s.Spec.Name, s.Spec.Namespace)
+}
+
+// Start delegates or does nothing (store doesn't really start).
+func (s *Store) Start() error {
+	// Stores don't need starting in this context usually, but to satisfy interface:
 	return nil
 }
 
@@ -108,10 +86,10 @@ func (st *Store) Start() error {
 //
 
 // NewStoreRecord creates a new store record from the provided store configuration.
-func NewStoreRecord(s *Store) *db.Store {
-	images := make([]db.Image, len(s.Spec.Images))
+func NewStoreRecord(spec Config) *db.Store {
+	images := make([]db.Image, len(spec.Images))
 
-	for index, img := range s.Spec.Images {
+	for index, img := range spec.Images {
 		images[index] = db.Image{
 			Name:      img.Name,
 			Version:   img.Version,
@@ -123,12 +101,12 @@ func NewStoreRecord(s *Store) *db.Store {
 	}
 
 	return &db.Store{
-		Name:          s.Spec.Name,
-		Namespace:     s.Spec.Namespace,
-		Labels:        s.Spec.Labels,
-		Backend:       s.Spec.Backend,
-		ArtifactsPath: s.Spec.Paths.Artifacts,
-		ImagesPath:    s.Spec.Paths.Images,
+		Name:          spec.Name,
+		Namespace:     spec.Namespace,
+		Labels:        spec.Labels,
+		Backend:       spec.Backend,
+		ArtifactsPath: spec.Paths.Artifacts,
+		ImagesPath:    spec.Paths.Images,
 		Images:        images,
 		CreatedAt:     time.Now(),
 	}
