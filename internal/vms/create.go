@@ -10,6 +10,11 @@ import (
 
 // Create Virtual Machine
 func (vm *VirtualMachine) Create() error {
+	// Resolve MAC address (explicit in config, otherwise derived from IP).
+	macAddress, err := network.ResolveMAC("02:aa:bb", vm.Spec.IP, vm.Spec.MAC)
+	if err != nil {
+		return fmt.Errorf("resolve mac for %q: %w", vm.Spec.Name, err)
+	}
 	// Initiliaze a new vm record
 	record, err := NewVirtualMachineRecord(vm)
 	if err != nil {
@@ -63,7 +68,8 @@ func (vm *VirtualMachine) Create() error {
 	if vm.Spec.IP != "" {
 		nm := network.NewLibvirtNetworkManager(vm.conn, vm.db)
 		// We're using NetName which connects to the network name in config
-		if err := nm.SetStaticMapping(vm.ctx, vm.Spec.NetName, vm.Spec.IP, vm.Spec.MAC); err != nil {
+		// if err := nm.SetStaticMapping(vm.ctx, vm.Spec.NetName, vm.Spec.IP, vm.Spec.MAC); err != nil {
+		if err := nm.SetStaticMapping(vm.ctx, vm.Spec.NetName, vm.Spec.IP, macAddress); err != nil {
 			// We might want to warn instead of fail, or fail.
 			// If we fail, we should rollback (undefine domain).
 			return vm.rollback(cleanups, "add static ip mapping", err)

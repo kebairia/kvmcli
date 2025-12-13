@@ -101,8 +101,6 @@ func Load(
 			manager,
 			ctx,
 		)
-		// error check was previously checking NewNetwork error, but NewNetwork no longer returns error.
-		// So we just append.
 		networks = append(networks, netRes)
 	}
 
@@ -113,10 +111,6 @@ func Load(
 			manager,
 			ctx,
 		)
-		// Error check not needed as NewStore returns *Store directly now.
-		// Logic change: previously NewStore returned (*Store, error).
-		// Now NewStore returns *Store.
-		// We should remove the error check.
 		stores = append(stores, stRes)
 	}
 
@@ -135,7 +129,7 @@ func (cfg *Config) ResolveReferences(ctx context.Context, db *sql.DB) error {
 		return fmt.Errorf("config is nil")
 	}
 
-	// 1. Build evaluation context for existing config blocks
+	// Build evaluation context for existing config blocks
 	networksByName, err := cfg.indexNetworks()
 	if err != nil {
 		return err
@@ -145,7 +139,7 @@ func (cfg *Config) ResolveReferences(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 
-	// 2. Process data blocks (data "store" "..." {})
+	//  Process data blocks (data "store" "..." {})
 	// We'll verify they exist in the DB, then add them to our evaluation maps.
 	dataStores := make(map[string]struct{})
 	dataNetworks := make(map[string]struct{})
@@ -168,10 +162,10 @@ func (cfg *Config) ResolveReferences(ctx context.Context, db *sql.DB) error {
 		}
 	}
 
-	// 3. Construct the shared EvalContext
+	// Construct the shared EvalContext
 	evalCtx := cfg.evalContext(networksByName, storesByName, dataNetworks, dataStores)
 
-	// 4. Resolve VM references
+	// Resolve VM references
 	for i := range cfg.VMs {
 		vm := &cfg.VMs[i]
 

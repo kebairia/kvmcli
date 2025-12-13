@@ -9,6 +9,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal/database"
+	"github.com/kebairia/kvmcli/internal/network"
 	"github.com/kebairia/kvmcli/internal/templates"
 )
 
@@ -58,6 +59,11 @@ func (d *LibvirtDomainManager) BuildXML(
 	if err != nil {
 		return "", nil
 	}
+	// Resolve MAC address (explicit in config, otherwise derived from IP).
+	macAddress, err := network.ResolveMAC("02:aa:bb", spec.IP, spec.MAC)
+	if err != nil {
+		return "", fmt.Errorf("resolve mac for %q: %w", spec.Name, err)
+	}
 
 	// Build the disk image path for the domain configuration.
 	diskImagePath := fmt.Sprintf(
@@ -70,7 +76,7 @@ func (d *LibvirtDomainManager) BuildXML(
 		spec.CPU,
 		diskImagePath,
 		spec.NetName,
-		spec.MAC,
+		macAddress,
 		img.OsProfile,
 	)
 	xmlConfig, err := domain.GenerateXML()
