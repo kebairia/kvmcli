@@ -257,3 +257,74 @@ func GetStores(
 	}
 	return stores, nil
 }
+
+// GetStoreByName retrieves a single store by its name.
+func GetStoreByName(
+	ctx context.Context,
+	db *sql.DB,
+	name string,
+) (Store, error) {
+	const query = `
+		SELECT id, name, namespace, labels, backend, artifacts_path, images_path, created_at
+		FROM ` + storesTable + `
+		WHERE name = ?
+	`
+	var (
+		store     Store
+		rawLabels string
+	)
+	row := db.QueryRowContext(ctx, query, name)
+	if err := row.Scan(
+		&store.ID,
+		&store.Name,
+		&store.Namespace,
+		&rawLabels,
+		&store.Backend,
+		&store.ArtifactsPath,
+		&store.ImagesPath,
+		&store.CreatedAt,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return Store{}, fmt.Errorf("no store found with name %q", name)
+		}
+		return Store{}, fmt.Errorf("scan store failed: %w", err)
+	}
+
+	// Parse JSON labels
+	if rawLabels != "" {
+		if err := json.Unmarshal([]byte(rawLabels), &store.Labels); err != nil {
+			return Store{}, fmt.Errorf("invalid labels JSON: %w", err)
+		}
+	}
+
+	// Fetch images for this store
+	imgQuery := `
+		SELECT id, name, version, os_profile, file, checksum, size, created_at 
+		FROM ` + imagesTable + ` 
+		WHERE store_id = ?
+	`
+	imgRows, err := db.QueryContext(ctx, imgQuery, store.ID)
+	if err != nil {
+		return Store{}, fmt.Errorf("failed to fetch images for store %s: %w", store.Name, err)
+	}
+	defer imgRows.Close()
+
+	var images []Image
+	for imgRows.Next() {
+		var img Image
+		img.StoreID = int64(store.ID)
+		if err := imgRows.Scan(
+			&img.ID, &img.Name, &img.Version, &img.OsProfile,
+			&img.File, &img.Checksum, &img.Size, &img.CreatedAt,
+		); err != nil {
+			return Store{}, fmt.Errorf("scan image failed: %w", err)
+		}
+		images = append(images, img)
+	}
+	if err := imgRows.Err(); err != nil {
+		return Store{}, fmt.Errorf("images rows error: %w", err)
+	}
+	store.Images = images
+
+	return store, nil
+}

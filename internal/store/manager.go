@@ -30,5 +30,9 @@ func NewDBStoreManager(db *sql.DB) *DBStoreManager {
 
 // Get retrieves the store record.
 func (m *DBStoreManager) Get(ctx context.Context, name string) (*db.Store, error) {
-	return nil, nil // Placeholder
+	s, err := db.GetStoreByName(ctx, m.db, name)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
 }
