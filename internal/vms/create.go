@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/kebairia/kvmcli/internal/database"
+	"github.com/kebairia/kvmcli/internal/network"
 )
 
 // Create Virtual Machine
@@ -57,6 +58,17 @@ func (vm *VirtualMachine) Create() error {
 	cleanups = append(cleanups, func() error {
 		return vm.domain.Undefine(vm.ctx, vm.Spec.Name)
 	})
+
+	// Step 4: Add static IP mapping if configured
+	if vm.Spec.IP != "" {
+		nm := network.NewLibvirtNetworkManager(vm.conn, vm.db)
+		// We're using NetName which connects to the network name in config
+		if err := nm.SetStaticMapping(vm.ctx, vm.Spec.NetName, vm.Spec.IP, vm.Spec.MAC); err != nil {
+			// We might want to warn instead of fail, or fail.
+			// If we fail, we should rollback (undefine domain).
+			return vm.rollback(cleanups, "add static ip mapping", err)
+		}
+	}
 
 	if err := vm.domain.Start(vm.ctx, vm.Spec.Name); err != nil {
 		return vm.rollback(cleanups, "start domain", err)

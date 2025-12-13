@@ -10,7 +10,6 @@ import (
 
 // Create persists the store to the database.
 func (m *DBStoreManager) Create(ctx context.Context, spec Config) error {
-	fmt.Printf("store/%s creating\n", spec.Name)
 	record := NewStoreRecord(spec)
 	err := record.Insert(ctx, m.db)
 	if err != nil {

@@ -12,7 +12,7 @@ type NetworkManager interface {
 	Create(ctx context.Context, spec Config) error
 	Delete(ctx context.Context, name string) error
 	Start(ctx context.Context, name string) error
-	AddStaticMapping(ctx context.Context, name, ip, mac string) error
+	SetStaticMapping(ctx context.Context, name, ip, mac string) error
 }
 
 // LibvirtNetworkManager implements NetworkManager using libvirt and a SQL database.

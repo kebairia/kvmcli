@@ -10,7 +10,10 @@ import (
 // What I need is whenever I create a new virtual machine with a static ip, I need to update
 // my virtual network declaration to add the ip <=> mac address mapping
 
-var ErrNetworkNameEmpty = errors.New("virtual network name is empty")
+var (
+	ErrNetworkNameEmpty = errors.New("virtual network name is empty")
+	ErrNilLibvirtConn   = errors.New("libvirt connection is nil")
+)
 
 // Network represents a bound network resource (configuration + manager).
 // It implements resources.Resource.
@@ -58,6 +61,6 @@ func (n *Network) Start() error {
 }
 
 // AddStaticMapping delegates to manager.
-func (n *Network) AddStaticMapping(ip, mac string) error {
-	return n.manager.AddStaticMapping(n.ctx, n.Spec.Name, ip, mac)
+func (n *Network) SetStaticMapping(ip, mac string) error {
+	return n.manager.SetStaticMapping(n.ctx, n.Spec.Name, ip, mac)
 }
