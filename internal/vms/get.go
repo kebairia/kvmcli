@@ -16,7 +16,7 @@ import (
 const allDomains = -1
 
 const (
-	vmCols = `id, name, namespace, cpu, ram, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
+	vmCols = `id, name, namespace, cpu, ram, ip_address, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
 )
 
 // VirtualMachineInfo holds everything we need to print one row.
@@ -27,24 +27,26 @@ type VirtualMachineInfo struct {
 	RAM      int     // in MB
 	DiskSize float64 // in GB
 	Network  string
+	IP       string
 	OS       string
 	Age      string
 }
 
 func (info *VirtualMachineInfo) Header() *tabwriter.Writer {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tOS\tAGE")
+	fmt.Fprintln(w, "NAME\tSTATE\tCPU\tMEMORY\tDISK\tNETWORK\tIP\tOS\tAGE")
 	return w
 }
 
 func (info *VirtualMachineInfo) PrintInfo(w *tabwriter.Writer) {
-	fmt.Fprintf(w, "%s\t%s\t%d\t%d MB\t%.2f GB\t%s\t%s\t%s\n",
+	fmt.Fprintf(w, "%s\t%s\t%d\t%d MB\t%.2f GB\t%s\t%s\t%s\t%s\n",
 		info.Name,
 		info.State,
 		info.CPU,
 		info.RAM, // Convert to MB
 		info.DiskSize,
 		info.Network,
+		info.IP,
 		info.OS,
 		info.Age,
 	)
@@ -81,13 +83,6 @@ func NewVirtualMachineInfo(
 	if err != nil {
 		log.Errorf("cannot get network name for %q: %v", rec.Name, err)
 	}
-	// vm.domain.State()
-	// vm.Network.Name()
-	// vm.disk.Size()
-	// vm.Config.Metadata.Name
-	// vm.Config.Spec.CPU
-	// vm.Config.Spec.Memory
-	// vm.Config.Spec.Image
 
 	// Image details for OS column
 	var osName string
@@ -108,6 +103,7 @@ func NewVirtualMachineInfo(
 		RAM:      rec.RAM,
 		DiskSize: disk,
 		Network:  network,
+		IP:       rec.IP,
 		OS:       osName,
 		Age:      common.FormatAge(rec.CreatedAt),
 	}, nil

@@ -17,8 +17,8 @@ type VirtualMachine struct {
 	Labels     map[string]string
 	CPU        int
 	RAM        int
-	MacAddress string
 	IP         string
+	MacAddress string
 	NetworkID  int
 	StoreID    int
 	Image      string
@@ -37,6 +37,7 @@ func EnsureVMTable(ctx context.Context, db *sql.DB) error {
 	  namespace   TEXT,
 	  cpu         INTEGER,
 	  ram         INTEGER,
+	  ip_address  TEXT,
 	  mac_address TEXT,
 	  network_id  INTEGER,
 	  store_id    INTEGER,
@@ -66,7 +67,7 @@ func (vmr *VirtualMachine) GetRecord(
 ) error {
 	query := fmt.Sprintf(`
 		SELECT id, name, namespace, 
-		       cpu, ram, mac_address, 
+		       cpu, ram, ip_address, mac_address, 
 		       network_id, store_id, image, 
 		       disk_size, disk_path, 
 		       created_at, labels
@@ -82,6 +83,7 @@ func (vmr *VirtualMachine) GetRecord(
 		&vmr.Namespace,
 		&vmr.CPU,
 		&vmr.RAM,
+		&vmr.IP,
 		&vmr.MacAddress,
 		&vmr.NetworkID,
 		&vmr.StoreID,
@@ -114,7 +116,7 @@ func (vmr *VirtualMachine) GetRecordByNamespace(
 	fmt.Println("-> GetRecordByNamespace")
 	query := fmt.Sprintf(`
 	SELECT id, name, namespace,
-	       cpu, ram, mac_address,
+	       cpu, ram, ip_address, mac_address,
 	       network_id, store_id, image,
 	       disk_size, disk_path,
 	       created_at, labels
@@ -131,6 +133,7 @@ func (vmr *VirtualMachine) GetRecordByNamespace(
 		&vmr.Namespace,
 		&vmr.CPU,
 		&vmr.RAM,
+		&vmr.IP,
 		&vmr.MacAddress,
 		&vmr.NetworkID,
 		&vmr.Image,
@@ -188,6 +191,7 @@ func (vmr *VirtualMachine) Insert(ctx context.Context, db *sql.DB) error {
 			namespace,
 			cpu,
 			ram,
+			ip_address,
 			mac_address,
 			network_id,
 			store_id,
@@ -196,7 +200,7 @@ func (vmr *VirtualMachine) Insert(ctx context.Context, db *sql.DB) error {
 			disk_path,
 			created_at,
 			labels
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`
 
 	// Execute the query using record values.
@@ -205,6 +209,7 @@ func (vmr *VirtualMachine) Insert(ctx context.Context, db *sql.DB) error {
 		vmr.Namespace,
 		vmr.CPU,
 		vmr.RAM,
+		vmr.IP,
 		vmr.MacAddress,
 		vmr.NetworkID,
 		vmr.StoreID,

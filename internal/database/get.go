@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	vmColumns = `id, name, namespace, cpu, ram, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
+	vmColumns = `id, name, namespace, cpu, ram, ip_address, mac_address, network_id, image, disk_size, disk_path, created_at, labels`
 	// networkColumns must match the actual table schema order
 	networkColumns = `id, name, namespace, labels, mac_address, bridge, mode, net_address, netmask, dhcp, autostart, created_at`
 )
@@ -43,6 +43,7 @@ func GetVMRecords(
 			&vm.Namespace,
 			&vm.CPU,
 			&vm.RAM,
+			&vm.IP,
 			&vm.MacAddress,
 			&vm.NetworkID,
 			&vm.Image,
@@ -131,9 +132,7 @@ func GetNetworks(
 		query += " WHERE namespace = ?"
 		args = append(args, namespace)
 	}
-	var (
-		networks []VirtualNetwork
-	)
+	var networks []VirtualNetwork
 
 	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
