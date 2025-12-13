@@ -89,6 +89,18 @@ func NewVirtualMachineInfo(
 	// vm.Config.Spec.Memory
 	// vm.Config.Spec.Image
 
+	// Image details for OS column
+	var osName string
+	imgInfo, err := db.GetImage(ctx, database, rec.Image)
+	if err == nil && imgInfo.ImageDisplay != "" {
+		osName = imgInfo.ImageDisplay
+	} else {
+		// Fallback to capitalizing the image name if display not found
+		// or just use raw name. For now let's just use raw name or a simple formatter if needed.
+		// User requested elegant output, so let's try to format if display is empty.
+		osName = rec.Image
+	}
+
 	return &VirtualMachineInfo{
 		Name:     rec.Name,
 		State:    state,
@@ -96,7 +108,7 @@ func NewVirtualMachineInfo(
 		RAM:      rec.RAM,
 		DiskSize: disk,
 		Network:  network,
-		OS:       rec.Image,
+		OS:       osName,
 		Age:      common.FormatAge(rec.CreatedAt),
 	}, nil
 }

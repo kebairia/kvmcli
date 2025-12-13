@@ -35,6 +35,7 @@ func TestGetStoreByName(t *testing.T) {
 		Images: []Image{
 			{
 				Name:      "ubuntu",
+				Display:   "Ubuntu 20.04",
 				Version:   "20.04",
 				OsProfile: "ubuntu",
 				File:      "ubuntu.qcow2",

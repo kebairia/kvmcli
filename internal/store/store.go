@@ -92,6 +92,7 @@ func NewStoreRecord(spec Config) *db.Store {
 	for index, img := range spec.Images {
 		images[index] = db.Image{
 			Name:      img.Name,
+			Display:   img.Display,
 			Version:   img.Version,
 			OsProfile: img.OSProfile,
 			File:      img.File,

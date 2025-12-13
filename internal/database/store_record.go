@@ -25,6 +25,7 @@ type Image struct {
 	ID        int64
 	StoreID   int64
 	Name      string
+	Display   string
 	Version   string
 	OsProfile string
 	File      string
@@ -40,6 +41,7 @@ type VMImageInfo struct {
 	ImageID        int64
 	ImageStoreID   int64
 	ImageName      string
+	ImageDisplay   string
 	ImageVersion   string
 	OsProfile      string
 	ArtifactsPath  string
@@ -85,7 +87,8 @@ func EnsureStoreTable(ctx context.Context, db *sql.DB) error {
 		CREATE TABLE IF NOT EXISTS ` + imagesTable + ` (
 		  id         INTEGER PRIMARY KEY AUTOINCREMENT,
 		  store_id   INTEGER NOT NULL,
-			name 			 TEXT,
+		  name 			 TEXT,
+		  display    TEXT,
 		  version    TEXT,
 		  os_profile TEXT,
 		  file       TEXT,
@@ -168,7 +171,7 @@ func GetImage(ctx context.Context, db *sql.DB, imgName string) (*VMImageInfo, er
 	const query = `
 		SELECT 
 		store.id, store.name, store.namespace,
-		image.id, image.store_id, image.name, image.version, image.os_profile,
+		image.id, image.store_id, image.name, image.display, image.version, image.os_profile,
 		store.artifacts_path, store.images_path, image.file, image.checksum, image.size
 		FROM ` + imagesTable + ` AS image
 		JOIN ` + storesTable + ` AS store ON image.store_id = store.id
@@ -178,7 +181,7 @@ func GetImage(ctx context.Context, db *sql.DB, imgName string) (*VMImageInfo, er
 	row := db.QueryRowContext(ctx, query, imgName)
 	if err := row.Scan(
 		&rec.StoreID, &rec.StoreName, &rec.StoreNamespace,
-		&rec.ImageID, &rec.ImageStoreID, &rec.ImageName, &rec.ImageVersion,
+		&rec.ImageID, &rec.ImageStoreID, &rec.ImageName, &rec.ImageDisplay, &rec.ImageVersion,
 		&rec.OsProfile, &rec.ArtifactsPath, &rec.ImagesPath,
 		&rec.ImageFile, &rec.Checksum, &rec.Size,
 	); err != nil {
@@ -266,14 +269,15 @@ func (store *Store) Insert(ctx context.Context, db *sql.DB) error {
 	// 6. Insert each image pointing back to the store
 	const imgInsert = `
 		INSERT INTO ` + imagesTable + ` (
-			store_id, name, version, os_profile,
+			store_id, name, display, version, os_profile,
 			file, checksum, size
-		) VALUES (?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	for _, img := range store.Images {
 		_, err = tx.ExecContext(ctx, imgInsert,
 			storeID,
 			img.Name,
+			img.Display,
 			img.Version,
 			img.OsProfile,
 			img.File,

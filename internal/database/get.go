@@ -299,7 +299,7 @@ func GetStoreByName(
 
 	// Fetch images for this store
 	imgQuery := `
-		SELECT id, name, version, os_profile, file, checksum, size, created_at 
+		SELECT id, name, display, version, os_profile, file, checksum, size, created_at 
 		FROM ` + imagesTable + ` 
 		WHERE store_id = ?
 	`
@@ -314,7 +314,7 @@ func GetStoreByName(
 		var img Image
 		img.StoreID = int64(store.ID)
 		if err := imgRows.Scan(
-			&img.ID, &img.Name, &img.Version, &img.OsProfile,
+			&img.ID, &img.Name, &img.Display, &img.Version, &img.OsProfile,
 			&img.File, &img.Checksum, &img.Size, &img.CreatedAt,
 		); err != nil {
 			return Store{}, fmt.Errorf("scan image failed: %w", err)
