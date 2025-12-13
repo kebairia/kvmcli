@@ -11,7 +11,6 @@ import (
 )
 
 // Create defines a Network in libvirt and inserts its database record.
-// Create defines a Network in libvirt and inserts its database record.
 func (m *LibvirtNetworkManager) Create(ctx context.Context, spec Config) error {
 	// Ensure Libvirt connection is initialized
 	if m.conn == nil {
