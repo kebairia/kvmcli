@@ -34,13 +34,12 @@ type VirtualMachine struct {
 }
 
 // getStore retrieves the store record for the Config.
+// getStore retrieves the store record for the Config.
 func (vm *VirtualMachine) fetchStore() (*db.Store, error) {
 	var store db.Store
-	var err error
-
-	store.ID, err = db.GetStoreIDByName(vm.ctx, vm.db, vm.Spec.Store)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get store ID for %q: %w", vm.Spec.Store, err)
+	// Fetch the full store record using the name from configuration
+	if err := store.GetRecord(vm.ctx, vm.db, vm.Spec.Store); err != nil {
+		return nil, fmt.Errorf("failed to get store record for %q: %w", vm.Spec.Store, err)
 	}
 
 	return &store, nil
@@ -112,16 +111,6 @@ func NewVirtualMachine(
 	// 	return nil, ErrNilDomainManager
 	// }
 
-	if vm.disk == nil {
-		vm.disk = &QemuDiskManager{
-			QemuImgPath:    "/usr/bin/qemu-img",
-			BaseImagesPath: "/home/zakaria/dox/homelab/artifacts/rocky",
-			DestImagesPath: "/home/zakaria/dox/homelab/images/",
-			Timeout:        10 * time.Second,
-		}
-	}
-	vm.domain = NewLibvirtDomainManager(vm.conn)
-
 	// validate core dependencies
 	if vm.conn == nil {
 		return nil, ErrNilLibvirtConn
@@ -129,6 +118,21 @@ func NewVirtualMachine(
 	if vm.db == nil {
 		return nil, ErrNilDBConn
 	}
+
+	if vm.disk == nil {
+		store, err := vm.fetchStore()
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch store for disk configuration: %w", err)
+		}
+
+		vm.disk = &QemuDiskManager{
+			QemuImgPath:    "qemu-img", // Default to system path
+			BaseImagesPath: store.ArtifactsPath,
+			DestImagesPath: store.ImagesPath,
+			Timeout:        10 * time.Second,
+		}
+	}
+	vm.domain = NewLibvirtDomainManager(vm.conn)
 
 	return vm, nil
 }

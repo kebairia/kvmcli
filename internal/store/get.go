@@ -13,27 +13,29 @@ import (
 
 // StoreInfo holds display information for a store.
 type StoreInfo struct {
-	Name       string
-	Namespace  string
-	Backend    string
-	ImagesPath string
-	ImageCount int
-	Age        string
+	Name          string
+	Namespace     string
+	Backend       string
+	ArtifactsPath string
+	ImagesPath    string
+	ImageCount    int
+	Age           string
 }
 
 // Header returns a tabwriter with column headers for store listing.
 func (info *StoreInfo) Header() *tabwriter.Writer {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "NAME\tNAMESPACE\tBACKEND\tIMAGES PATH\tIMAGES\tAGE")
+	fmt.Fprintln(w, "NAME\tNAMESPACE\tBACKEND\tARTIFACTS PATH\tIMAGES PATH\tIMAGES\tAGE")
 	return w
 }
 
 // PrintInfo writes the store info as a row to the tabwriter.
 func (info *StoreInfo) PrintInfo(w *tabwriter.Writer) {
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%s\n",
+	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%d\t%s\n",
 		info.Name,
 		info.Namespace,
 		info.Backend,
+		info.ArtifactsPath,
 		info.ImagesPath,
 		info.ImageCount,
 		info.Age,
@@ -50,12 +52,13 @@ func NewStoreInfo(
 	imageCount := len(record.Images)
 
 	return &StoreInfo{
-		Name:       record.Name,
-		Namespace:  record.Namespace,
-		Backend:    record.Backend,
-		ImagesPath: record.ImagesPath,
-		ImageCount: imageCount,
-		Age:        common.FormatAge(record.CreatedAt),
+		Name:          record.Name,
+		Namespace:     record.Namespace,
+		Backend:       record.Backend,
+		ArtifactsPath: record.ArtifactsPath,
+		ImagesPath:    record.ImagesPath,
+		ImageCount:    imageCount,
+		Age:           common.FormatAge(record.CreatedAt),
 	}, nil
 }
 

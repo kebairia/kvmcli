@@ -71,7 +71,7 @@ func NewVirtualNetworkInfo(
 	// Format the DHCP range.
 	var dhcpRange string
 	if record.DHCP != nil {
-		dhcpRange = record.DHCP["start"] + " -> " + record.DHCP["end"]
+		dhcpRange = record.DHCP["start"] + " → " + record.DHCP["end"]
 	}
 
 	return &VirtualNetworkInfo{

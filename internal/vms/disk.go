@@ -29,7 +29,6 @@ func (d *QemuDiskManager) Paths() (string, string) {
 	return d.BaseImagesPath, d.DestImagesPath
 }
 
-// TODO: Fetch the store information, and create the disk manager
 func NewQemuDiskManager() (*QemuDiskManager, error) {
 	return &QemuDiskManager{}, nil
 }
