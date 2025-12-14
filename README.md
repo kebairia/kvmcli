@@ -62,10 +62,9 @@ vm "web-server-01" {
 
   # Reference the store and network defined above
   image     = "ubuntu-22.04"
-  # store     = store.default.name
-  # network   = network.services.name
   store     = store.default
   network   = network.services
+  ip        = "10.10.10.2"
 }
 ```
 
