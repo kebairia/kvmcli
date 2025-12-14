@@ -1,5 +1,6 @@
 tmp
 *.xml
+*.old
 kvmcli
 *.yaml
 ./configs/yamls
